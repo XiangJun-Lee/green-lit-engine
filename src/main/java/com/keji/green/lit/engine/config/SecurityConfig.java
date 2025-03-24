@@ -4,6 +4,7 @@ import com.keji.green.lit.engine.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -94,12 +95,14 @@ public class SecurityConfig {
     /**
      * 认证管理器
      * 用于处理认证请求
+     * 使用@Lazy注解避免循环依赖
      * 
      * @param authenticationConfiguration 认证配置
      * @return 认证管理器
      * @throws Exception 配置异常
      */
     @Bean
+    @Lazy
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }

@@ -13,6 +13,8 @@ import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -34,7 +36,6 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl implements UserService, UserDetailsService {
 
     /**
@@ -59,8 +60,27 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     
     /**
      * 认证管理器
+     * 使用@Lazy注解避免循环依赖
      */
     private final AuthenticationManager authenticationManager;
+
+    /**
+     * 构造函数注入所有依赖
+     * 使用@Lazy注解解决循环依赖问题
+     */
+    @Autowired
+    public UserServiceImpl(
+            UserRepository userRepository,
+            VerificationCodeService verificationCodeService,
+            PasswordEncoder passwordEncoder,
+            JwtTokenProvider jwtTokenProvider,
+            @Lazy AuthenticationManager authenticationManager) {
+        this.userRepository = userRepository;
+        this.verificationCodeService = verificationCodeService;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+        this.authenticationManager = authenticationManager;
+    }
 
     /**
      * 手机号正则表达式
