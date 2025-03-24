@@ -105,7 +105,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .role(UserRole.USER)
                 .isActive(true)
                 .creditBalance(0)
-                .createdAt(LocalDateTime.now())
+                .gmtCreate(LocalDateTime.now())
                 .build();
 
         User savedUser = userRepository.save(user);
@@ -118,7 +118,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         );
         String token = jwtTokenProvider.createToken(authentication);
 
-        return TokenResponse.of(token, savedUser.getId(), savedUser.getPhone());
+        return TokenResponse.of(token, savedUser.getUid(), savedUser.getPhone());
     }
 
     /**
@@ -154,7 +154,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             // 生成token
             String token = jwtTokenProvider.createToken(authentication);
 
-            return TokenResponse.of(token, user.getId(), user.getPhone());
+            return TokenResponse.of(token, user.getUid(), user.getPhone());
         } catch (Exception e) {
             throw new BusinessException("用户名或密码错误", e);
         }
@@ -200,7 +200,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         // 生成token
         String token = jwtTokenProvider.createToken(authentication);
 
-        return TokenResponse.of(token, user.getId(), user.getPhone());
+        return TokenResponse.of(token, user.getUid(), user.getPhone());
     }
 
     /**
@@ -247,7 +247,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
         // 更新密码
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setGmtModify(LocalDateTime.now());
         userRepository.save(user);
     }
 
@@ -255,18 +255,38 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * 注销账号
      * 将用户状态设置为非活跃
      * 
-     * @param userId 用户ID
+     * @param uid 用户ID
      * @throws BusinessException 用户不存在时抛出
      */
     @Override
     @Transactional
-    public void deactivateAccount(Long userId) {
-        User user = userRepository.findById(userId)
+    public void deactivateAccount(Long uid) {
+        User user = userRepository.findById(uid)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
 
         user.setIsActive(false);
-        user.setUpdatedAt(LocalDateTime.now());
+        user.setGmtModify(LocalDateTime.now());
         userRepository.save(user);
+    }
+
+    /**
+     * 更新客户端连接信息
+     * 
+     * @param uid 用户ID
+     * @param ipPort IP和端口信息，格式为ip:port
+     * @throws BusinessException 用户不存在时抛出
+     */
+    @Override
+    @Transactional
+    public void updateClientConnection(Long uid, String ipPort) {
+        User user = userRepository.findById(uid)
+                .orElseThrow(() -> new BusinessException("用户不存在"));
+        
+        user.setClientConnection(ipPort);
+        user.setGmtModify(LocalDateTime.now());
+        userRepository.save(user);
+        
+        log.info("用户 {} 客户端连接信息已更新: {}", user.getPhone(), ipPort);
     }
 
     /**

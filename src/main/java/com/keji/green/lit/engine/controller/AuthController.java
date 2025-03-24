@@ -139,9 +139,25 @@ public class AuthController {
     @DeleteMapping("/account")
     public ResponseEntity<Map<String, String>> deactivateAccount() {
         UserResponse currentUser = userService.getCurrentUser();
-        userService.deactivateAccount(currentUser.getId());
+        userService.deactivateAccount(currentUser.getUid());
         Map<String, String> response = new HashMap<>();
         response.put("message", "账号已注销");
+        return ResponseEntity.ok(response);
+    }
+    
+    /**
+     * 更新客户端连接信息
+     * 
+     * @param ipPort IP和端口信息，格式为ip:port
+     * @return 更新结果
+     */
+    @PostMapping("/client-connection")
+    public ResponseEntity<Map<String, String>> updateClientConnection(
+            @RequestParam @NotBlank(message = "客户端连接信息不能为空") String ipPort) {
+        UserResponse currentUser = userService.getCurrentUser();
+        userService.updateClientConnection(currentUser.getUid(), ipPort);
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "客户端连接信息已更新");
         return ResponseEntity.ok(response);
     }
 } 

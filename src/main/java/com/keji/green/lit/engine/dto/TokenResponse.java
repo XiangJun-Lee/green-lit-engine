@@ -39,15 +39,15 @@ public class TokenResponse {
      * 创建TokenResponse实例的工厂方法
      * 
      * @param token JWT令牌
-     * @param userId 用户ID
+     * @param uid 用户ID
      * @param phone 用户手机号
      * @return TokenResponse实例
      */
-    public static TokenResponse of(String token, Long userId, String phone) {
+    public static TokenResponse of(String token, Long uid, String phone) {
         return TokenResponse.builder()
                 .token(token)
                 .type("Bearer")
-                .userId(userId)
+                .userId(uid)
                 .phone(phone)
                 .build();
     }

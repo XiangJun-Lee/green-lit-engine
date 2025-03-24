@@ -21,7 +21,7 @@ public class UserResponse {
     /**
      * 用户ID
      */
-    private Long id;
+    private Long uid;
     
     /**
      * 用户手机号
@@ -31,7 +31,7 @@ public class UserResponse {
     /**
      * 账号创建时间
      */
-    private LocalDateTime createdAt;
+    private LocalDateTime gmtCreate;
     
     /**
      * 最后登录时间
@@ -49,6 +49,11 @@ public class UserResponse {
     private String resumeText;
     
     /**
+     * 客户端连接信息
+     */
+    private String clientConnection;
+    
+    /**
      * 从User实体创建UserResponse的工厂方法
      * 
      * @param user 用户实体
@@ -56,12 +61,13 @@ public class UserResponse {
      */
     public static UserResponse fromUser(User user) {
         return UserResponse.builder()
-                .id(user.getId())
+                .uid(user.getUid())
                 .phone(user.getPhone())
-                .createdAt(user.getCreatedAt())
+                .gmtCreate(user.getGmtCreate())
                 .lastLoginAt(user.getLastLoginAt())
                 .creditBalance(user.getCreditBalance())
                 .resumeText(user.getResumeText())
+                .clientConnection(user.getClientConnection())
                 .build();
     }
 } 

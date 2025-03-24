@@ -22,7 +22,7 @@ import java.util.Collections;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "users")
+@Table(name = "user_info")
 public class User implements UserDetails {
 
     /**
@@ -30,7 +30,8 @@ public class User implements UserDetails {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "uid")
+    private Long uid;
 
     /**
      * 用户手机号，唯一，用作登录账号
@@ -47,14 +48,14 @@ public class User implements UserDetails {
     /**
      * 创建时间
      */
-    @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    @Column(name = "gmt_create", nullable = false)
+    private LocalDateTime gmtCreate;
 
     /**
      * 更新时间
      */
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    @Column(name = "gmt_modify")
+    private LocalDateTime gmtModify;
 
     /**
      * 最后登录时间
@@ -86,6 +87,12 @@ public class User implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(name = "user_role", nullable = false)
     private UserRole role;
+    
+    /**
+     * 客户端连接信息 (ip:port)
+     */
+    @Column(name = "client_connection")
+    private String clientConnection;
 
     /**
      * 获取用户权限信息
@@ -147,7 +154,7 @@ public class User implements UserDetails {
      */
     @PrePersist
     protected void onCreate() {
-        createdAt = LocalDateTime.now();
+        gmtCreate = LocalDateTime.now();
         if (creditBalance == null) {
             creditBalance = 0;
         }
@@ -165,6 +172,6 @@ public class User implements UserDetails {
      */
     @PreUpdate
     protected void onUpdate() {
-        updatedAt = LocalDateTime.now();
+        gmtModify = LocalDateTime.now();
     }
 } 

@@ -55,9 +55,9 @@ public interface UserService {
     /**
      * 注销账号
      * 
-     * @param userId 用户ID
+     * @param uid 用户ID
      */
-    void deactivateAccount(Long userId);
+    void deactivateAccount(Long uid);
     
     /**
      * 获取当前登录用户信息
@@ -74,4 +74,12 @@ public interface UserService {
      * @return 验证结果，true表示验证通过
      */
     boolean verifyCode(String phone, String code);
+    
+    /**
+     * 更新客户端连接信息
+     * 
+     * @param uid 用户ID
+     * @param ipPort IP和端口信息，格式为ip:port
+     */
+    void updateClientConnection(Long uid, String ipPort);
 } 
