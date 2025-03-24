@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class GreenLitEngineApplication {
 
     public static void main(String[] args) {
-
         SpringApplication.run(GreenLitEngineApplication.class, args);
     }
 
