@@ -1,0 +1,126 @@
+@startuml 双端互联面试模式
+actor "用户" as User
+participant "客户端(电脑)" as Client
+participant "网页前端(移动设备)" as WebUI
+participant "业务服务(Java)" as Backend
+participant "算法服务(Python)" as AlgoService
+participant "大型语言模型" as LLM
+database 数据库 as DB
+
+== 进入面试 ==
+User -> WebUI: 在移动设备上进入面试页面
+WebUI -> Backend: 根据面试ID查询面试信息
+Backend -> DB: 根据面试ID查询面试信息
+DB --> Backend: 返回面试数据(包含面试状态)
+Backend --> WebUI: 返回面试配置和状态
+WebUI -> WebUI: 检查面试状态
+
+alt 面试状态=已结束
+    WebUI -> WebUI: 启用只读模式
+    WebUI --> User: 显示面试记录(禁用操作按钮)
+    note over WebUI
+      只显示历史对话内容
+      禁用所有交互功能
+    end note
+else 面试状态=进行中
+    WebUI --> User: 显示分为左右两侧的对话界面
+    WebUI --> User: 启用"开始"按钮和其他功能
+
+== 开始面试 ==
+User -> WebUI: 点击"开始"按钮
+WebUI -> Client: 发送开始监听请求
+Client -> Client: 同时激活麦克风和系统音频监听
+Client -> WebUI: 确认音频监听就绪
+WebUI -> AlgoService: 建立系统音频WebSocket连接(标记为面试官)
+AlgoService -> AlgoService: 初始化语音转写服务
+AlgoService --> WebUI: 确认系统音频转写服务就绪
+WebUI -> AlgoService: 建立麦克风音频WebSocket连接(标记为我)
+AlgoService -> AlgoService: 初始化语音转写服务
+AlgoService --> WebUI: 确认麦克风音频转写服务就绪
+WebUI --> User: 开始接收音频输入
+
+== 实时问题转写(系统音频) ==
+note over Client
+  监听共享页面的系统音频
+end note
+Client -> Client: 采集系统音频数据
+Client -> WebUI: 通过局域网传输系统音频流
+WebUI -> AlgoService: 转发系统音频流(标记为面试官)
+AlgoService -> AlgoService: 处理音频并转为文字
+AlgoService --> WebUI: 实时返回转写文本
+WebUI -> WebUI: 在左侧对话框实时显示问题文本
+WebUI --> User: 用户看到面试问题文字
+WebUI -> WebUI: 检测完整句子
+WebUI -> Backend: 发送完整句子(面试官)
+Backend -> DB: 存储完整句子(关联面试ID)
+
+== 实时回答转写(麦克风) ==
+note over Client
+  同时采集用户麦克风音频
+end note
+User -> Client: 对着麦克风回答问题
+Client -> Client: 采集麦克风音频数据
+Client -> WebUI: 通过局域网传输麦克风音频流
+WebUI -> AlgoService: 转发麦克风音频流(标记为我)
+AlgoService -> AlgoService: 处理音频并转为文字
+AlgoService --> WebUI: 实时返回转写文本
+WebUI -> WebUI: 在左侧对话框实时显示回答文本
+WebUI --> User: 用户看到自己的回答文字
+WebUI -> WebUI: 检测完整句子
+WebUI -> Backend: 发送完整句子(我)
+Backend -> DB: 存储完整句子(关联面试ID)
+
+WebUI -> WebUI: 正则匹配自定义关键词
+alt 匹配到关键词
+    WebUI -> WebUI: 获取上一条面试官问题
+    WebUI -> Backend: 发送问题内容和面试ID
+    Backend -> DB: 查询用户余额
+    DB --> Backend: 返回用户余额信息
+    Backend --> Backend: 确认余额信息
+
+    alt 余额不足
+        Backend --> WebUI: 返回余额不足错误
+        WebUI --> User: 显示"余额不足"提示
+    else 余额充足
+        Backend -> AlgoService: 传递问题内容
+        AlgoService -> LLM: 提交问题内容
+        LLM -> LLM: 分析问题并生成最佳回答
+        LLM --> AlgoService: 返回生成的回答
+        AlgoService --> Backend: 返回优化后的回答
+        Backend -> DB: 存储AI生成的回答(关联面试ID)
+        Backend -> DB: 实时扣减用户余额
+        Backend -> DB: 实时记录消费流水(用户ID、面试ID、消费类型、金额、时间)
+        
+        Backend --> WebUI: 推送回答内容
+        WebUI -> WebUI: 在右侧对话框显示答案
+        WebUI --> User: 用户看到AI生成的回答
+    end
+end
+
+== 快速回答生成(手动触发) ==
+User -> WebUI: 点击问题文本上的"快答"按钮
+WebUI -> Backend: 发送当前问题内容和面试ID
+Backend -> DB: 查询用户余额
+DB --> Backend: 返回用户余额信息
+Backend --> Backend: 确认余额信息
+
+alt 余额不足
+    Backend --> WebUI: 返回余额不足错误
+    WebUI --> User: 显示"余额不足"提示
+else 余额充足
+    Backend -> AlgoService: 传递问题内容
+    AlgoService -> LLM: 提交问题内容
+    LLM -> LLM: 分析问题并生成最佳回答
+    LLM --> AlgoService: 返回生成的回答
+    AlgoService --> Backend: 返回优化后的回答
+    Backend -> DB: 存储AI生成的回答(关联面试ID)
+    Backend -> DB: 实时扣减用户余额
+    Backend -> DB: 实时记录消费流水(用户ID、面试ID、消费类型、金额、时间)
+    
+    Backend --> WebUI: 推送回答内容
+    WebUI -> WebUI: 在右侧对话框显示答案
+    WebUI --> User: 用户看到AI生成的回答
+end
+
+end
+@enduml 

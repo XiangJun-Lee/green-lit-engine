@@ -1,0 +1,16 @@
+@startuml 用户注销流程
+actor 用户
+participant "前端服务" as Frontend
+participant "业务服务(Java)" as Backend
+database 数据库 as DB
+
+== 退出登录流程 ==
+用户 -> Frontend: 点击"退出登录"按钮
+Frontend -> Frontend: 清除本地Token和缓存
+Frontend -> Backend: 发送退出登录请求
+Backend -> DB: 更新用户登录状态
+Backend -> Backend: 使当前Token失效
+DB --> Backend: 确认状态更新
+Backend --> Frontend: 返回退出成功消息
+Frontend --> 用户: 跳转到登录页面
+@enduml 

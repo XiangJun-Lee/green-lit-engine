@@ -1,0 +1,43 @@
+@startuml 面试结束流程
+actor "用户" as User
+participant "网页前端" as WebUI
+participant "业务服务(Java)" as Backend
+participant "算法服务(Python)" as AlgoService
+database 数据库 as DB
+
+== 手动结束 ==
+User -> WebUI: 点击"结束"按钮
+WebUI -> Backend: 发送结束请求
+
+Backend -> DB: 查询面试信息(包含开始时间)
+DB --> Backend: 返回面试信息(包含开始时间)
+
+Backend -> Backend: 获取当前时间作为面试结束时间
+Backend -> Backend: 计算面试时长(结束时间-开始时间)
+
+Backend -> DB: 更新面试状态为已结束并记录结束时间
+DB --> Backend: 确认更新成功
+
+Backend --> WebUI: 返回面试结束确认
+WebUI --> User: 显示面试已结束提示
+WebUI --> User: 提供面试记录查看和下载选项
+note over WebUI
+  自动保存所有对话记录
+  禁用所有交互功能
+end note
+
+WebUI -> AlgoService : 关闭WebSocket连接
+
+
+== 自动结束 ==
+Backend -> Backend: 2小时后自动触发结束
+
+Backend -> DB: 查询面试信息(包含开始时间)
+DB --> Backend: 返回面试信息(包含开始时间)
+
+Backend -> Backend: 获取当前时间作为面试结束时间
+Backend -> Backend: 计算面试时长(结束时间-开始时间)
+
+Backend -> DB: 更新面试状态为已结束并记录结束时间
+DB --> Backend: 确认更新成功
+@enduml 

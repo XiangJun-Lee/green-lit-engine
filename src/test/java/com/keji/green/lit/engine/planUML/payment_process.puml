@@ -1,0 +1,104 @@
+@startuml 积分充值与消费流程
+actor "用户" as User
+participant "网页前端" as WebUI
+participant "业务服务(Java)" as Backend
+participant "第三方支付平台" as ThirdPartyPayment
+database 数据库 as DB
+
+== 浏览积分页面 ==
+User -> WebUI: 访问积分充值页面
+WebUI -> Backend: 获取可用积分充值选项
+Backend -> DB: 查询积分充值配置信息
+DB --> Backend: 返回积分充值数据
+Backend --> WebUI: 返回积分充值选项和价格
+WebUI --> User: 展示积分充值选项(50积分/200积分/500积分)
+
+== 选择积分充值 ==
+User -> WebUI: 选择积分数量并点击"充值"按钮
+WebUI -> WebUI: 显示积分充值确认弹窗
+note right of WebUI
+  显示积分充值详情：
+  - 充值积分数量
+  - 对应人民币金额
+  - 可使用AI回答次数
+  - 有效期说明
+end note
+User -> WebUI: 确认充值
+
+== 创建订单 ==
+WebUI -> Backend: 提交积分充值请求
+Backend -> DB: 查询用户信息和当前积分
+DB --> Backend: 返回用户数据
+Backend -> Backend: 生成唯一订单号
+Backend -> DB: 创建订单记录(待支付状态)
+DB --> Backend: 确认订单创建成功
+Backend -> Backend: 计算订单金额
+Backend --> WebUI: 返回订单信息和支付选项
+WebUI --> User: 显示支付方式选择(支付宝/微信)
+
+== 选择支付方式 ==
+User -> WebUI: 选择支付方式(支付宝/微信)
+WebUI -> Backend: 发起支付请求(携带订单号和支付方式)
+Backend -> ThirdPartyPayment: 请求支付链接/二维码
+ThirdPartyPayment --> Backend: 返回支付链接/二维码
+Backend --> WebUI: 返回支付链接/二维码
+WebUI --> User: 显示支付二维码或跳转支付页面
+
+== 完成支付 ==
+User -> ThirdPartyPayment: 扫码支付或在第三方完成支付
+ThirdPartyPayment -> Backend: 发送支付结果回调(异步)
+Backend -> DB: 查询订单信息
+DB --> Backend: 返回订单数据
+
+alt 支付成功
+    Backend -> DB: 更新订单状态为"已支付"
+    Backend -> DB: 增加用户积分余额
+    note right of Backend
+      根据购买积分类型增加对应积分:
+      - 5元: +50积分
+      - 20元: +200积分
+      - 50元: +500积分
+    end note
+    DB --> Backend: 确认积分更新成功
+    Backend -> Backend: 生成交易凭证
+    Backend -> DB: 记录支付流水
+    Backend --> WebUI: 推送支付成功通知
+    WebUI --> User: 显示充值成功页面
+    WebUI --> User: 显示积分已增加提示
+else 支付失败
+    Backend -> DB: 更新订单状态为"支付失败"
+    
+    note over Backend
+      检测到支付失败，自动处理退款
+    end note
+    Backend -> ThirdPartyPayment: 发起退款请求
+    ThirdPartyPayment -> ThirdPartyPayment: 处理退款
+    ThirdPartyPayment --> Backend: 返回退款结果
+    
+    Backend -> DB: 记录退款信息
+    Backend -> DB: 更新订单状态为"已退款"
+    Backend --> WebUI: 推送支付失败和退款通知
+    WebUI --> User: 显示支付失败提示
+    WebUI --> User: 显示"款项已自动退回"提示
+    WebUI --> User: 提供重新充值选项
+end
+
+== 使用AI答题服务 ==
+User -> WebUI: 点击问题文本上的"快答"按钮
+WebUI -> Backend: 请求使用AI答题服务
+Backend -> DB: 查询用户积分余额
+DB --> Backend: 返回用户剩余积分
+
+alt 积分余额充足
+    Backend -> Backend: 计算AI答题消耗积分(每次-10积分)
+    Backend -> DB: 扣减用户积分
+    Backend -> Backend: 处理AI答题请求
+    Backend -> DB: 记录积分消费记录(用户ID、消费类型、积分数、时间)
+    Backend --> WebUI: 返回AI答案
+    WebUI --> User: 显示AI生成的回答
+else 积分余额不足
+    Backend --> WebUI: 返回积分不足提示
+    WebUI --> User: 显示"积分余额不足"提示
+    WebUI --> User: 提供积分充值链接
+end
+@enduml 

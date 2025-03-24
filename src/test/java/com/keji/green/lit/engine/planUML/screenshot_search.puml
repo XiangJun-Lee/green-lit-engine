@@ -1,0 +1,42 @@
+@startuml 截图搜题流程
+actor "用户" as User
+participant "客户端" as Client
+participant "网页前端" as WebUI
+participant "业务服务(Java)" as Backend
+participant "算法服务(Python)" as AlgoService
+participant "大型语言模型" as LLM
+database 数据库 as DB
+
+== 远控截图搜题 ==
+User -> WebUI: 点击远控截图按钮
+WebUI -> Client: 发送远程截图指令
+Client -> Client: 捕获屏幕图像
+Client -> WebUI: 返回截图数据
+WebUI -> WebUI: 显示截图内容
+WebUI -> Backend: 发送截图请求(携带面试ID和图片)
+Backend -> DB: 查询用户余额
+DB --> Backend: 返回用户余额信息
+
+alt 余额不足
+    Backend --> WebUI: 返回余额不足错误
+    WebUI --> User: 显示"余额不足"提示
+else 余额充足
+    Backend -> AlgoService: 发送图片进行分析
+
+    AlgoService -> LLM: 发送识别内容请求答案
+    LLM -> LLM: 分析问题并生成回答
+    LLM --> AlgoService: 返回生成的回答
+    AlgoService --> Backend: 返回答案
+    
+    Backend -> DB: 存储答案(关联面试ID)
+
+    Backend -> DB: 扣减用户余额
+    Backend -> DB: 记录消费流水(用户ID、面试ID、消费类型="图片搜题"、金额、时间)
+
+    Backend --> WebUI: 推送答案
+    WebUI -> WebUI: 在右侧对话框显示答案
+    WebUI --> User: 用户看到答案结果
+
+
+end
+@enduml 

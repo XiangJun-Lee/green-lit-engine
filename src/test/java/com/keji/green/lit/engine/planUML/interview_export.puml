@@ -1,0 +1,22 @@
+@startuml 面试记录下载流程
+actor 用户
+participant "前端服务" as Frontend
+participant "业务服务(Java)" as Backend
+database 数据库 as DB
+
+用户 -> Frontend: 选择面试记录
+Frontend -> Frontend: 显示导出选项
+用户 -> Frontend: 选择导出格式(TXT/JSON)
+用户 -> Frontend: 点击"导出"按钮
+Frontend -> Backend: 提交下载请求(包含格式选择)
+Backend -> DB: 获取面试记录数据
+DB --> Backend: 返回面试详细信息
+Backend -> Backend: 根据选择格式处理数据
+alt 选择TXT格式
+    Backend -> Backend: 生成TXT格式文件
+else 选择JSON格式
+    Backend -> Backend: 生成JSON格式文件
+end
+Backend --> Frontend: 返回文件
+Frontend --> 用户: 返回文件
+@enduml 

@@ -1,0 +1,128 @@
+@startuml 面试创建流程
+actor "用户" as User
+participant "客户端(电脑)" as Client
+participant "网页前端" as WebUI
+participant "业务服务(Java)" as Backend
+participant "算法服务(Python)" as AlgorithmService
+database 数据库 as DB
+
+== 1.填写面试基础信息 ==
+User -> WebUI: 点击"新建面试"按钮
+
+
+WebUI -> Backend: 获取用户简历信息
+Backend -> DB: 查询用户简历信息
+DB --> Backend: 返回用户简历信息
+Backend --> WebUI: 返回用户简历信息
+
+alt 用户简历不为空
+    WebUI --> User: 显示"已上传"标识
+else 用户简历为空
+    WebUI --> User: 不显示"已上传"标识
+end
+
+WebUI -> WebUI: 显示面试设置对话框
+User -> WebUI: 填写面试信息(名称、语言、编程语言)
+
+User -> WebUI: 点击"我的简历"按钮
+WebUI -> WebUI: 跳转到简历详情页
+
+alt 用户简历为空
+    WebUI --> User: 显示空文本框和上传按钮
+    User -> WebUI: 点击上传按钮选择简历文件
+    WebUI -> AlgorithmService: 请求转换简历为txt
+    AlgorithmService --> WebUI: 返回简历txt内容
+    WebUI --> User: 显示简历txt内容
+else 用户已有简历
+    WebUI --> User: 显示已有简历内容
+end
+
+User -> WebUI: 点击"美化"按钮
+WebUI -> Backend: 请求美化简历txt(携带用户ID)
+Backend -> DB: 查询用户余额
+DB --> Backend: 返回用户余额信息
+
+alt 余额不足
+    Backend --> WebUI: 返回余额不足错误
+    WebUI --> User: 显示"余额不足"提示
+else 余额充足
+    Backend -> AlgorithmService: 请求markdown美化
+    AlgorithmService --> Backend: 返回美化后的结构
+    Backend -> DB: 扣减用户余额
+    Backend -> DB: 记录消费流水(用户ID、消费类型="简历美化"、金额、时间)
+    Backend --> WebUI: 返回美化后的结构
+    WebUI --> User: 显示美化后的简历
+end
+
+User -> WebUI: 点击"保存"按钮
+WebUI -> Backend: 保存简历txt(用户维度)
+Backend -> DB: 更新用户简历信息
+DB --> Backend: 确认保存成功
+
+WebUI -> WebUI: 返回面试设置对话框
+WebUI --> User: 显示"已上传"标识
+
+User -> WebUI: 点击"确认"按钮
+WebUI -> Backend: 提交面试基础信息
+Backend -> Backend: 计算当前时间和2小时后的结束时间
+Backend -> DB: 创建面试记录(包含结束时间=当前时间+2小时)
+DB --> Backend: 返回面试ID
+Backend -> Backend: 创建2小时后的自动结束延时消息
+note over Backend
+  延时消息包含：
+  - 面试ID
+  - 操作类型="自动结束"
+  - 执行时间=当前时间+2小时
+end note
+Backend --> WebUI: 返回面试ID
+WebUI --> User: 进入面试配置流程
+
+== 2.音频设备配置 ==
+WebUI -> WebUI: 显示音频设备配置对话框
+
+WebUI -> Backend: 获取用户客户端连接信息
+Backend -> DB: 查询用户客户端IP和端口
+DB --> Backend: 返回用户客户端连接信息
+Backend --> WebUI: 返回客户端连接信息
+
+WebUI -> WebUI: 尝试与客户端建立局域网连接
+
+alt 连接失败
+    WebUI --> User: 显示"请下载并配置客户端"提示
+    note over WebUI
+      显示客户端下载链接
+      提供配置指导
+    end note
+else 连接成功
+    WebUI -> Client: 请求获取音频设备强度
+    Client -> Client: 检测麦克风和系统音频
+    Client --> WebUI: 返回麦克风和系统音频强度
+    WebUI --> User: 显示客户端监听的麦克风和系统音频强度
+end
+
+User -> WebUI: 点击"下一步"按钮
+WebUI --> User: 显示下一步配置界面
+
+== 3.快捷方式设置 ==
+WebUI -> WebUI: 显示快捷方式设置对话框
+User -> WebUI: 查看默认快捷键
+User -> WebUI: 点击"快捷键"按钮修改快捷键
+
+User -> WebUI: 选择是否使用快捷指令
+alt 使用快捷指令
+    User -> WebUI: 点击"自定义快捷指令"按钮
+    WebUI -> WebUI: 显示快捷指令设置界面
+    User -> WebUI: 设置快捷指令内容
+end
+
+== 4.完成配置 ==
+User -> WebUI: 点击"完成"按钮完成整个配置流程
+
+WebUI -> Backend: 提交完整配置(快捷方式、快捷指令、携带面试ID)
+Backend -> DB: 更新面试配置(快捷方式和快捷指令、面试维度)
+DB --> Backend: 确认更新成功
+Backend --> WebUI: 返回配置确认
+WebUI --> User: 跳转到面试主界面
+User -> WebUI: 点击"开始"按钮开始面试
+
+@enduml

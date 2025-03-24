@@ -1,0 +1,84 @@
+@startuml 设备准备和双端互联配置
+actor "用户" as User
+participant "客户端(电脑)" as Client
+participant "网页前端(移动设备)" as WebUI
+participant "业务服务(Java)" as Backend
+database 数据库 as DB
+
+== 客户端设备准备 ==
+User -> Client: 在本地设备打开并登录客户端应用
+Client --> User: 显示音频配置界面
+Client -> Client: 创建局域网服务
+Client -> Client: 获取本地IP和端口
+Client -> Client: 启动端口监听
+Client -> Backend: 上报连接信息(用户ID、IP、端口)
+Backend -> DB: 存储用户连接信息
+DB --> Backend: 确认存储成功
+Backend --> Client: 确认接收成功
+Client --> User: 显示"等待连接"状态和重启按钮
+
+User -> Client: 点击重启按钮
+Client -> Client: 关闭现有局域网服务
+Client -> Client: 重新创建局域网服务
+Client -> Client: 重新获取本地IP和端口
+Client -> Client: 重新启动端口监听
+Client -> Backend: 重新上报连接信息(用户ID、IP、端口)
+Backend -> DB: 更新用户连接信息
+DB --> Backend: 确认更新成功
+Backend --> Client: 确认接收成功
+Client --> User: 显示"等待连接"状态和重启按钮
+
+== 双端互联配置 ==
+User -> WebUI: 点击下一步按钮
+WebUI --> User: 进入音频配置界面
+WebUI -> Backend: 根据用户ID获取客户端连接信息
+Backend -> DB: 根据用户ID查询客户端IP和端口
+DB --> Backend: 返回客户端连接信息
+
+alt 未获取到连接信息
+    Backend --> WebUI: 返回未配置状态
+    WebUI --> User: 显示"请打开并配置客户端后重试"提示
+    note over WebUI
+      显示重试按钮
+    end note
+else 获取到连接信息
+    WebUI -> Client: 根据IP和端口建立连接
+    Client -> Client: 验证连接请求
+    Client --> WebUI: 返回连接结果
+
+    alt 连接失败
+        WebUI --> User: 显示连接失败提示
+        note over WebUI
+          显示重试按钮
+          提供排查步骤和教程链接
+        end note
+    else 连接成功
+        WebUI --> User: 显示连接成功
+    end
+end
+
+User -> WebUI: 点击重试按钮
+WebUI -> Backend: 根据用户ID重新获取客户端连接信息
+Backend -> DB: 根据用户ID重新查询客户端IP和端口
+DB --> Backend: 返回最新客户端连接信息
+Backend --> WebUI: 返回连接信息
+
+alt 未获取到连接信息
+    WebUI --> User: 显示"请打开并配置客户端后重试"提示
+else 获取到连接信息
+    WebUI -> Client: 根据IP和端口重新建立连接
+    Client -> Client: 验证连接请求
+    Client --> WebUI: 返回连接结果
+
+    alt 连接失败
+        WebUI --> User: 显示连接失败提示
+        note over WebUI
+          显示重试按钮
+          提供排查步骤和教程链接
+        end note
+    else 连接成功
+        WebUI --> User: 显示连接成功
+    end
+end
+
+@enduml 
