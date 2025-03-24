@@ -11,9 +11,7 @@ import com.keji.green.lit.engine.repository.UserRepository;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -25,6 +23,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import jakarta.annotation.Resource;
 
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
@@ -41,46 +41,34 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     /**
      * 用户数据访问层
      */
-    private final UserRepository userRepository;
-    
+    @Resource
+    private UserRepository userRepository;
+
     /**
      * 验证码服务
      */
-    private final VerificationCodeService verificationCodeService;
-    
+    @Resource
+    private VerificationCodeService verificationCodeService;
+
     /**
      * 密码编码器
      */
-    private final PasswordEncoder passwordEncoder;
-    
+    @Resource
+    private PasswordEncoder passwordEncoder;
+
     /**
      * JWT令牌提供者
      */
-    private final JwtTokenProvider jwtTokenProvider;
-    
+    @Resource
+    private JwtTokenProvider jwtTokenProvider;
+
     /**
      * 认证管理器
      * 使用@Lazy注解避免循环依赖
      */
-    private final AuthenticationManager authenticationManager;
-
-    /**
-     * 构造函数注入所有依赖
-     * 使用@Lazy注解解决循环依赖问题
-     */
-    @Autowired
-    public UserServiceImpl(
-            UserRepository userRepository,
-            VerificationCodeService verificationCodeService,
-            PasswordEncoder passwordEncoder,
-            JwtTokenProvider jwtTokenProvider,
-            @Lazy AuthenticationManager authenticationManager) {
-        this.userRepository = userRepository;
-        this.verificationCodeService = verificationCodeService;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.authenticationManager = authenticationManager;
-    }
+    @Resource
+    @Lazy
+    private AuthenticationManager authenticationManager;
 
     /**
      * 手机号正则表达式
@@ -95,7 +83,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * 3. 检查用户是否已存在
      * 4. 创建用户并保存
      * 5. 生成JWT令牌
-     * 
+     *
      * @param request 注册请求，包含手机号、验证码和密码
      * @return JWT令牌响应
      * @throws BusinessException 参数验证失败或用户已存在时抛出
@@ -147,7 +135,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * 2. 设置认证信息
      * 3. 更新最后登录时间
      * 4. 生成JWT令牌
-     * 
+     *
      * @param request 登录请求，包含手机号和密码
      * @return JWT令牌响应
      * @throws BusinessException 用户名或密码错误时抛出
@@ -187,9 +175,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * 3. 更新最后登录时间
      * 4. 创建认证信息
      * 5. 生成JWT令牌
-     * 
+     *
      * @param phone 手机号
-     * @param code 验证码
+     * @param code  验证码
      * @return JWT令牌响应
      * @throws BusinessException 验证码错误或用户不存在时抛出
      */
@@ -227,7 +215,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * 请求发送验证码
      * 1. 验证手机号格式
      * 2. 生成并发送验证码
-     * 
+     *
      * @param phone 手机号
      * @throws BusinessException 手机号格式不正确时抛出
      */
@@ -247,10 +235,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * 1. 验证验证码
      * 2. 获取用户信息
      * 3. 更新密码
-     * 
-     * @param phone 手机号
+     *
+     * @param phone            手机号
      * @param verificationCode 验证码
-     * @param newPassword 新密码
+     * @param newPassword      新密码
      * @throws BusinessException 验证码错误或用户不存在时抛出
      */
     @Override
@@ -274,7 +262,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     /**
      * 注销账号
      * 将用户状态设置为非活跃
-     * 
+     *
      * @param uid 用户ID
      * @throws BusinessException 用户不存在时抛出
      */
@@ -291,8 +279,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     /**
      * 更新客户端连接信息
-     * 
-     * @param uid 用户ID
+     *
+     * @param uid    用户ID
      * @param ipPort IP和端口信息，格式为ip:port
      * @throws BusinessException 用户不存在时抛出
      */
@@ -301,17 +289,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public void updateClientConnection(Long uid, String ipPort) {
         User user = userRepository.findById(uid)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
-        
+
         user.setClientConnection(ipPort);
         user.setGmtModify(LocalDateTime.now());
         userRepository.save(user);
-        
+
         log.info("用户 {} 客户端连接信息已更新: {}", user.getPhone(), ipPort);
     }
 
     /**
      * 获取当前登录用户信息
-     * 
+     *
      * @return 用户信息响应
      * @throws BusinessException 用户未登录或不存在时抛出
      */
@@ -331,9 +319,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
     /**
      * 验证手机验证码
-     * 
+     *
      * @param phone 手机号
-     * @param code 验证码
+     * @param code  验证码
      * @return 验证结果，true表示验证通过
      */
     @Override
@@ -344,7 +332,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     /**
      * 根据用户名（手机号）加载用户详情
      * 实现UserDetailsService接口的方法，用于Spring Security认证
-     * 
+     *
      * @param username 用户名（手机号）
      * @return 用户详情
      * @throws UsernameNotFoundException 用户不存在时抛出

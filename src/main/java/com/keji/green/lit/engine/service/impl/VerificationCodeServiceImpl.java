@@ -1,13 +1,13 @@
 package com.keji.green.lit.engine.service.impl;
 
 import com.keji.green.lit.engine.service.VerificationCodeService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
+import jakarta.annotation.Resource;
 import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
@@ -18,13 +18,13 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class VerificationCodeServiceImpl implements VerificationCodeService {
 
     /**
      * 缓存管理器，用于存储验证码
      */
-    private final CacheManager cacheManager;
+    @Resource
+    private CacheManager cacheManager;
     
     /**
      * 随机数生成器
