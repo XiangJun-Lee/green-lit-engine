@@ -1,5 +1,6 @@
 package com.keji.green.lit.engine.service.impl;
 
+import com.keji.green.lit.engine.dao.UserDao;
 import com.keji.green.lit.engine.dto.LoginRequest;
 import com.keji.green.lit.engine.dto.RegisterRequest;
 import com.keji.green.lit.engine.dto.TokenResponse;
@@ -7,7 +8,6 @@ import com.keji.green.lit.engine.dto.UserResponse;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.model.UserRole;
-import com.keji.green.lit.engine.repository.UserRepository;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
@@ -25,7 +25,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
-
 import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
@@ -42,7 +41,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * 用户数据访问层
      */
     @Resource
-    private UserRepository userRepository;
+    private UserDao userDao;
 
     /**
      * 验证码服务
@@ -102,7 +101,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         // 检查用户是否已存在
-        if (userRepository.existsByPhone(request.getPhone())) {
+        if (userDao.existsByPhone(request.getPhone())) {
             throw new BusinessException("该手机号已注册");
         }
 
@@ -116,7 +115,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .gmtCreate(LocalDateTime.now())
                 .build();
 
-        User savedUser = userRepository.save(user);
+        User savedUser = userDao.createUser(user);
         log.info("用户注册成功: {}", savedUser.getPhone());
 
         // 生成token
@@ -152,12 +151,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 获取用户信息
-            User user = userRepository.findByPhone(request.getPhone())
+            User user = userDao.findByPhone(request.getPhone())
                     .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
 
             // 更新最后登录时间
-            user.setLastLoginAt(LocalDateTime.now());
-            userRepository.save(user);
+            user = userDao.updateLastLoginTime(user);
 
             // 生成token
             String token = jwtTokenProvider.createToken(authentication);
@@ -190,12 +188,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         // 获取用户信息
-        User user = userRepository.findByPhone(phone)
+        User user = userDao.findByPhone(phone)
                 .orElseThrow(() -> new BusinessException("用户不存在，请先注册"));
 
         // 更新最后登录时间
-        user.setLastLoginAt(LocalDateTime.now());
-        userRepository.save(user);
+        user = userDao.updateLastLoginTime(user);
 
         // 创建认证信息
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -250,13 +247,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         // 获取用户信息
-        User user = userRepository.findByPhone(phone)
-                .orElseThrow(() -> new BusinessException("用户不存在，请先注册"));
+        User user = userDao.findByPhone(phone)
+                .orElseThrow(() -> new BusinessException("用户不存在"));
 
         // 更新密码
-        user.setPassword(passwordEncoder.encode(newPassword));
-        user.setGmtModify(LocalDateTime.now());
-        userRepository.save(user);
+        userDao.updatePassword(user, passwordEncoder.encode(newPassword));
     }
 
     /**
@@ -269,12 +264,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     public void deactivateAccount(Long uid) {
-        User user = userRepository.findById(uid)
+        User user = userDao.findById(uid)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
 
-        user.setIsActive(false);
-        user.setGmtModify(LocalDateTime.now());
-        userRepository.save(user);
+        userDao.updateUserStatus(user, false);
     }
 
     /**
@@ -287,13 +280,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     public void updateClientConnection(Long uid, String ipPort) {
-        User user = userRepository.findById(uid)
+        User user = userDao.findById(uid)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
 
-        user.setClientConnection(ipPort);
-        user.setGmtModify(LocalDateTime.now());
-        userRepository.save(user);
-
+        user = userDao.updateClientConnection(user, ipPort);
         log.info("用户 {} 客户端连接信息已更新: {}", user.getPhone(), ipPort);
     }
 
@@ -311,7 +301,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         String phone = authentication.getName();
-        User user = userRepository.findByPhone(phone)
+        User user = userDao.findByPhone(phone)
                 .orElseThrow(() -> new BusinessException("用户不存在"));
 
         return UserResponse.fromUser(user);
@@ -339,7 +329,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByPhone(username)
+        return userDao.findByPhone(username)
                 .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
     }
 } 
