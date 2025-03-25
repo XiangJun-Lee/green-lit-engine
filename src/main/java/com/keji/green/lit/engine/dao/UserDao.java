@@ -1,7 +1,8 @@
 package com.keji.green.lit.engine.dao;
 
+import com.keji.green.lit.engine.mapper.UserMapper;
 import com.keji.green.lit.engine.model.User;
-import com.keji.green.lit.engine.repository.UserRepository;
+import com.keji.green.lit.engine.model.UserRole;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
 import java.time.LocalDateTime;
@@ -14,20 +15,20 @@ import java.util.Optional;
 public class UserDao {
     
     @Resource
-    private UserRepository repository;
+    private UserMapper mapper;
 
     /**
      * 根据手机号查询用户
      */
     public Optional<User> findByPhone(String phone) {
-        return repository.findByPhone(phone);
+        return mapper.findByPhone(phone);
     }
 
     /**
      * 检查手机号是否已存在
      */
     public boolean existsByPhone(String phone) {
-        return repository.existsByPhone(phone);
+        return mapper.existsByPhone(phone);
     }
 
     /**
@@ -35,7 +36,17 @@ public class UserDao {
      */
     public User createUser(User user) {
         user.setGmtCreate(LocalDateTime.now());
-        return repository.save(user);
+        if (user.getCreditBalance() == null) {
+            user.setCreditBalance(0);
+        }
+        if (user.getIsActive() == null) {
+            user.setIsActive(true);
+        }
+        if (user.getRole() == null) {
+            user.setRole(UserRole.USER.getCode());
+        }
+        mapper.insert(user);
+        return user;
     }
 
     /**
@@ -43,7 +54,8 @@ public class UserDao {
      */
     public User updateLastLoginTime(User user) {
         user.setLastLoginAt(LocalDateTime.now());
-        return repository.save(user);
+        mapper.updateLastLoginTime(user);
+        return user;
     }
 
     /**
@@ -52,7 +64,8 @@ public class UserDao {
     public User updatePassword(User user, String encodedPassword) {
         user.setPassword(encodedPassword);
         user.setGmtModify(LocalDateTime.now());
-        return repository.save(user);
+        mapper.updatePassword(user);
+        return user;
     }
 
     /**
@@ -61,7 +74,8 @@ public class UserDao {
     public User updateUserStatus(User user, boolean isActive) {
         user.setIsActive(isActive);
         user.setGmtModify(LocalDateTime.now());
-        return repository.save(user);
+        mapper.updateUserStatus(user);
+        return user;
     }
 
     /**
@@ -70,13 +84,14 @@ public class UserDao {
     public User updateClientConnection(User user, String clientConnection) {
         user.setClientConnection(clientConnection);
         user.setGmtModify(LocalDateTime.now());
-        return repository.save(user);
+        mapper.updateClientConnection(user);
+        return user;
     }
 
     /**
      * 根据ID查询用户
      */
     public Optional<User> findById(Long id) {
-        return repository.findById(id);
+        return mapper.findById(id);
     }
 } 

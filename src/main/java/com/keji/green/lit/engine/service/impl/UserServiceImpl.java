@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User user = User.builder()
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(UserRole.USER)
+                .role(UserRole.USER.getCode())
                 .isActive(true)
                 .creditBalance(0)
                 .gmtCreate(LocalDateTime.now())

@@ -1,6 +1,5 @@
 package com.keji.green.lit.engine.model;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,77 +20,61 @@ import java.util.Collections;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "user_info")
 public class User implements UserDetails {
 
     /**
      * 用户ID，主键
      */
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "uid")
     private Long uid;
 
     /**
      * 用户手机号，唯一，用作登录账号
      */
-    @Column(unique = true, nullable = false)
     private String phone;
 
     /**
      * 用户密码，加密存储
      */
-    @Column(nullable = false)
     private String password;
 
     /**
      * 创建时间
      */
-    @Column(name = "gmt_create", nullable = false)
     private LocalDateTime gmtCreate;
 
     /**
      * 更新时间
      */
-    @Column(name = "gmt_modify")
     private LocalDateTime gmtModify;
 
     /**
      * 最后登录时间
      */
-    @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
 
     /**
      * 用户积分余额
      */
-    @Column(name = "credit_balance")
     private Integer creditBalance;
 
     /**
      * 是否激活，false表示账号已注销
      */
-    @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
     /**
      * 用户简历文本
      */
-    @Column(name = "resume_text", columnDefinition = "TEXT")
     private String resumeText;
 
     /**
      * 用户角色
      */
-    @Enumerated(EnumType.STRING)
-    @Column(name = "user_role", nullable = false)
-    private UserRole role;
+    private Integer role;
     
     /**
      * 客户端连接信息 (ip:port)
      */
-    @Column(name = "client_connection")
     private String clientConnection;
 
     /**
@@ -100,7 +83,8 @@ public class User implements UserDetails {
      */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
+        UserRole userRole = UserRole.fromCode(role);
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
     }
 
     /**
@@ -146,32 +130,5 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return isActive;
-    }
-
-    /**
-     * 实体创建前的预处理
-     * 设置创建时间和默认值
-     */
-    @PrePersist
-    protected void onCreate() {
-        gmtCreate = LocalDateTime.now();
-        if (creditBalance == null) {
-            creditBalance = 0;
-        }
-        if (isActive == null) {
-            isActive = true;
-        }
-        if (role == null) {
-            role = UserRole.USER;
-        }
-    }
-
-    /**
-     * 实体更新前的预处理
-     * 设置更新时间
-     */
-    @PreUpdate
-    protected void onUpdate() {
-        gmtModify = LocalDateTime.now();
     }
 } 
