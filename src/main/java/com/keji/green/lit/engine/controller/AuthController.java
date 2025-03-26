@@ -5,10 +5,13 @@ import com.keji.green.lit.engine.dto.RegisterRequest;
 import com.keji.green.lit.engine.dto.TokenResponse;
 import com.keji.green.lit.engine.dto.UserResponse;
 import com.keji.green.lit.engine.service.UserService;
+import com.keji.green.lit.engine.service.RateLimitService;
+import com.keji.green.lit.engine.exception.BusinessException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -32,6 +35,18 @@ public class AuthController {
     private UserService userService;
 
     /**
+     * 频率限制服务
+     */
+    @Resource
+    private RateLimitService rateLimitService;
+
+    /**
+     * HTTP请求对象
+     */
+    @Resource
+    private HttpServletRequest request;
+
+    /**
      * 用户注册
      * 
      * @param request 注册请求，包含手机号、验证码和密码
@@ -50,6 +65,21 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> loginWithPassword(@Valid @RequestBody LoginRequest request) {
+        String ip = getClientIp();
+        String key = "login:" + ip;
+        String phoneKey = "login:phone:" + request.getPhone();
+        
+        // 检查IP登录频率限制：5次/分钟
+        if (rateLimitService.isRateLimited(key, 5, 60)) {
+            throw new BusinessException("登录尝试次数过多，请稍后再试");
+        }
+
+        // 检查手机号发送频率限制：5次/小时
+        if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
+            throw new BusinessException("该手机号发送验证码次数过多，请稍后再试");
+        }
+        
+        rateLimitService.recordAccess(key);
         return ResponseEntity.ok(userService.loginWithPassword(request));
     }
 
@@ -65,6 +95,21 @@ public class AuthController {
             @RequestParam @NotBlank(message = "手机号不能为空") 
             @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone,
             @RequestParam @NotBlank(message = "验证码不能为空") String code) {
+        String ip = getClientIp();
+        String key = "login:code:" + ip;
+        String phoneKey = "login:code:phone:" + phone;
+        
+        // 检查IP登录频率限制：5次/分钟
+        if (rateLimitService.isRateLimited(key, 5, 60)) {
+            throw new BusinessException("登录尝试次数过多，请稍后再试");
+        }
+
+
+        // 检查手机号发送频率限制：5次/小时
+        if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
+            throw new BusinessException("该手机号发送验证码次数过多，请稍后再试");
+        }
+        rateLimitService.recordAccess(key);
         return ResponseEntity.ok(userService.loginWithVerificationCode(phone, code));
     }
 
@@ -78,6 +123,23 @@ public class AuthController {
     public ResponseEntity<Map<String, Object>> sendVerificationCode(
             @RequestParam @NotBlank(message = "手机号不能为空") 
             @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone) {
+        String ip = getClientIp();
+        String ipKey = "code:ip:" + ip;
+        String phoneKey = "code:phone:" + phone;
+
+        // 检查IP发送频率限制：10次/小时
+        if (rateLimitService.isRateLimited(ipKey, 10, 3600)) {
+            throw new BusinessException("发送验证码次数过多，请稍后再试");
+        }
+
+        // 检查手机号发送频率限制：5次/小时
+        if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
+            throw new BusinessException("该手机号发送验证码次数过多，请稍后再试");
+        }
+        
+        rateLimitService.recordAccess(ipKey);
+        rateLimitService.recordAccess(phoneKey);
+        
         userService.requestVerificationCode(phone);
         Map<String, Object> response = new HashMap<>();
         response.put("code", 200);
@@ -166,5 +228,30 @@ public class AuthController {
         response.put("code", 200);
         response.put("message", "客户端连接信息已更新");
         return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 获取客户端IP地址
+     *
+     * @return 客户端IP地址
+     */
+    private String getClientIp() {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_CLIENT_IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
     }
 } 

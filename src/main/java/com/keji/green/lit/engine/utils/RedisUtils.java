@@ -173,4 +173,14 @@ public class RedisUtils {
             closeJedis(jedis);
         }
     }
-} 
+
+    public void incr(String redisKey) {
+        Jedis jedis = null;
+        try {
+            jedis = getJedis();
+            jedis.incr(redisKey);
+        } finally {
+            closeJedis(jedis);
+        }
+    }
+}
