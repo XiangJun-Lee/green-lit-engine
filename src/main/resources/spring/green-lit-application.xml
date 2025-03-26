@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       http://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- 引入属性文件 -->
+    <context:property-placeholder location="classpath:application.properties"/>
+
+    <!-- Redis连接池配置 -->
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!-- 最大连接数 -->
+        <property name="maxTotal" value="${spring.redis.jedis.pool.max-active:8}"/>
+        <!-- 最大空闲连接数 -->
+        <property name="maxIdle" value="${spring.redis.jedis.pool.max-idle:8}"/>
+        <!-- 最小空闲连接数 -->
+        <property name="minIdle" value="${spring.redis.jedis.pool.min-idle:0}"/>
+        <!-- 获取连接时的最大等待时间 -->
+        <property name="maxWaitMillis" value="${spring.redis.jedis.pool.max-wait:3000}"/>
+        <!-- 连接池是否阻塞 -->
+        <property name="blockWhenExhausted" value="true"/>
+        <!-- 连接池的测试配置 -->
+        <property name="testOnBorrow" value="false"/>
+        <property name="testOnReturn" value="false"/>
+        <property name="testWhileIdle" value="true"/>
+        <!-- 连接池的驱逐配置 -->
+        <property name="timeBetweenEvictionRunsMillis" value="30000"/>
+        <property name="minEvictableIdleTimeMillis" value="60000"/>
+        <property name="numTestsPerEvictionRun" value="3"/>
+        <!-- JMX配置 -->
+        <property name="jmxEnabled" value="false"/>
+    </bean>
+
+    <!-- Redis连接池 -->
+    <bean id="jedisPool" class="redis.clients.jedis.JedisPool">
+        <constructor-arg ref="jedisPoolConfig"/>
+        <constructor-arg type="java.lang.String" value="${spring.data.redis.host:localhost}"/>
+        <constructor-arg type="int" value="${spring.data.redis.port:6379}"/>
+        <constructor-arg type="int" value="${spring.data.redis.timeout:2000}"/>
+    </bean>
+
+</beans>
