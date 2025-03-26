@@ -1,16 +1,14 @@
 package com.keji.green.lit.engine.service.impl;
 
 import com.keji.green.lit.engine.service.VerificationCodeService;
+import com.keji.green.lit.engine.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
-import java.util.Objects;
+
 import java.util.Random;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 验证码服务实现类
@@ -20,55 +18,34 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class VerificationCodeServiceImpl implements VerificationCodeService {
 
-    /**
-     * 缓存管理器，用于存储验证码
-     */
+
     @Resource
-    private CacheManager cacheManager;
-    
-    /**
-     * 随机数生成器
-     */
+    private RedisUtils redisUtils;
+
     private final Random random = new Random();
-    
-    /**
-     * 验证码过期时间（秒）
-     */
-    @Value("${sms.verification.expiration:90}")
-    private int codeExpirationSeconds;
-    
-    /**
-     * 验证码缓存名称
-     */
-    private static final String VERIFICATION_CODE_CACHE = "verificationCodes";
+
+    @Value("${sms.verification.expiration:60}")
+    private int verificationCodeExpiration;
 
     /**
      * 生成并发送验证码
-     * 生成6位随机数字验证码并存入缓存
-     * 实际环境中会调用短信服务发送验证码
+     * 生成6位随机数字验证码并通过短信发送给用户
      *
      * @param phone 手机号
      * @return 生成的验证码
      */
     @Override
     public String generateAndSendCode(String phone) {
-        String code = generateRandomCode();
-        
-        // 缓存验证码
-        Cache cache = cacheManager.getCache(VERIFICATION_CODE_CACHE);
-        if (cache != null) {
-            cache.put(phone, code);
-        }
-        
-        // 在实际应用中，这里应该调用短信服务发送验证码
-        log.info("向手机号 {} 发送验证码: {}", phone, code);
-        
+        String code = String.format("%06d", random.nextInt(1000000));
+        String key = "verificationCode:" + phone;
+        redisUtils.set(key, code, verificationCodeExpiration);
+        log.debug("Stored verification code for phone number: {},code:{}", phone, code);
         return code;
     }
 
     /**
      * 验证验证码
-     * 从缓存中获取验证码进行比对，验证成功后自动删除缓存
+     * 验证用户输入的验证码是否与系统生成的一致
      *
      * @param phone 手机号
      * @param code  验证码
@@ -76,29 +53,16 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
      */
     @Override
     public boolean verifyCode(String phone, String code) {
-        Cache cache = cacheManager.getCache(VERIFICATION_CODE_CACHE);
-        if (cache != null) {
-            String cachedCode = cache.get(phone, String.class);
-            boolean isValid = Objects.equals(cachedCode, code);
-            
-            if (isValid) {
-                // 验证成功后删除缓存
-                cache.evict(phone);
-            }
-            
-            return isValid;
+        String key = "verificationCode:" + phone;
+        String storedCode = redisUtils.get(key);
+
+        if (storedCode != null && storedCode.equals(code)) {
+            // 验证成功后删除验证码
+            redisUtils.del(key);
+            log.debug("Verification code verified for phone number: {}", phone);
+            return true;
         }
+        log.debug("Verification code verification failed for phone number: {}", phone);
         return false;
-    }
-    
-    /**
-     * 生成6位随机数字验证码
-     *
-     * @return 6位数字验证码
-     */
-    private String generateRandomCode() {
-        // 生成6位数字验证码
-        int code = 100000 + random.nextInt(900000);
-        return String.valueOf(code);
     }
 } 
