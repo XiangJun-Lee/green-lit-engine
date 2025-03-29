@@ -183,4 +183,17 @@ public class RedisUtils {
             closeJedis(jedis);
         }
     }
+
+    /**
+     * 增加计数并获取新值
+     */
+    public String incrAndGet(String key) {
+        Jedis jedis = null;
+        try {
+            jedis = getJedis();
+            return String.valueOf(jedis.incr(key));
+        } finally {
+            closeJedis(jedis);
+        }
+    }
 }

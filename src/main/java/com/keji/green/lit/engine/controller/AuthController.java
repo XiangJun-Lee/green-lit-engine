@@ -19,6 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.keji.green.lit.engine.exception.ErrorCode.RATE_LIMIT_EXCEEDED;
+import static com.keji.green.lit.engine.utils.Constants.*;
+
 /**
  * 认证控制器
  * 处理用户注册、登录、登出和账号管理等认证相关请求
@@ -66,20 +69,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<TokenResponse> loginWithPassword(@Valid @RequestBody LoginRequest request) {
         String ip = getClientIp();
-        String key = "login:" + ip;
-        String phoneKey = "login:phone:" + request.getPhone();
-        
+        String ipLimitKey = String.format(PASSWORD_LOGIN_IP_KEY, ip);
+        String phoneLimitKey = String.format(PASSWORD_LOGIN_PHONE_KEY, request.getPhone());
         // 检查IP登录频率限制：5次/分钟
-        if (rateLimitService.isRateLimited(key, 5, 60)) {
-            throw new BusinessException("登录尝试次数过多，请稍后再试");
+        if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
+            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "登录尝试次数过多，请1分钟后再试");
+        }
+        // 检查手机号发送频率限制：5次/小时
+        if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
+            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "该手机号登录尝试次数过多，请1分钟后再试");
         }
 
-        // 检查手机号发送频率限制：5次/小时
-        if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
-            throw new BusinessException("该手机号发送验证码次数过多，请稍后再试");
-        }
-        
-        rateLimitService.recordAccess(key);
         return ResponseEntity.ok(userService.loginWithPassword(request));
     }
 
@@ -101,15 +101,14 @@ public class AuthController {
         
         // 检查IP登录频率限制：5次/分钟
         if (rateLimitService.isRateLimited(key, 5, 60)) {
-            throw new BusinessException("登录尝试次数过多，请稍后再试");
+            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"登录尝试次数过多，请稍后再试");
         }
 
 
         // 检查手机号发送频率限制：5次/小时
         if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
-            throw new BusinessException("该手机号发送验证码次数过多，请稍后再试");
+            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
         }
-        rateLimitService.recordAccess(key);
         return ResponseEntity.ok(userService.loginWithVerificationCode(phone, code));
     }
 
@@ -129,16 +128,13 @@ public class AuthController {
 
         // 检查IP发送频率限制：10次/小时
         if (rateLimitService.isRateLimited(ipKey, 10, 3600)) {
-            throw new BusinessException("发送验证码次数过多，请稍后再试");
+            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"发送验证码次数过多，请稍后再试");
         }
 
         // 检查手机号发送频率限制：5次/小时
         if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
-            throw new BusinessException("该手机号发送验证码次数过多，请稍后再试");
+            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
         }
-        
-        rateLimitService.recordAccess(ipKey);
-        rateLimitService.recordAccess(phoneKey);
         
         userService.requestVerificationCode(phone);
         Map<String, Object> response = new HashMap<>();

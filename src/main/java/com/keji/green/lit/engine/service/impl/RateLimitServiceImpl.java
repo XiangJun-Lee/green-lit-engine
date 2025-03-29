@@ -1,25 +1,27 @@
 package com.keji.green.lit.engine.service.impl;
 
+import com.keji.green.lit.engine.exception.BusinessException;
+import com.keji.green.lit.engine.exception.ErrorCode;
 import com.keji.green.lit.engine.service.RateLimitService;
 import com.keji.green.lit.engine.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
-import java.util.concurrent.TimeUnit;
+
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 频率限制服务实现类
  * 使用Redis实现访问频率限制
+ * @author xiangjun_lee
  */
 @Slf4j
 @Service
 public class RateLimitServiceImpl implements RateLimitService {
 
     /**
-     * Redis模板
+     * Redis工具类
      */
     @Resource
     private RedisUtils redisUtils;
@@ -32,19 +34,12 @@ public class RateLimitServiceImpl implements RateLimitService {
     @Override
     public boolean isRateLimited(String key, int limit, int periodSeconds) {
         String redisKey = RATE_LIMIT_KEY_PREFIX + key;
-        String countString = redisUtils.get(redisKey);
-        if (StringUtils.isBlank(countString)){
-            return false;
+        // 使用 Redis 的 INCR 命令原子性地增加计数并获取新值
+        int count = Integer.parseInt(redisUtils.incrAndGet(redisKey));
+        // 如果是第一次访问，设置过期时间
+        if (count == INTEGER_ONE) {
+            redisUtils.expire(redisKey, periodSeconds);
         }
-        int count = Integer.parseInt(countString);
-        return count >= limit;
-    }
-
-    @Override
-    public void recordAccess(String key) {
-        String redisKey = RATE_LIMIT_KEY_PREFIX + key;
-        redisUtils.incr(redisKey);
-        // 设置过期时间
-        redisUtils.expire(redisKey, 3600);
+        return count > limit;
     }
 } 

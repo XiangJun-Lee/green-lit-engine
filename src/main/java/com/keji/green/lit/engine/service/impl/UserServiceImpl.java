@@ -26,12 +26,16 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
 import java.time.LocalDateTime;
+import java.util.Optional;
 import java.util.regex.Pattern;
+
+import static com.keji.green.lit.engine.exception.ErrorCode.*;
 
 /**
  * 用户服务实现类
  * 实现用户管理相关的业务逻辑
  * 同时实现UserDetailsService接口以支持Spring Security认证
+ * @author xiangjun_lee
  */
 @Slf4j
 @Service
@@ -92,17 +96,17 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public TokenResponse register(RegisterRequest request) {
         // 验证手机号格式
         if (!PHONE_PATTERN.matcher(request.getPhone()).matches()) {
-            throw new BusinessException("手机号格式不正确");
+            throw new BusinessException(PARAM_ERROR.getCode(), "手机号格式不正确");
         }
 
         // 验证验证码
         if (!verificationCodeService.verifyCode(request.getPhone(), request.getVerificationCode())) {
-            throw new BusinessException("验证码错误或已过期");
+            throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误或已过期");
         }
 
         // 检查用户是否已存在
         if (userDao.existsByPhone(request.getPhone())) {
-            throw new BusinessException("该手机号已注册");
+            throw new BusinessException(PARAM_ERROR.getCode(), "该手机号已注册");
         }
 
         // 创建用户
@@ -151,9 +155,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
             // 获取用户信息
-            User user = userDao.findByPhone(request.getPhone())
-                    .orElseThrow(() -> new UsernameNotFoundException("用户不存在"));
-
+            Optional<User> userOptional = userDao.findByPhone(request.getPhone());
+            if (userOptional.isEmpty()) {
+                throw new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在");
+            }
+            User user = userOptional.get();
             // 更新最后登录时间
             user = userDao.updateLastLoginTime(user);
 
@@ -162,7 +168,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
             return TokenResponse.of(token, user.getUid(), user.getPhone());
         } catch (Exception e) {
-            throw new BusinessException("用户名或密码错误", e);
+            throw new BusinessException(PARAM_ERROR.getCode(), "用户名或密码错误");
         }
     }
 
@@ -184,12 +190,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public TokenResponse loginWithVerificationCode(String phone, String code) {
         // 验证验证码
         if (!verificationCodeService.verifyCode(phone, code)) {
-            throw new BusinessException("验证码错误或已过期");
+            throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误或已过期");
         }
 
         // 获取用户信息
         User user = userDao.findByPhone(phone)
-                .orElseThrow(() -> new BusinessException("用户不存在，请先注册"));
+                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在，请先注册"));
 
         // 更新最后登录时间
         user = userDao.updateLastLoginTime(user);
@@ -220,7 +226,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public void requestVerificationCode(String phone) {
         // 验证手机号格式
         if (!PHONE_PATTERN.matcher(phone).matches()) {
-            throw new BusinessException("手机号格式不正确");
+            throw new BusinessException(PARAM_ERROR.getCode(), "手机号格式不正确");
         }
 
         // 生成并发送验证码
@@ -243,12 +249,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public void resetPassword(String phone, String verificationCode, String newPassword) {
         // 验证验证码
         if (!verificationCodeService.verifyCode(phone, verificationCode)) {
-            throw new BusinessException("验证码错误或已过期");
+            throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误或已过期");
         }
 
         // 获取用户信息
         User user = userDao.findByPhone(phone)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
 
         // 更新密码
         userDao.updatePassword(user, passwordEncoder.encode(newPassword));
@@ -265,7 +271,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional
     public void deactivateAccount(Long uid) {
         User user = userDao.findById(uid)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
 
         userDao.updateUserStatus(user, false);
     }
@@ -281,7 +287,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Transactional
     public void updateClientConnection(Long uid, String ipPort) {
         User user = userDao.findById(uid)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
 
         user = userDao.updateClientConnection(user, ipPort);
         log.info("用户 {} 客户端连接信息已更新: {}", user.getPhone(), ipPort);
@@ -297,12 +303,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public UserResponse getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BusinessException("用户未登录");
+            throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
         }
 
         String phone = authentication.getName();
         User user = userDao.findByPhone(phone)
-                .orElseThrow(() -> new BusinessException("用户不存在"));
+                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
 
         return UserResponse.fromUser(user);
     }
