@@ -4,7 +4,7 @@ package com.keji.green.lit.engine.integration;
  * 短信服务防腐层接口
  * 用于隔离外部短信平台的具体实现
  */
-public interface SmsPort {
+public interface SmsWrapService {
     
     /**
      * 发送验证码短信

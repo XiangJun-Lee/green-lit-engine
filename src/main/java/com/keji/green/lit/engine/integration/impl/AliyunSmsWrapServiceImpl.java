@@ -2,7 +2,7 @@ package com.keji.green.lit.engine.integration.impl;
 
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.exception.ErrorCode;
-import com.keji.green.lit.engine.integration.SmsPort;
+import com.keji.green.lit.engine.integration.SmsWrapService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import java.util.Random;
  */
 @Slf4j
 @Component
-public class AliyunSmsPortImpl implements SmsPort {
+public class AliyunSmsWrapServiceImpl implements SmsWrapService {
 
     @Value("${aliyun.sms.access-key-id}")
     private String accessKeyId;

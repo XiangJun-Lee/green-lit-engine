@@ -7,7 +7,6 @@ import com.keji.green.lit.engine.dto.TokenResponse;
 import com.keji.green.lit.engine.dto.UserResponse;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.RateLimitService;
-import com.keji.green.lit.engine.service.SmsService;
 import com.keji.green.lit.engine.exception.BusinessException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.*;
 
 import static com.keji.green.lit.engine.exception.ErrorCode.RATE_LIMIT_EXCEEDED;
 import static com.keji.green.lit.engine.utils.Constants.*;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 认证控制器
@@ -42,12 +40,6 @@ public class AuthController {
      */
     @Resource
     private RateLimitService rateLimitService;
-
-    /**
-     * 短信服务
-     */
-    @Resource
-    private SmsService smsService;
 
     /**
      * HTTP请求对象
@@ -140,8 +132,8 @@ public class AuthController {
         if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
         }
-        
-        smsService.sendVerificationCode(phone);
+
+        userService.requestVerificationCode(phone);
         return Result.success();
     }
 

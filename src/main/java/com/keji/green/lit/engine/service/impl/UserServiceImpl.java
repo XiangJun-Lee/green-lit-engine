@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
-import java.util.Date;
+
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -190,9 +190,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
 
         // 获取用户信息
-        User user = userDao.findByPhone(phone)
-                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在，请先注册"));
-
+        Optional<User> userOptional = userDao.findByPhone(phone);
+        if (userOptional.isEmpty()) {
+            throw new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在");
+        }
+        User user = userOptional.get();
         // 更新最后登录时间
         user = userDao.updateLastLoginTime(user);
 
