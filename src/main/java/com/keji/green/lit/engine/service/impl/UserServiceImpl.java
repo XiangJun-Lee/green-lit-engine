@@ -25,7 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.annotation.Resource;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
@@ -98,15 +98,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if (!PHONE_PATTERN.matcher(request.getPhone()).matches()) {
             throw new BusinessException(PARAM_ERROR.getCode(), "手机号格式不正确");
         }
-
         // 验证验证码
         if (!verificationCodeService.verifyCode(request.getPhone(), request.getVerificationCode())) {
-            throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误或已过期");
+            throw new BusinessException(VERIFICATION_CODE_ERROR);
         }
-
         // 检查用户是否已存在
         if (userDao.existsByPhone(request.getPhone())) {
-            throw new BusinessException(PARAM_ERROR.getCode(), "该手机号已注册");
+            throw new BusinessException(USER_ALREADY_EXISTS.getCode(), "该手机号已注册");
         }
 
         // 创建用户
@@ -115,8 +113,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.USER.getCode())
                 .isActive(true)
-                .creditBalance(0)
-                .gmtCreate(LocalDateTime.now())
+                .creditBalance(10)
+//                .gmtCreate(new Date())
                 .build();
 
         User savedUser = userDao.createUser(user);
@@ -228,9 +226,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if (!PHONE_PATTERN.matcher(phone).matches()) {
             throw new BusinessException(PARAM_ERROR.getCode(), "手机号格式不正确");
         }
-
         // 生成并发送验证码
-        verificationCodeService.generateAndSendCode(phone);
+        String code = verificationCodeService.generateAndSendCode(phone);
+        // todo 接发送短信三方平台
     }
 
     /**

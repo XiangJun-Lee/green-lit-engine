@@ -8,9 +8,9 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 
 /**
  * 用户实体类
@@ -40,17 +40,17 @@ public class User implements UserDetails {
     /**
      * 创建时间
      */
-    private LocalDateTime gmtCreate;
+    private Date gmtCreate;
 
     /**
      * 更新时间
      */
-    private LocalDateTime gmtModify;
+    private Date gmtModify;
 
     /**
      * 最后登录时间
      */
-    private LocalDateTime lastLoginAt;
+    private Date lastLoginAt;
 
     /**
      * 用户积分余额

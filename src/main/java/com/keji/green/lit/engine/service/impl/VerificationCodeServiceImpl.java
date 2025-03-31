@@ -1,8 +1,10 @@
 package com.keji.green.lit.engine.service.impl;
 
+import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.service.VerificationCodeService;
 import com.keji.green.lit.engine.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -10,9 +12,12 @@ import jakarta.annotation.Resource;
 
 import java.util.Random;
 
+import static com.keji.green.lit.engine.exception.ErrorCode.*;
+
 /**
  * 验证码服务实现类
  * 提供验证码的生成、缓存和验证功能
+ * @author xiangjun_lee
  */
 @Slf4j
 @Service
@@ -55,14 +60,14 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     public boolean verifyCode(String phone, String code) {
         String key = "verificationCode:" + phone;
         String storedCode = redisUtils.get(key);
-
-        if (storedCode != null && storedCode.equals(code)) {
+        if (StringUtils.isBlank(storedCode)){
+            throw new BusinessException(VERIFICATION_CODE_EXPIRED);
+        }
+        if (storedCode.equals(code)) {
             // 验证成功后删除验证码
             redisUtils.del(key);
-            log.debug("Verification code verified for phone number: {}", phone);
             return true;
         }
-        log.debug("Verification code verification failed for phone number: {}", phone);
         return false;
     }
 } 

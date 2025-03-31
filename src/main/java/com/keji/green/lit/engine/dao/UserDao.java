@@ -5,7 +5,7 @@ import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.model.UserRole;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -35,7 +35,7 @@ public class UserDao {
      * 创建新用户
      */
     public User createUser(User user) {
-        user.setGmtCreate(LocalDateTime.now());
+//        user.setGmtCreate(new Date());
         if (user.getCreditBalance() == null) {
             user.setCreditBalance(0);
         }
@@ -45,7 +45,7 @@ public class UserDao {
         if (user.getRole() == null) {
             user.setRole(UserRole.USER.getCode());
         }
-        mapper.insert(user);
+        mapper.insertSelective(user);
         return user;
     }
 
@@ -53,7 +53,7 @@ public class UserDao {
      * 更新用户最后登录时间
      */
     public User updateLastLoginTime(User user) {
-        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginAt(new Date());
         mapper.updateLastLoginTime(user);
         return user;
     }
@@ -63,7 +63,7 @@ public class UserDao {
      */
     public User updatePassword(User user, String encodedPassword) {
         user.setPassword(encodedPassword);
-        user.setGmtModify(LocalDateTime.now());
+        user.setGmtModify(new Date());
         mapper.updatePassword(user);
         return user;
     }
@@ -73,7 +73,7 @@ public class UserDao {
      */
     public User updateUserStatus(User user, boolean isActive) {
         user.setIsActive(isActive);
-        user.setGmtModify(LocalDateTime.now());
+        user.setGmtModify(new Date());
         mapper.updateUserStatus(user);
         return user;
     }
@@ -83,7 +83,7 @@ public class UserDao {
      */
     public User updateClientConnection(User user, String clientConnection) {
         user.setClientConnection(clientConnection);
-        user.setGmtModify(LocalDateTime.now());
+        user.setGmtModify(new Date());
         mapper.updateClientConnection(user);
         return user;
     }

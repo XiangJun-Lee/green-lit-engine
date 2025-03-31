@@ -6,7 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * 用户信息响应DTO
@@ -31,12 +31,12 @@ public class UserResponse {
     /**
      * 账号创建时间
      */
-    private LocalDateTime gmtCreate;
+    private Date gmtCreate;
     
     /**
      * 最后登录时间
      */
-    private LocalDateTime lastLoginAt;
+    private Date lastLoginAt;
     
     /**
      * 积分余额

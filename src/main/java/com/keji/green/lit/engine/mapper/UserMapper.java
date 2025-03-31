@@ -26,6 +26,8 @@ public interface UserMapper {
      */
     int insert(User user);
 
+    int insertSelective(User user);
+
     /**
      * 更新用户最后登录时间
      */

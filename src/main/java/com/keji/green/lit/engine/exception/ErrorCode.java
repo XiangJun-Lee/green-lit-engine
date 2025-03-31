@@ -15,6 +15,8 @@ public enum ErrorCode {
     
     // 业务级错误码 (2000-2999)
     RATE_LIMIT_EXCEEDED(2000, "访问频率超限"),
+    VERIFICATION_CODE_ERROR(2001, "验证码错误"),
+    VERIFICATION_CODE_EXPIRED(2002, "验证码过期"),
     
     // 权限相关错误码 (3000-3999)
     UNAUTHORIZED(3000, "未授权访问"),
@@ -25,7 +27,8 @@ public enum ErrorCode {
     DATA_NOT_FOUND(4000, "数据不存在"),
     DATA_ALREADY_EXISTS(4001, "数据已存在"),
     USER_NOT_EXIST(4002, "用户不存在"),
-    
+    USER_ALREADY_EXISTS(4003, "用户已存在"),
+
     // 外部服务错误码 (5000-5999)
     EXTERNAL_SERVICE_ERROR(5000, "外部服务调用失败");
 
