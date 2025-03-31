@@ -78,6 +78,11 @@ public class User implements UserDetails {
     private String clientConnection;
 
     /**
+     * 用户邮箱
+     */
+    private String email;
+
+    /**
      * 获取用户权限信息
      * @return 用户权限集合
      */

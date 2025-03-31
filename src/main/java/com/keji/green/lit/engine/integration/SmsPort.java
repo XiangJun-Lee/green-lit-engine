@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.port;
+package com.keji.green.lit.engine.integration;
 
 /**
  * 短信服务防腐层接口

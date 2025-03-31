@@ -113,12 +113,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(UserRole.USER.getCode())
                 .isActive(true)
-                .creditBalance(10)
-//                .gmtCreate(new Date())
+                .email(request.getEmail())
                 .build();
 
         User savedUser = userDao.createUser(user);
-        log.info("用户注册成功: {}", savedUser.getPhone());
 
         // 生成token
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -321,6 +319,30 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public boolean verifyCode(String phone, String code) {
         return verificationCodeService.verifyCode(phone, code);
+    }
+
+    /**
+     * 检查手机号是否已注册且账号处于活跃状态
+     *
+     * @param phone 手机号
+     * @return true表示已注册且活跃，false表示未注册或已注销
+     */
+    @Override
+    public boolean isPhoneRegisteredAndActive(String phone) {
+        // 验证手机号格式
+        if (!PHONE_PATTERN.matcher(phone).matches()) {
+            return false;
+        }
+        
+        // 查询用户信息
+        Optional<User> userOptional = userDao.findByPhone(phone);
+        if (userOptional.isEmpty()) {
+            return false;
+        }
+        
+        // 检查用户状态
+        User user = userOptional.get();
+        return Boolean.TRUE.equals(user.getIsActive());
     }
 
     /**

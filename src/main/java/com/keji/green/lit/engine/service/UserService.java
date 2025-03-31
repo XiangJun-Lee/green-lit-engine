@@ -4,12 +4,13 @@ import com.keji.green.lit.engine.dto.LoginRequest;
 import com.keji.green.lit.engine.dto.RegisterRequest;
 import com.keji.green.lit.engine.dto.TokenResponse;
 import com.keji.green.lit.engine.dto.UserResponse;
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 /**
  * 用户服务接口
  * 提供用户管理相关的业务逻辑操作
  */
-public interface UserService {
+public interface UserService extends UserDetailsService {
     
     /**
      * 用户注册
@@ -82,4 +83,12 @@ public interface UserService {
      * @param ipPort IP和端口信息，格式为ip:port
      */
     void updateClientConnection(Long uid, String ipPort);
+
+    /**
+     * 检查手机号是否已注册且账号处于活跃状态
+     *
+     * @param phone 手机号
+     * @return true表示已注册且活跃，false表示未注册或已注销
+     */
+    boolean isPhoneRegisteredAndActive(String phone);
 } 

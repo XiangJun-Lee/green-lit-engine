@@ -14,11 +14,12 @@
         <result column="resume_text" property="resumeText"/>
         <result column="user_role" property="role"/>
         <result column="client_connection" property="clientConnection"/>
+        <result column="email" property="email"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         uid, phone, password, gmt_create, gmt_modify, last_login_at, credit_balance,
-        is_active, resume_text, user_role, client_connection
+        is_active, resume_text, user_role, client_connection, email
     </sql>
 
     <select id="findByPhone" resultMap="BaseResultMap">
@@ -35,9 +36,9 @@
 
     <insert id="insert" parameterType="User" useGeneratedKeys="true" keyProperty="uid">
         INSERT INTO user_info (
-            phone, password, gmt_create, credit_balance, is_active, user_role
+            phone, password, gmt_create, credit_balance, is_active, user_role, email
         ) VALUES (
-            #{phone}, #{password}, #{gmtCreate}, #{creditBalance}, #{isActive}, #{role}
+            #{phone}, #{password}, #{gmtCreate}, #{creditBalance}, #{isActive}, #{role}, #{email}
         )
     </insert>
 
@@ -74,6 +75,9 @@
             <if test="clientConnection != null">
                 client_connection,
             </if>
+            <if test="email != null">
+                email,
+            </if>
         </trim>
         <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
             <if test="phone != null">
@@ -105,6 +109,9 @@
             </if>
             <if test="clientConnection != null">
                 #{clientConnection},
+            </if>
+            <if test="email != null">
+                #{email},
             </if>
         </trim>
     </insert>

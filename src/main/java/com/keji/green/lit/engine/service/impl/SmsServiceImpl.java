@@ -2,7 +2,7 @@ package com.keji.green.lit.engine.service.impl;
 
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.exception.ErrorCode;
-import com.keji.green.lit.engine.port.SmsPort;
+import com.keji.green.lit.engine.integration.SmsPort;
 import com.keji.green.lit.engine.service.SmsService;
 import com.keji.green.lit.engine.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.Resource;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 短信服务实现类
