@@ -1,8 +1,9 @@
 package com.keji.green.lit.engine.dao;
 
+import com.keji.green.lit.engine.exception.BusinessException;
+import com.keji.green.lit.engine.exception.ErrorCode;
 import com.keji.green.lit.engine.mapper.UserMapper;
 import com.keji.green.lit.engine.model.User;
-import com.keji.green.lit.engine.model.UserRole;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
 import java.util.Date;
@@ -21,7 +22,7 @@ public class UserDao {
      * 根据手机号查询用户
      */
     public Optional<User> findByPhone(String phone) {
-        return mapper.findByPhone(phone);
+        return mapper.selectByPhone(phone);
     }
 
     /**
@@ -35,63 +36,46 @@ public class UserDao {
      * 创建新用户
      */
     public User createUser(User user) {
-//        user.setGmtCreate(new Date());
-        if (user.getCreditBalance() == null) {
-            user.setCreditBalance(0);
+        if (mapper.insertSelective(user)>0){
+            return user;
         }
-        if (user.getIsActive() == null) {
-            user.setIsActive(true);
-        }
-        if (user.getRole() == null) {
-            user.setRole(UserRole.USER.getCode());
-        }
-        mapper.insertSelective(user);
-        return user;
+        throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "写入用户信息失败");
     }
 
     /**
      * 更新用户最后登录时间
      */
-    public User updateLastLoginTime(User user) {
-        user.setLastLoginAt(new Date());
-        mapper.updateLastLoginTime(user);
-        return user;
+    public int updateLastLoginTime(Long uid) {
+        User user = new User();
+        user.setUid(uid);
+        user.setLastLoginTime(new Date());
+        return mapper.updateSelectiveByUid(user);
     }
 
     /**
      * 更新用户密码
      */
-    public User updatePassword(User user, String encodedPassword) {
+    public int updatePassword(Long uid, String encodedPassword) {
+        User user = new User();
+        user.setUid(uid);
         user.setPassword(encodedPassword);
-        user.setGmtModify(new Date());
-        mapper.updatePassword(user);
-        return user;
+        return mapper.updateSelectiveByUid(user);
     }
 
     /**
      * 更新用户状态
      */
-    public User updateUserStatus(User user, boolean isActive) {
-        user.setIsActive(isActive);
-        user.setGmtModify(new Date());
-        mapper.updateUserStatus(user);
-        return user;
-    }
-
-    /**
-     * 更新用户客户端连接信息
-     */
-    public User updateClientConnection(User user, String clientConnection) {
-        user.setClientConnection(clientConnection);
-        user.setGmtModify(new Date());
-        mapper.updateClientConnection(user);
-        return user;
+    public int updateUserStatus(Long uid, int userStatus) {
+        User user = new User();
+        user.setUid(uid);
+        user.setStatus(userStatus);
+        return mapper.updateSelectiveByUid(user);
     }
 
     /**
      * 根据ID查询用户
      */
-    public Optional<User> findById(Long id) {
-        return mapper.findById(id);
+    public Optional<User> findById(Long uid) {
+        return mapper.selectByUid(uid);
     }
 } 

@@ -75,14 +75,6 @@ public interface UserService extends UserDetailsService {
      * @return 验证结果，true表示验证通过
      */
     boolean verifyCode(String phone, String code);
-    
-    /**
-     * 更新客户端连接信息
-     * 
-     * @param uid 用户ID
-     * @param ipPort IP和端口信息，格式为ip:port
-     */
-    void updateClientConnection(Long uid, String ipPort);
 
     /**
      * 检查手机号是否已注册且账号处于活跃状态

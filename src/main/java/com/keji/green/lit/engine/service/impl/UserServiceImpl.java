@@ -5,9 +5,10 @@ import com.keji.green.lit.engine.dto.LoginRequest;
 import com.keji.green.lit.engine.dto.RegisterRequest;
 import com.keji.green.lit.engine.dto.TokenResponse;
 import com.keji.green.lit.engine.dto.UserResponse;
+import com.keji.green.lit.engine.enums.UserStatusEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
-import com.keji.green.lit.engine.model.UserRole;
+import com.keji.green.lit.engine.enums.UserRole;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
@@ -111,8 +112,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         User user = User.builder()
                 .phone(request.getPhone())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(UserRole.USER.getCode())
-                .isActive(true)
+                .userRole(UserRole.USER.getCode())
                 .email(request.getEmail())
                 .build();
 
@@ -157,11 +157,13 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             }
             User user = userOptional.get();
             // 更新最后登录时间
-            user = userDao.updateLastLoginTime(user);
-
+            try {
+                userDao.updateLastLoginTime(user.getUid());
+            } catch (Exception e) {
+                log.error("更新用户最后登录时间失败", e);
+            }
             // 生成token
             String token = jwtTokenProvider.createToken(authentication);
-
             return TokenResponse.of(token, user.getUid(), user.getPhone());
         } catch (Exception e) {
             throw new BusinessException(PARAM_ERROR.getCode(), "用户名或密码错误");
@@ -196,7 +198,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         }
         User user = userOptional.get();
         // 更新最后登录时间
-        user = userDao.updateLastLoginTime(user);
+        try {
+            userDao.updateLastLoginTime(user.getUid());
+        } catch (Exception e) {
+            log.warn("更新用户最后登录时间失败", e);
+        }
 
         // 创建认证信息
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -255,7 +261,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
 
         // 更新密码
-        userDao.updatePassword(user, passwordEncoder.encode(newPassword));
+        userDao.updatePassword(user.getUid(), passwordEncoder.encode(newPassword));
     }
 
     /**
@@ -270,25 +276,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public void deactivateAccount(Long uid) {
         User user = userDao.findById(uid)
                 .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
-
-        userDao.updateUserStatus(user, false);
-    }
-
-    /**
-     * 更新客户端连接信息
-     *
-     * @param uid    用户ID
-     * @param ipPort IP和端口信息，格式为ip:port
-     * @throws BusinessException 用户不存在时抛出
-     */
-    @Override
-    @Transactional
-    public void updateClientConnection(Long uid, String ipPort) {
-        User user = userDao.findById(uid)
-                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
-
-        user = userDao.updateClientConnection(user, ipPort);
-        log.info("用户 {} 客户端连接信息已更新: {}", user.getPhone(), ipPort);
+        userDao.updateUserStatus(user.getUid(), UserStatusEnum.CANCELLED.getCode());
     }
 
     /**
@@ -335,16 +323,14 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         if (!PHONE_PATTERN.matcher(phone).matches()) {
             return false;
         }
-        
         // 查询用户信息
         Optional<User> userOptional = userDao.findByPhone(phone);
         if (userOptional.isEmpty()) {
             return false;
         }
-        
         // 检查用户状态
         User user = userOptional.get();
-        return Boolean.TRUE.equals(user.getIsActive());
+        return UserStatusEnum.isNormal(user.getStatus());
     }
 
     /**

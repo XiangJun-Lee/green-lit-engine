@@ -1,5 +1,7 @@
 package com.keji.green.lit.engine.model;
 
+import com.keji.green.lit.engine.enums.UserRole;
+import com.keji.green.lit.engine.enums.UserStatusEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -8,34 +10,61 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 
 /**
- * 用户实体类
- * 实现UserDetails接口以支持Spring Security认证
+ * @author xiangjun_lee
  */
 @Data
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 public class User implements UserDetails {
 
     /**
-     * 用户ID，主键
+     * 用户id
      */
     private Long uid;
 
     /**
-     * 用户手机号，唯一，用作登录账号
+     * 积分余额
+     */
+    private Integer pointsBalance;
+
+    /**
+     * 状态
+     */
+    private Integer status;
+
+    /**
+     * 最后登录时间
+     */
+    private Date lastLoginTime;
+
+    /**
+     * 密码
+     */
+    private String password;
+
+    /**
+     * 手机号
      */
     private String phone;
 
     /**
-     * 用户密码，加密存储
+     * 用户角色
      */
-    private String password;
+    private Integer userRole;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
+    /**
+     * 注册时间
+     */
+    private Date registrationTime;
 
     /**
      * 创建时间
@@ -43,97 +72,43 @@ public class User implements UserDetails {
     private Date gmtCreate;
 
     /**
-     * 更新时间
+     * 修改时间
      */
     private Date gmtModify;
 
     /**
-     * 最后登录时间
-     */
-    private Date lastLoginAt;
-
-    /**
-     * 用户积分余额
-     */
-    private Integer creditBalance;
-
-    /**
-     * 是否激活，false表示账号已注销
-     */
-    private Boolean isActive;
-
-    /**
-     * 用户简历文本
+     * 简历文本
      */
     private String resumeText;
 
-    /**
-     * 用户角色
-     */
-    private Integer role;
-    
-    /**
-     * 客户端连接信息 (ip:port)
-     */
-    private String clientConnection;
-
-    /**
-     * 用户邮箱
-     */
-    private String email;
-
-    /**
-     * 获取用户权限信息
-     * @return 用户权限集合
-     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        UserRole userRole = UserRole.fromCode(role);
-        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + userRole.name()));
+        UserRole role = UserRole.fromCode(userRole);
+        return Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role.name()));
     }
 
-    /**
-     * 获取用户名（手机号）
-     * @return 用户手机号
-     */
     @Override
     public String getUsername() {
-        return phone;
+        return "";
     }
 
-    /**
-     * 账号是否未过期
-     * @return true表示未过期
-     */
     @Override
     public boolean isAccountNonExpired() {
-        return isActive;
+        return UserStatusEnum.isNormal(status);
     }
 
-    /**
-     * 账号是否未锁定
-     * @return true表示未锁定
-     */
     @Override
     public boolean isAccountNonLocked() {
-        return isActive;
+        return UserStatusEnum.isNormal(status);
     }
 
-    /**
-     * 凭证是否未过期
-     * @return true表示未过期
-     */
     @Override
     public boolean isCredentialsNonExpired() {
-        return isActive;
+        return UserStatusEnum.isNormal(status);
     }
 
-    /**
-     * 账号是否启用
-     * @return true表示启用
-     */
     @Override
     public boolean isEnabled() {
-        return isActive;
+        return UserStatusEnum.isNormal(status);
     }
-} 
+}

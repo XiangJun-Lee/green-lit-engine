@@ -28,6 +28,8 @@ public enum ErrorCode {
     DATA_ALREADY_EXISTS(4001, "数据已存在"),
     USER_NOT_EXIST(4002, "用户不存在"),
     USER_ALREADY_EXISTS(4003, "用户已存在"),
+    DATABASE_WRITE_ERROR(4004, "数据库写入失败"),
+
 
     // 外部服务错误码 (5000-5999)
     EXTERNAL_SERVICE_ERROR(5000, "外部服务调用失败");

@@ -3,6 +3,7 @@ package com.keji.green.lit.engine.mapper;
 import com.keji.green.lit.engine.model.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+
 import java.util.Optional;
 
 /**
@@ -10,46 +11,34 @@ import java.util.Optional;
  */
 @Mapper
 public interface UserMapper {
-    
+
+    /**
+     * 插入用户
+     */
+    int insertSelective(User row);
+
+    /**
+     * 根据主键查询用户
+     */
+    Optional<User> selectByUid(Long uid);
+
     /**
      * 根据手机号查询用户
      */
-    Optional<User> findByPhone(@Param("phone") String phone);
+    Optional<User> selectByPhone(String phone);
+
+    /**
+     * 根据主键更新用户
+     */
+    int updateSelectiveByUid(User row);
+
+    /**
+     * 根据手机号更新用户
+     */
+    int updateByPhoneSelective(User row);
 
     /**
      * 检查手机号是否已存在
      */
     boolean existsByPhone(@Param("phone") String phone);
-
-    /**
-     * 创建新用户
-     */
-    int insert(User user);
-
-    int insertSelective(User user);
-
-    /**
-     * 更新用户最后登录时间
-     */
-    int updateLastLoginTime(User user);
-
-    /**
-     * 更新用户密码
-     */
-    int updatePassword(User user);
-
-    /**
-     * 更新用户状态
-     */
-    int updateUserStatus(User user);
-
-    /**
-     * 更新用户客户端连接信息
-     */
-    int updateClientConnection(User user);
-
-    /**
-     * 根据ID查询用户
-     */
-    Optional<User> findById(@Param("uid") Long uid);
-} 
+}

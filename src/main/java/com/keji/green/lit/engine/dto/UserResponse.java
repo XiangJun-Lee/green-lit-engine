@@ -36,12 +36,12 @@ public class UserResponse {
     /**
      * 最后登录时间
      */
-    private Date lastLoginAt;
+    private Date lastLoginTime;
     
     /**
      * 积分余额
      */
-    private Integer creditBalance;
+    private Integer pointsBalance;
     
     /**
      * 简历文本内容
@@ -52,22 +52,27 @@ public class UserResponse {
      * 客户端连接信息
      */
     private String clientConnection;
+
+    /**
+     * 状态
+     */
+    private Integer status;
+
+    /**
+     * 邮箱
+     */
+    private String email;
     
     /**
      * 从User实体创建UserResponse的工厂方法
-     * 
-     * @param user 用户实体
-     * @return UserResponse实例
      */
     public static UserResponse fromUser(User user) {
         return UserResponse.builder()
                 .uid(user.getUid())
                 .phone(user.getPhone())
                 .gmtCreate(user.getGmtCreate())
-                .lastLoginAt(user.getLastLoginAt())
-                .creditBalance(user.getCreditBalance())
+                .pointsBalance(user.getPointsBalance())
                 .resumeText(user.getResumeText())
-                .clientConnection(user.getClientConnection())
                 .build();
     }
 } 

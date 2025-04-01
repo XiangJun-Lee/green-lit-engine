@@ -1,151 +1,198 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.keji.green.lit.engine.mapper.UserMapper">
-    
-    <resultMap id="BaseResultMap" type="User">
-        <id column="uid" property="uid"/>
-        <result column="phone" property="phone"/>
-        <result column="password" property="password"/>
-        <result column="gmt_create" property="gmtCreate"/>
-        <result column="gmt_modify" property="gmtModify"/>
-        <result column="last_login_at" property="lastLoginAt"/>
-        <result column="credit_balance" property="creditBalance"/>
-        <result column="is_active" property="isActive"/>
-        <result column="resume_text" property="resumeText"/>
-        <result column="user_role" property="role"/>
-        <result column="client_connection" property="clientConnection"/>
-        <result column="email" property="email"/>
-    </resultMap>
+  <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.User">
+    <id column="uid" jdbcType="BIGINT" property="uid" />
+    <result column="points_balance" jdbcType="INTEGER" property="pointsBalance" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+    <result column="last_login_time" jdbcType="TIMESTAMP" property="lastLoginTime" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="phone" jdbcType="VARCHAR" property="phone" />
+    <result column="user_role" jdbcType="SMALLINT" property="userRole" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="registration_time" jdbcType="TIMESTAMP" property="registrationTime" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
+    <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />
+  </resultMap>
 
-    <sql id="Base_Column_List">
-        uid, phone, password, gmt_create, gmt_modify, last_login_at, credit_balance,
-        is_active, resume_text, user_role, client_connection, email
-    </sql>
+  <sql id="Base_Column_List">
+    uid, points_balance, status, last_login_time, password, phone, user_role, email, 
+    registration_time, gmt_create, gmt_modify,resume_text
+  </sql>
 
-    <select id="findByPhone" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM user_info
-        WHERE phone = #{phone}
-    </select>
+  <select id="selectByUid" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user_info
+    where uid = #{uid,jdbcType=BIGINT}
+  </select>
 
-    <select id="existsByPhone" resultType="boolean">
-        SELECT COUNT(1)
-        FROM user_info
-        WHERE phone = #{phone}
-    </select>
+  <select id="selectByPhone" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user_info
+    where phone = #{phone,jdbcType=VARCHAR}
+  </select>
 
-    <insert id="insert" parameterType="User" useGeneratedKeys="true" keyProperty="uid">
-        INSERT INTO user_info (
-            phone, password, gmt_create, credit_balance, is_active, user_role, email
-        ) VALUES (
-            #{phone}, #{password}, #{gmtCreate}, #{creditBalance}, #{isActive}, #{role}, #{email}
-        )
-    </insert>
+  <insert id="insertSelective" parameterType="com.keji.green.lit.engine.model.User">
+    <selectKey keyProperty="uid" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
+    insert into user_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="pointsBalance != null">
+        points_balance,
+      </if>
+      <if test="status != null">
+        status,
+      </if>
+      <if test="lastLoginTime != null">
+        last_login_time,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="phone != null">
+        phone,
+      </if>
+      <if test="userRole != null">
+        user_role,
+      </if>
+      <if test="email != null">
+        email,
+      </if>
+      <if test="registrationTime != null">
+        registration_time,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify,
+      </if>
+      <if test="resumeText != null">
+        resume_text,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="pointsBalance != null">
+        #{pointsBalance,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+      <if test="lastLoginTime != null">
+        #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null">
+        #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="userRole != null">
+        #{userRole,jdbcType=SMALLINT},
+      </if>
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="registrationTime != null">
+        #{registrationTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+      <if test="resumeText != null">
+        #{resumeText,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
 
-    <insert id="insertSelective" parameterType="User" useGeneratedKeys="true" keyProperty="uid">
-        INSERT INTO user_info
-        <trim prefix="(" suffix=")" suffixOverrides=",">
-            <if test="phone != null">
-                phone,
-            </if>
-            <if test="password != null">
-                password,
-            </if>
-            <if test="gmtCreate != null">
-                gmt_create,
-            </if>
-            <if test="gmtModify != null">
-                gmt_modify,
-            </if>
-            <if test="lastLoginAt != null">
-                last_login_at,
-            </if>
-            <if test="creditBalance != null">
-                credit_balance,
-            </if>
-            <if test="isActive != null">
-                is_active,
-            </if>
-            <if test="resumeText != null">
-                resume_text,
-            </if>
-            <if test="role != null">
-                user_role,
-            </if>
-            <if test="clientConnection != null">
-                client_connection,
-            </if>
-            <if test="email != null">
-                email,
-            </if>
-        </trim>
-        <trim prefix="VALUES (" suffix=")" suffixOverrides=",">
-            <if test="phone != null">
-                #{phone},
-            </if>
-            <if test="password != null">
-                #{password},
-            </if>
-            <if test="gmtCreate != null">
-                #{gmtCreate},
-            </if>
-            <if test="gmtModify != null">
-                #{gmtModify},
-            </if>
-            <if test="lastLoginAt != null">
-                #{lastLoginAt},
-            </if>
-            <if test="creditBalance != null">
-                #{creditBalance},
-            </if>
-            <if test="isActive != null">
-                #{isActive},
-            </if>
-            <if test="resumeText != null">
-                #{resumeText},
-            </if>
-            <if test="role != null">
-                #{role},
-            </if>
-            <if test="clientConnection != null">
-                #{clientConnection},
-            </if>
-            <if test="email != null">
-                #{email},
-            </if>
-        </trim>
-    </insert>
+  <update id="updateSelectiveByUid" parameterType="com.keji.green.lit.engine.model.User">
+    update user_info
+    <set>
+      <if test="pointsBalance != null">
+        points_balance = #{pointsBalance,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="lastLoginTime != null">
+        last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null">
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="userRole != null">
+        user_role = #{userRole,jdbcType=SMALLINT},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="registrationTime != null">
+        registration_time = #{registrationTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+      <if test="resumeText != null">
+        resume_text = #{resumeText,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where uid = #{uid,jdbcType=BIGINT}
+  </update>
 
-    <update id="updateLastLoginTime">
-        UPDATE user_info
-        SET last_login_at = #{lastLoginAt}
-        WHERE uid = #{uid}
-    </update>
+  <update id="updateByPhoneSelective" parameterType="com.keji.green.lit.engine.model.User">
+    update user_info
+    <set>
+      <if test="pointsBalance != null">
+        points_balance = #{pointsBalance,jdbcType=INTEGER},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="lastLoginTime != null">
+        last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="userRole != null">
+        user_role = #{userRole,jdbcType=SMALLINT},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="registrationTime != null">
+        registration_time = #{registrationTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+      <if test="resumeText != null">
+        resume_text = #{resumeText,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where phone = #{phone,jdbcType=VARCHAR}
+  </update>
 
-    <update id="updatePassword">
-        UPDATE user_info
-        SET password = #{password},
-            gmt_modify = #{gmtModify}
-        WHERE uid = #{uid}
-    </update>
+  <select id="existsByPhone" resultType="boolean">
+    select COUNT(1)
+    from user_info
+    where phone = #{phone,jdbcType=VARCHAR}
+  </select>
 
-    <update id="updateUserStatus">
-        UPDATE user_info
-        SET is_active = #{isActive},
-            gmt_modify = #{gmtModify}
-        WHERE uid = #{uid}
-    </update>
-
-    <update id="updateClientConnection">
-        UPDATE user_info
-        SET client_connection = #{clientConnection},
-            gmt_modify = #{gmtModify}
-        WHERE uid = #{uid}
-    </update>
-
-    <select id="findById" resultMap="BaseResultMap">
-        SELECT <include refid="Base_Column_List"/>
-        FROM user_info
-        WHERE uid = #{uid}
-    </select>
-</mapper> 
+</mapper>

@@ -193,21 +193,6 @@ public class AuthController {
     }
 
     /**
-     * 更新客户端连接信息
-     * 
-     * @param uid 用户ID
-     * @param ipPort 客户端连接信息
-     * @return 更新结果
-     */
-    @PostMapping("/update-connection")
-    public Result<Void> updateClientConnection(
-            @RequestParam Long uid,
-            @RequestParam @NotBlank(message = "客户端连接信息不能为空") String ipPort) {
-        userService.updateClientConnection(uid, ipPort);
-        return Result.success();
-    }
-
-    /**
      * 获取客户端IP地址
      * 
      * @return 客户端IP地址

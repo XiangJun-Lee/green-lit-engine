@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.model;
+package com.keji.green.lit.engine.enums;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
