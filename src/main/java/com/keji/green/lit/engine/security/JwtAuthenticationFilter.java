@@ -17,6 +17,7 @@ import java.io.IOException;
 /**
  * JWT认证过滤器
  * 拦截所有请求，提取并验证JWT令牌，设置认证信息
+ * @author xiangjun_lee
  */
 @Slf4j
 @Component

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 
 import static com.keji.green.lit.engine.exception.ErrorCode.RATE_LIMIT_EXCEEDED;
 import static com.keji.green.lit.engine.utils.Constants.*;
+import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 认证控制器
@@ -94,16 +95,16 @@ public class AuthController {
             @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone,
             @RequestParam @NotBlank(message = "验证码不能为空") String code) {
         String ip = getClientIp();
-        String key = "login:code:" + ip;
-        String phoneKey = "login:code:phone:" + phone;
+        String ipLimitKey = String.format(VERIFICATION_CODE_IP_KEY, ip);
+        String phoneLimitKey = String.format(VERIFICATION_CODE_PHONE_KEY, phone);
         
         // 检查IP登录频率限制：5次/分钟
-        if (rateLimitService.isRateLimited(key, 5, 60)) {
+        if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"登录尝试次数过多，请稍后再试");
         }
 
-        // 检查手机号发送频率限制：5次/小时
-        if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
+        // 检查手机号发送频率限制：1次/分钟
+        if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_ONE, ONE_MINUTE_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
         }
         return Result.success(userService.loginWithVerificationCode(phone, code));
