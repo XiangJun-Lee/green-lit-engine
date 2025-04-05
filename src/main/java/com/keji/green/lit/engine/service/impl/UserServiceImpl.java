@@ -2,19 +2,15 @@ package com.keji.green.lit.engine.service.impl;
 
 import com.keji.green.lit.engine.dao.UserDao;
 import com.keji.green.lit.engine.dto.LoginRequest;
-import com.keji.green.lit.engine.dto.RegisterRequest;
 import com.keji.green.lit.engine.dto.TokenResponse;
 import com.keji.green.lit.engine.dto.UserResponse;
 import com.keji.green.lit.engine.enums.UserStatusEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.enums.UserRole;
-import com.keji.green.lit.engine.security.JwtTokenProvider;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -61,20 +57,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private PasswordEncoder passwordEncoder;
 
     /**
-     * JWT令牌提供者
-     */
-    @Resource
-    private JwtTokenProvider jwtTokenProvider;
-
-    /**
-     * 认证管理器
-     * 使用@Lazy注解避免循环依赖
-     */
-    @Resource
-    @Lazy
-    private AuthenticationManager authenticationManager;
-
-    /**
      * 手机号正则表达式
      * 匹配中国大陆手机号
      */
@@ -94,38 +76,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     @Transactional
-    public TokenResponse register(RegisterRequest request) {
-        // 验证手机号格式
-        if (!PHONE_PATTERN.matcher(request.getPhone()).matches()) {
-            throw new BusinessException(PARAM_ERROR.getCode(), "手机号格式不正确");
-        }
-        // 验证验证码
-        if (!verificationCodeService.verifyCode(request.getPhone(), request.getVerificationCode())) {
-            throw new BusinessException(VERIFICATION_CODE_ERROR);
-        }
-        // 检查用户是否已存在
-        if (userDao.existsByPhone(request.getPhone())) {
-            throw new BusinessException(USER_ALREADY_EXISTS.getCode(), "该手机号已注册");
-        }
-
+    public void saveUser(User user) {
         // 创建用户
-        User user = User.builder()
-                .phone(request.getPhone())
-                .password(passwordEncoder.encode(request.getPassword()))
-                .userRole(UserRole.USER.getCode())
-                .email(request.getEmail())
-                .build();
-
-        User savedUser = userDao.createUser(user);
-
-        // 生成token
-        Authentication authentication = new UsernamePasswordAuthenticationToken(
-                savedUser.getPhone(),
-                request.getPassword()
-        );
-        String token = jwtTokenProvider.createToken(authentication);
-
-        return TokenResponse.of(token, savedUser.getUid(), savedUser.getPhone());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (userDao.createUser(user) <= 0) {
+            throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "注册失败，请联系管理员");
+        }
     }
 
     /**
@@ -140,7 +96,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      * @throws BusinessException 用户名或密码错误时抛出
      */
     @Override
-    public TokenResponse loginWithPassword(LoginRequest request) {
+    public User loginWithPassword(LoginRequest request) {
         try {
             // 验证用户凭证
             Authentication authentication = authenticationManager.authenticate(
@@ -179,7 +135,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     @Transactional
-    public TokenResponse loginWithVerificationCode(String phone, String code) {
+    public User loginWithVerificationCode(String phone, String code) {
         // 验证验证码
         if (!verificationCodeService.verifyCode(phone, code)) {
             throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误或已过期");
@@ -332,6 +288,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userDao.findByPhone(username)
-                .orElseThrow(() -> new UsernameNotFoundException("用户不存在: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("手机号为注册: " + username));
     }
 } 

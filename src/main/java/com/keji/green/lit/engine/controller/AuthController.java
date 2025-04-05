@@ -5,6 +5,9 @@ import com.keji.green.lit.engine.dto.LoginRequest;
 import com.keji.green.lit.engine.dto.RegisterRequest;
 import com.keji.green.lit.engine.dto.TokenResponse;
 import com.keji.green.lit.engine.dto.UserResponse;
+import com.keji.green.lit.engine.model.User;
+import com.keji.green.lit.engine.security.JwtTokenProvider;
+import com.keji.green.lit.engine.service.AuthService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.RateLimitService;
 import com.keji.green.lit.engine.exception.BusinessException;
@@ -13,10 +16,16 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import static com.keji.green.lit.engine.exception.ErrorCode.RATE_LIMIT_EXCEEDED;
+import static com.keji.green.lit.engine.exception.ErrorCode.USER_NOT_EXIST;
 import static com.keji.green.lit.engine.utils.Constants.*;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
@@ -49,14 +58,31 @@ public class AuthController {
     private HttpServletRequest request;
 
     /**
+     * 认证管理器
+     * 使用@Lazy注解避免循环依赖
+     */
+    @Resource
+    @Lazy
+    private AuthenticationManager authenticationManager;
+
+    /**
+     * JWT令牌提供者
+     */
+    @Resource
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Resource
+    private AuthService authService;
+    /**
      * 用户注册
      * 
      * @param request 注册请求，包含手机号、验证码和密码
      * @return JWT令牌响应
      */
     @PostMapping("/register")
-    public Result<TokenResponse> register(@Valid @RequestBody RegisterRequest request) {
-        return Result.success(userService.register(request));
+    public Result<Void> register(@Valid @RequestBody RegisterRequest request) {
+        authService.register(request);
+        return Result.success();
     }
 
     /**
@@ -67,19 +93,10 @@ public class AuthController {
      */
     @PostMapping("/login")
     public Result<TokenResponse> loginWithPassword(@Valid @RequestBody LoginRequest request) {
-        String ip = getClientIp();
-        String ipLimitKey = String.format(PASSWORD_LOGIN_IP_KEY, ip);
-        String phoneLimitKey = String.format(PASSWORD_LOGIN_PHONE_KEY, request.getPhone());
-        // 检查IP登录频率限制：5次/分钟
-        if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "登录尝试次数过多，请1分钟后再试");
-        }
-        // 检查手机号发送频率限制：5次/分钟
-        if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "该手机号登录尝试次数过多，请1分钟后再试");
-        }
 
-        return Result.success(userService.loginWithPassword(request));
+        TokenResponse response = authService.loginWithPassword(request);
+
+        return Result.success(TokenResponse.of(token, user.getUid(), user.getPhone()));
     }
 
     /**
@@ -206,28 +223,5 @@ public class AuthController {
         return Result.success(userService.isPhoneRegisteredAndActive(phone));
     }
 
-    /**
-     * 获取客户端IP地址
-     * 
-     * @return 客户端IP地址
-     */
-    private String getClientIp() {
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("WL-Proxy-Client-IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_CLIENT_IP");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getHeader("HTTP_X_FORWARDED_FOR");
-        }
-        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
-            ip = request.getRemoteAddr();
-        }
-        return ip;
-    }
+
 } 

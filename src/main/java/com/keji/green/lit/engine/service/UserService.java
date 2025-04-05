@@ -1,9 +1,8 @@
 package com.keji.green.lit.engine.service;
 
 import com.keji.green.lit.engine.dto.LoginRequest;
-import com.keji.green.lit.engine.dto.RegisterRequest;
-import com.keji.green.lit.engine.dto.TokenResponse;
 import com.keji.green.lit.engine.dto.UserResponse;
+import com.keji.green.lit.engine.model.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 /**
@@ -18,7 +17,7 @@ public interface UserService extends UserDetailsService {
      * @param request 注册请求信息，包含手机号、验证码和密码
      * @return 包含JWT令牌的响应
      */
-    TokenResponse register(RegisterRequest request);
+    void saveUser(User request);
     
     /**
      * 使用密码登录
@@ -26,7 +25,7 @@ public interface UserService extends UserDetailsService {
      * @param request 登录请求信息，包含手机号和密码
      * @return 包含JWT令牌的响应
      */
-    TokenResponse loginWithPassword(LoginRequest request);
+    User loginWithPassword(LoginRequest request);
     
     /**
      * 使用验证码登录
@@ -35,7 +34,7 @@ public interface UserService extends UserDetailsService {
      * @param code 验证码
      * @return 包含JWT令牌的响应
      */
-    TokenResponse loginWithVerificationCode(String phone, String code);
+    User loginWithVerificationCode(String phone, String code);
     
     /**
      * 请求发送验证码

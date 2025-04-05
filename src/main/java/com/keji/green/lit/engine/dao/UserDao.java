@@ -35,11 +35,8 @@ public class UserDao {
     /**
      * 创建新用户
      */
-    public User createUser(User user) {
-        if (mapper.insertSelective(user)>0){
-            return user;
-        }
-        throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "写入用户信息失败");
+    public int createUser(User user) {
+        return mapper.insertSelective(user);
     }
 
     /**
