@@ -74,7 +74,7 @@ public class AuthController {
         if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "登录尝试次数过多，请1分钟后再试");
         }
-        // 检查手机号发送频率限制：5次/小时
+        // 检查手机号发送频率限制：5次/分钟
         if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "该手机号登录尝试次数过多，请1分钟后再试");
         }
@@ -121,16 +121,16 @@ public class AuthController {
             @RequestParam @NotBlank(message = "手机号不能为空") 
             @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone) {
         String ip = getClientIp();
-        String ipKey = "code:ip:" + ip;
-        String phoneKey = "code:phone:" + phone;
+        String ipLimitKey = String.format(SEND_VERIFICATION_IP_KEY, ip);
+        String phoneLimitKey = String.format(SEND_VERIFICATION_CODE_PHONE_KEY, phone);
 
         // 检查IP发送频率限制：10次/小时
-        if (rateLimitService.isRateLimited(ipKey, 10, 3600)) {
+        if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_TEN, ONE_HOUR_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"发送验证码次数过多，请稍后再试");
         }
 
-        // 检查手机号发送频率限制：5次/小时
-        if (rateLimitService.isRateLimited(phoneKey, 1, 60)) {
+        // 检查手机号发送频率限制：1次/分钟
+        if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_ONE, ONE_MINUTE_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
         }
 
@@ -191,6 +191,19 @@ public class AuthController {
     public Result<Void> deactivateAccount(@RequestParam Long uid) {
         userService.deactivateAccount(uid);
         return Result.success();
+    }
+
+    /**
+     * 检查手机号是否已注册且账号处于活跃状态
+     * 
+     * @param phone 手机号
+     * @return 是否已注册且活跃
+     */
+    @GetMapping("/check-phone")
+    public Result<Boolean> checkPhoneRegistered(
+            @RequestParam @NotBlank(message = "手机号不能为空") 
+            @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone) {
+        return Result.success(userService.isPhoneRegisteredAndActive(phone));
     }
 
     /**

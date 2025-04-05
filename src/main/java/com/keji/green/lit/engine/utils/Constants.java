@@ -13,6 +13,9 @@ public class Constants {
     public static final String PASSWORD_LOGIN_PHONE_KEY = "pwd:login:phone:%s";
     public static final String VERIFICATION_CODE_IP_KEY = "verification:code:ip:%s";
     public static final String VERIFICATION_CODE_PHONE_KEY = "verification:code:phone:%s";
+    public static final String SEND_VERIFICATION_IP_KEY = "send:verification:code:ip:%s";
+    public static final String SEND_VERIFICATION_CODE_PHONE_KEY = "send:verification:code:phone:%s";
+
 
 
     public static final Integer ONE_MINUTE_SECONDS = 60;
@@ -21,6 +24,4 @@ public class Constants {
     public static final Integer INTEGER_FIVE = 5;
     public static final Integer INTEGER_TEN = 10;
     public static final Integer INTEGER_TWENTY = 20;
-
-
 }

@@ -156,12 +156,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
                 throw new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在");
             }
             User user = userOptional.get();
-            // 更新最后登录时间
-            try {
-                userDao.updateLastLoginTime(user.getUid());
-            } catch (Exception e) {
-                log.error("更新用户最后登录时间失败", e);
-            }
             // 生成token
             String token = jwtTokenProvider.createToken(authentication);
             return TokenResponse.of(token, user.getUid(), user.getPhone());
@@ -197,12 +191,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
             throw new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在");
         }
         User user = userOptional.get();
-        // 更新最后登录时间
-        try {
-            userDao.updateLastLoginTime(user.getUid());
-        } catch (Exception e) {
-            log.warn("更新用户最后登录时间失败", e);
-        }
 
         // 创建认证信息
         Authentication authentication = new UsernamePasswordAuthenticationToken(
@@ -321,7 +309,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     public boolean isPhoneRegisteredAndActive(String phone) {
         // 验证手机号格式
         if (!PHONE_PATTERN.matcher(phone).matches()) {
-            return false;
+            throw new BusinessException(PARAM_ERROR.getCode(), "手机号格式不正确");
         }
         // 查询用户信息
         Optional<User> userOptional = userDao.findByPhone(phone);

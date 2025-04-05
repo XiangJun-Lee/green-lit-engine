@@ -6,7 +6,7 @@ import com.keji.green.lit.engine.mapper.UserMapper;
 import com.keji.green.lit.engine.model.User;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Repository;
-import java.util.Date;
+
 import java.util.Optional;
 
 /**
@@ -40,16 +40,6 @@ public class UserDao {
             return user;
         }
         throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "写入用户信息失败");
-    }
-
-    /**
-     * 更新用户最后登录时间
-     */
-    public int updateLastLoginTime(Long uid) {
-        User user = new User();
-        user.setUid(uid);
-        user.setLastLoginTime(new Date());
-        return mapper.updateSelectiveByUid(user);
     }
 
     /**
