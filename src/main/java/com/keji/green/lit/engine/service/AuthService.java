@@ -6,9 +6,6 @@ import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 
 /**
  * @author xiangjun_lee

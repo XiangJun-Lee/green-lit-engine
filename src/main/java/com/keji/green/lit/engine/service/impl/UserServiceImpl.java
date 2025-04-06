@@ -5,10 +5,8 @@ import com.keji.green.lit.engine.enums.UserStatusEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.UserService;
-import com.keji.green.lit.engine.service.VerificationCodeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -17,8 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.annotation.Resource;
 
 import java.util.Optional;
-import java.util.regex.Pattern;
-
 import static com.keji.green.lit.engine.exception.ErrorCode.*;
 
 /**
@@ -29,7 +25,7 @@ import static com.keji.green.lit.engine.exception.ErrorCode.*;
  */
 @Slf4j
 @Service
-public class UserServiceImpl implements UserService, UserDetailsService {
+public class UserServiceImpl implements UserService {
 
     /**
      * 用户数据访问层
@@ -38,22 +34,10 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     private UserDao userDao;
 
     /**
-     * 验证码服务
-     */
-    @Resource
-    private VerificationCodeService verificationCodeService;
-
-    /**
      * 密码编码器
      */
     @Resource
     private PasswordEncoder passwordEncoder;
-
-    /**
-     * 手机号正则表达式
-     * 匹配中国大陆手机号
-     */
-    private static final Pattern PHONE_PATTERN = Pattern.compile("^1[3-9]\\d{9}$");
 
     /**
      * 用户注册
