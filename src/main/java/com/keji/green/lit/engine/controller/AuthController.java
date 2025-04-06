@@ -7,24 +7,14 @@ import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
-import com.keji.green.lit.engine.security.JwtTokenProvider;
 import com.keji.green.lit.engine.service.AuthService;
 import com.keji.green.lit.engine.service.UserService;
-import com.keji.green.lit.engine.service.RateLimitService;
-import com.keji.green.lit.engine.exception.BusinessException;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import static com.keji.green.lit.engine.exception.ErrorCode.RATE_LIMIT_EXCEEDED;
-import static com.keji.green.lit.engine.utils.Constants.*;
-import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
 /**
  * 认证控制器
@@ -42,31 +32,7 @@ public class AuthController {
     @Resource
     private UserService userService;
 
-    /**
-     * 频率限制服务
-     */
-    @Resource
-    private RateLimitService rateLimitService;
 
-    /**
-     * HTTP请求对象
-     */
-    @Resource
-    private HttpServletRequest request;
-
-    /**
-     * 认证管理器
-     * 使用@Lazy注解避免循环依赖
-     */
-    @Resource
-    @Lazy
-    private AuthenticationManager authenticationManager;
-
-    /**
-     * JWT令牌提供者
-     */
-    @Resource
-    private JwtTokenProvider jwtTokenProvider;
 
     @Resource
     private AuthService authService;
@@ -122,21 +88,8 @@ public class AuthController {
      * 重置密码
      */
     @PostMapping("/reset-password")
-    public Result<Void> resetPassword((@Valid @RequestBody ResetPasswordByPhoneRequest request) {
+    public Result<Void> resetPassword(@Valid @RequestBody ResetPasswordByPhoneRequest request) {
         authService.resetPassword(request);
-        return Result.success();
-    }
-
-    /**
-     * 用户登出
-     * JWT是无状态的，客户端只需清除本地保存的token即可完成登出
-     * 此接口仅返回登出成功的消息，实际操作由客户端完成
-     * 
-     * @return 登出结果
-     */
-    @PostMapping("/logout")
-    public Result<Void> logout() {
-        // JWT无状态，客户端只需清除token即可
         return Result.success();
     }
 
@@ -147,7 +100,7 @@ public class AuthController {
      */
     @GetMapping("/me")
     public Result<UserResponse> getCurrentUser() {
-        return Result.success(userService.getCurrentUser());
+        return Result.success(authService.getCurrentUser());
     }
 
     /**
@@ -159,7 +112,7 @@ public class AuthController {
      */
     @PostMapping("/deactivate")
     public Result<Void> deactivateAccount(@RequestParam Long uid) {
-        userService.deactivateAccount(uid);
+        authService.deactivateAccount(uid);
         return Result.success();
     }
 
@@ -173,7 +126,7 @@ public class AuthController {
     public Result<Boolean> checkPhoneRegistered(
             @RequestParam @NotBlank(message = "手机号不能为空") 
             @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone) {
-        return Result.success(userService.isPhoneRegisteredAndActive(phone));
+        return Result.success(authService.isPhoneRegisteredAndActive(phone));
     }
 
 

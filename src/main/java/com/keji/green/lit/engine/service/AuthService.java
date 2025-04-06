@@ -5,7 +5,10 @@ import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
+import com.keji.green.lit.engine.dto.response.UserResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
 
 /**
  * @author xiangjun_lee
@@ -22,5 +25,11 @@ public interface AuthService {
 
     void requestVerificationCode(String phone);
 
-    void resetPassword(@Valid ResetPasswordByPhoneRequest request);
+    void resetPassword(ResetPasswordByPhoneRequest request);
+
+    UserResponse getCurrentUser();
+
+    void deactivateAccount(Long uid);
+
+    Boolean isPhoneRegisteredAndActive(String phone);
 }

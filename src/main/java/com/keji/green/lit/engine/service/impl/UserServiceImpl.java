@@ -1,15 +1,12 @@
 package com.keji.green.lit.engine.service.impl;
 
 import com.keji.green.lit.engine.dao.UserDao;
-import com.keji.green.lit.engine.dto.response.UserResponse;
 import com.keji.green.lit.engine.enums.UserStatusEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -84,29 +81,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     @Override
     @Transactional
     public void deactivateAccount(Long uid) {
-        User user = userDao.findById(uid)
-                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
+        User user = userDao.findById(uid).orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在"));
         userDao.updateUserStatus(user.getUid(), UserStatusEnum.CANCELLED.getCode());
-    }
-
-    /**
-     * 获取当前登录用户信息
-     *
-     * @return 用户信息响应
-     * @throws BusinessException 用户未登录或不存在时抛出
-     */
-    @Override
-    public UserResponse getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
-        }
-
-        String phone = authentication.getName();
-        User user = userDao.findByPhone(phone)
-                .orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(),"用户不存在"));
-
-        return UserResponse.fromUser(user);
     }
 
 
@@ -118,10 +94,6 @@ public class UserServiceImpl implements UserService, UserDetailsService {
      */
     @Override
     public boolean isPhoneRegisteredAndActive(String phone) {
-        // 验证手机号格式
-        if (!PHONE_PATTERN.matcher(phone).matches()) {
-            throw new BusinessException(PARAM_ERROR.getCode(), "手机号格式不正确");
-        }
         // 查询用户信息
         Optional<User> userOptional = userDao.findByPhone(phone);
         if (userOptional.isEmpty()) {

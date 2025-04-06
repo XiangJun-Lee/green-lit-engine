@@ -16,7 +16,7 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    uid, status, last_login_time, password, phone, user_role, email,
+    uid, status, password, phone, user_role, email,
     registration_time, gmt_create, gmt_modify,resume_text,version
   </sql>
 
@@ -42,9 +42,6 @@
       </if>
       <if test="status != null">
         status,
-      </if>
-      <if test="lastLoginTime != null">
-        last_login_time,
       </if>
       <if test="password != null">
         password,
@@ -77,9 +74,6 @@
       </if>
       <if test="status != null">
         #{status,jdbcType=INTEGER},
-      </if>
-      <if test="lastLoginTime != null">
-        #{lastLoginTime,jdbcType=TIMESTAMP},
       </if>
       <if test="password != null">
         #{password,jdbcType=VARCHAR},
@@ -116,9 +110,6 @@
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
-      </if>
-      <if test="lastLoginTime != null">
-        last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
       </if>
       <if test="password != null">
         password = #{password,jdbcType=VARCHAR},
@@ -158,9 +149,6 @@
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
-      </if>
-      <if test="lastLoginTime != null">
-        last_login_time = #{lastLoginTime,jdbcType=TIMESTAMP},
       </if>
       <if test="password != null">
         password = #{password,jdbcType=VARCHAR},

@@ -1,6 +1,7 @@
 package com.keji.green.lit.engine.exception;
 
 import com.keji.green.lit.engine.common.Result;
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -70,9 +71,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConstraintViolationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleConstraintViolationException(ConstraintViolationException e) {
-        String message = e.getConstraintViolations().stream()
-                .map(violation -> violation.getPropertyPath().toString() + ": " + violation.getMessage())
-                .collect(Collectors.joining(", "));
+        String message = e.getConstraintViolations().stream().map(ConstraintViolation::getMessage).collect(Collectors.joining(", "));
         log.error("约束违反异常：{}", message);
         return Result.error(ErrorCode.PARAM_ERROR.getCode(), message);
     }

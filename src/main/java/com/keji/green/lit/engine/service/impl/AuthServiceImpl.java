@@ -5,6 +5,7 @@ import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
+import com.keji.green.lit.engine.dto.response.UserResponse;
 import com.keji.green.lit.engine.enums.UserRole;
 import com.keji.green.lit.engine.enums.UserStatusEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
@@ -17,8 +18,6 @@ import com.keji.green.lit.engine.service.VerificationCodeService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -26,6 +25,8 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Objects;
 
 import static com.keji.green.lit.engine.exception.ErrorCode.*;
 import static com.keji.green.lit.engine.utils.Constants.*;
@@ -39,7 +40,6 @@ import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 @Slf4j
 @Service("authService")
 public class AuthServiceImpl implements AuthService {
-
 
     /**
      * 用户服务
@@ -61,10 +61,8 @@ public class AuthServiceImpl implements AuthService {
 
     /**
      * 认证管理器
-     * 使用@Lazy注解避免循环依赖
      */
     @Resource
-    @Lazy
     private AuthenticationManager authenticationManager;
 
     /**
@@ -78,7 +76,12 @@ public class AuthServiceImpl implements AuthService {
      */
     @Resource
     private VerificationCodeService verificationCodeService;
-    @Autowired
+
+
+    /**
+     * 密码加密器
+     */
+    @Resource
     private PasswordEncoder passwordEncoder;
 
 
@@ -221,6 +224,40 @@ public class AuthServiceImpl implements AuthService {
         if (userService.resetPasswordByUid(user.getUid(), request.getNewPassword(), user.getVersion()) <= 0) {
             throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "密码修改失败，请稍后重试");
         }
+    }
+
+    @Override
+    public UserResponse getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
+        }
+        String phone = authentication.getName();
+        return UserResponse.fromUser(userService.queryNormalUserByPhone(phone));
+    }
+
+    @Override
+    public void deactivateAccount(Long uid) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
+        }
+        String phone = authentication.getName();
+        User user = userService.queryNormalUserByPhone(phone);
+        if (Objects.isNull(user) || !Objects.equals(UserRole.ADMIN.getCode(), user.getUserRole())) {
+            throw new BusinessException(FORBIDDEN.getCode(), "用户无权限注销");
+        }
+        userService.deactivateAccount(uid);
+    }
+
+    @Override
+    public Boolean isPhoneRegisteredAndActive(String phone) {
+        try {
+            userService.queryNormalUserByPhone(phone);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
     /**
