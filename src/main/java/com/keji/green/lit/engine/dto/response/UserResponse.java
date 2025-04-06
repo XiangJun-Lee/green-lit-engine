@@ -27,7 +27,7 @@ public class UserResponse {
     /**
      * 用户名
      */
-    private String userName;
+    private String nickName;
     
     /**
      * 用户手机号
@@ -62,7 +62,7 @@ public class UserResponse {
     public static UserResponse fromUser(User user) {
         return UserResponse.builder()
                 .uid(user.getUid())
-                .userName(user.getUsername())
+                .nickName(user.getNickName())
                 .phone(user.getPhone())
                 .email(user.getEmail())
                 .resumeText(user.getResumeText())

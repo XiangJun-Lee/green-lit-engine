@@ -27,9 +27,10 @@ public class User implements UserDetails {
     private Long uid;
 
     /**
-     * 用户名
+     * 用户昵称
      */
-    private String userName;
+    private String nickName;
+
     /**
      * 状态
      */
@@ -83,7 +84,8 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return userName;
+        // 账号名就是手机号
+        return phone;
     }
 
     @Override

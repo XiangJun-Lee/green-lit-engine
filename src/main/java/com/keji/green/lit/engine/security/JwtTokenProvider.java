@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 /**
  * JWT令牌提供者
  * 负责创建、解析和验证JWT令牌
+ * @author xiangjun_lee
  */
 @Slf4j
 @Component

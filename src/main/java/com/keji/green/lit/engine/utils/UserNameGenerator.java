@@ -8,7 +8,7 @@ import java.util.Random;
  */
 public class UserNameGenerator {
     
-    private static final String PREFIX = "greenLit ";
+    private static final String PREFIX = "Offer绿灯侠 ";
     private static final String CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
     private static final int RANDOM_LENGTH = 6;
     private static final Random RANDOM = new Random();

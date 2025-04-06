@@ -103,7 +103,7 @@ public class AuthServiceImpl implements AuthService {
                 .password(request.getPassword())
                 .userRole(UserRole.USER.getCode())
                 .email(request.getEmail())
-                .userName(UserNameGenerator.generate())
+                .nickName(UserNameGenerator.generate())
                 .build();
 
         userService.saveUser(user);

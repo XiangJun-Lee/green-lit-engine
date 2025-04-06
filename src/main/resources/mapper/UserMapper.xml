@@ -6,7 +6,7 @@
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="password" jdbcType="VARCHAR" property="password" />
     <result column="phone" jdbcType="VARCHAR" property="phone" />
-    <result column="user_name" jdbcType="VARCHAR" property="userName"/>
+    <result column="nick_name" jdbcType="VARCHAR" property="nickName"/>
     <result column="user_role" jdbcType="SMALLINT" property="userRole" />
     <result column="email" jdbcType="VARCHAR" property="email" />
     <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />
@@ -16,7 +16,7 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    uid, status, password, phone, user_name, user_role, email, gmt_create, gmt_modify, resume_text, version
+    uid, status, password, phone, nick_name, user_role, email, gmt_create, gmt_modify, resume_text, version
   </sql>
 
   <select id="selectByUid" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -36,8 +36,8 @@
   <insert id="insertSelective" parameterType="User">
     insert into user_info
     <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="userName != null">
-        user_name,
+      <if test="nickName != null">
+        nick_name,
       </if>
       <if test="status != null">
         status,
@@ -59,8 +59,8 @@
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="userName != null">
-        #{userName,jdbcType=VARCHAR},
+      <if test="nickName != null">
+        #{nickName,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         #{status,jdbcType=INTEGER},
@@ -86,8 +86,8 @@
   <update id="updateSelectiveByUid" parameterType="com.keji.green.lit.engine.model.User">
     update user_info
     <set>
-      <if test="userName != null">
-        user_name = #{userName,jdbcType=VARCHAR},
+      <if test="nickName != null">
+        nick_name = #{nickName,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
@@ -116,8 +116,8 @@
   <update id="updateSelectiveByPhone" parameterType="com.keji.green.lit.engine.model.User">
     update user_info
     <set>
-      <if test="userName != null">
-        user_name = #{userName,jdbcType=VARCHAR},
+      <if test="nickName != null">
+        nick_name = #{nickName,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
