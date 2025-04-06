@@ -6,7 +6,7 @@
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="password" jdbcType="VARCHAR" property="password" />
     <result column="phone" jdbcType="VARCHAR" property="phone" />
-    <result column="user_name" javaType="VARCHAR" property="userName"/>
+    <result column="user_name" jdbcType="VARCHAR" property="userName"/>
     <result column="user_role" jdbcType="SMALLINT" property="userRole" />
     <result column="email" jdbcType="VARCHAR" property="email" />
     <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />

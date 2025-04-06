@@ -11,6 +11,7 @@ import java.util.Date;
 /**
  * 用户信息响应DTO
  * 用于向客户端返回用户信息，不包含敏感信息如密码
+ * @author xiangjun_lee
  */
 @Data
 @Builder
@@ -22,6 +23,11 @@ public class UserResponse {
      * 用户ID
      */
     private Long uid;
+    
+    /**
+     * 用户名
+     */
+    private String userName;
     
     /**
      * 用户手机号
@@ -56,6 +62,7 @@ public class UserResponse {
     public static UserResponse fromUser(User user) {
         return UserResponse.builder()
                 .uid(user.getUid())
+                .userName(user.getUsername())
                 .phone(user.getPhone())
                 .email(user.getEmail())
                 .resumeText(user.getResumeText())

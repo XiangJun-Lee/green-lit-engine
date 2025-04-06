@@ -15,6 +15,7 @@ import com.keji.green.lit.engine.service.AuthService;
 import com.keji.green.lit.engine.service.RateLimitService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
+import com.keji.green.lit.engine.utils.UserNameGenerator;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -102,6 +103,7 @@ public class AuthServiceImpl implements AuthService {
                 .password(request.getPassword())
                 .userRole(UserRole.USER.getCode())
                 .email(request.getEmail())
+                .userName(UserNameGenerator.generate())
                 .build();
 
         userService.saveUser(user);

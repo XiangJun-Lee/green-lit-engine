@@ -27,19 +27,13 @@ public class User implements UserDetails {
     private Long uid;
 
     /**
-     * 积分余额
+     * 用户名
      */
-    private Integer pointsBalance;
-
+    private String userName;
     /**
      * 状态
      */
     private Integer status;
-
-    /**
-     * 最后登录时间
-     */
-    private Date lastLoginTime;
 
     /**
      * 密码
@@ -60,11 +54,6 @@ public class User implements UserDetails {
      * 邮箱
      */
     private String email;
-
-    /**
-     * 注册时间
-     */
-    private Date registrationTime;
 
     /**
      * 创建时间
@@ -94,7 +83,7 @@ public class User implements UserDetails {
 
     @Override
     public String getUsername() {
-        return "";
+        return userName;
     }
 
     @Override
