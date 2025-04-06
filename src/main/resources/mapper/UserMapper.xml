@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.keji.green.lit.engine.mapper.UserMapper">
-  <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.User">
+  <resultMap id="BaseResultMap" type="User">
     <id column="uid" jdbcType="BIGINT" property="uid" />
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="password" jdbcType="VARCHAR" property="password" />
     <result column="phone" jdbcType="VARCHAR" property="phone" />
+    <result column="user_name" javaType="VARCHAR" property="userName"/>
     <result column="user_role" jdbcType="SMALLINT" property="userRole" />
     <result column="email" jdbcType="VARCHAR" property="email" />
-    <result column="registration_time" jdbcType="TIMESTAMP" property="registrationTime" />
     <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />
     <result column="version" jdbcType="INTEGER" property="version" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
@@ -16,8 +16,7 @@
   </resultMap>
 
   <sql id="Base_Column_List">
-    uid, status, password, phone, user_role, email,
-    registration_time, gmt_create, gmt_modify,resume_text,version
+    uid, status, password, phone, user_name, user_role, email, gmt_create, gmt_modify, resume_text, version
   </sql>
 
   <select id="selectByUid" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -34,11 +33,11 @@
     where phone = #{phone,jdbcType=VARCHAR}
   </select>
 
-  <insert id="insertSelective" parameterType="com.keji.green.lit.engine.model.User">
+  <insert id="insertSelective" parameterType="User">
     insert into user_info
     <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="pointsBalance != null">
-        points_balance,
+      <if test="userName != null">
+        user_name,
       </if>
       <if test="status != null">
         status,
@@ -55,22 +54,13 @@
       <if test="email != null">
         email,
       </if>
-      <if test="registrationTime != null">
-        registration_time,
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create,
-      </if>
-      <if test="gmtModify != null">
-        gmt_modify,
-      </if>
       <if test="resumeText != null">
         resume_text,
       </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="pointsBalance != null">
-        #{pointsBalance,jdbcType=INTEGER},
+      <if test="userName != null">
+        #{userName,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         #{status,jdbcType=INTEGER},
@@ -87,15 +77,6 @@
       <if test="email != null">
         #{email,jdbcType=VARCHAR},
       </if>
-      <if test="registrationTime != null">
-        #{registrationTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtCreate != null">
-        #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModify != null">
-        #{gmtModify,jdbcType=TIMESTAMP},
-      </if>
       <if test="resumeText != null">
         #{resumeText,jdbcType=LONGVARCHAR},
       </if>
@@ -105,8 +86,8 @@
   <update id="updateSelectiveByUid" parameterType="com.keji.green.lit.engine.model.User">
     update user_info
     <set>
-      <if test="pointsBalance != null">
-        points_balance = #{pointsBalance,jdbcType=INTEGER},
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
@@ -123,15 +104,6 @@
       <if test="email != null">
         email = #{email,jdbcType=VARCHAR},
       </if>
-      <if test="registrationTime != null">
-        registration_time = #{registrationTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModify != null">
-        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
-      </if>
       <if test="resumeText != null">
         resume_text = #{resumeText,jdbcType=LONGVARCHAR},
       </if>
@@ -144,8 +116,8 @@
   <update id="updateSelectiveByPhone" parameterType="com.keji.green.lit.engine.model.User">
     update user_info
     <set>
-      <if test="pointsBalance != null">
-        points_balance = #{pointsBalance,jdbcType=INTEGER},
+      <if test="userName != null">
+        user_name = #{userName,jdbcType=VARCHAR},
       </if>
       <if test="status != null">
         status = #{status,jdbcType=INTEGER},
@@ -158,15 +130,6 @@
       </if>
       <if test="email != null">
         email = #{email,jdbcType=VARCHAR},
-      </if>
-      <if test="registrationTime != null">
-        registration_time = #{registrationTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModify != null">
-        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
       </if>
       <if test="resumeText != null">
         resume_text = #{resumeText,jdbcType=LONGVARCHAR},
