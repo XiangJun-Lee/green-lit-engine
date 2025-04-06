@@ -10,13 +10,14 @@
     <result column="user_role" jdbcType="SMALLINT" property="userRole" />
     <result column="email" jdbcType="VARCHAR" property="email" />
     <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />
+    <result column="client_ip" jdbcType="VARCHAR" property="clientIp"/>
     <result column="version" jdbcType="INTEGER" property="version" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
   </resultMap>
 
   <sql id="Base_Column_List">
-    uid, status, password, phone, nick_name, user_role, email, gmt_create, gmt_modify, resume_text, version
+    uid, status, password, phone, nick_name, user_role, email, gmt_create, gmt_modify, resume_text, version,client_ip
   </sql>
 
   <select id="selectByUid" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -57,6 +58,9 @@
       <if test="resumeText != null">
         resume_text,
       </if>
+      <if test="clientIp != null">
+        client_ip,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="nickName != null">
@@ -79,6 +83,9 @@
       </if>
       <if test="resumeText != null">
         #{resumeText,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="clientIp != null">
+        #{clientIp,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -107,6 +114,9 @@
       <if test="resumeText != null">
         resume_text = #{resumeText,jdbcType=LONGVARCHAR},
       </if>
+      <if test="clientIp != null">
+        client_ip = #{clientIp,jdbcType=VARCHAR},
+      </if>
       version = version + 1
     </set>
     where uid = #{uid,jdbcType=BIGINT}
@@ -133,6 +143,9 @@
       </if>
       <if test="resumeText != null">
         resume_text = #{resumeText,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="clientIp != null">
+        client_ip = #{clientIp,jdbcType=VARCHAR},
       </if>
       version = version + 1
     </set>

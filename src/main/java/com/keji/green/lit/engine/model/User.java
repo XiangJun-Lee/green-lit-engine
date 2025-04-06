@@ -72,6 +72,11 @@ public class User implements UserDetails {
     private String resumeText;
 
     /**
+     * 客户端ip:port
+     */
+    private String clientIp;
+
+    /**
      * 版本号
      */
     private Integer version;
