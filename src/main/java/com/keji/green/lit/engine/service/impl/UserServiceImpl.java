@@ -114,6 +114,15 @@ public class UserServiceImpl implements UserService {
 
     }
 
+    @Override
+    public int updateClientIp(Long uid, String clientIp, Integer version) {
+        User user = new User();
+        user.setUid(uid);
+        user.setClientIp(clientIp);
+        user.setVersion(version);
+        return userDao.updateSelectiveByUid(user);
+    }
+
     /**
      * 根据用户名（手机号）加载用户详情
      * 实现UserDetailsService接口的方法，用于Spring Security认证

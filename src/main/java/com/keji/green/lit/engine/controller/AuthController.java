@@ -5,6 +5,7 @@ import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
 import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
+import com.keji.green.lit.engine.dto.request.UpdateClientIpRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
 import com.keji.green.lit.engine.service.AuthService;
@@ -129,5 +130,16 @@ public class AuthController {
         return Result.success(authService.isPhoneRegisteredAndActive(phone));
     }
 
+    /**
+     * 更新客户端IP
+     * 
+     * @param request 更新客户端IP请求，包含用户ID和客户端IP:端口
+     * @return 更新结果
+     */
+    @PostMapping("/update-client-ip")
+    public Result<Void> updateClientIp(@Valid @RequestBody UpdateClientIpRequest request) {
+        authService.updateClientIp(request);
+        return Result.success();
+    }
 
 } 

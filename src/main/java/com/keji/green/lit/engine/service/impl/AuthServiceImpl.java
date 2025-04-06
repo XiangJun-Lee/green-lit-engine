@@ -4,6 +4,7 @@ import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
 import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
+import com.keji.green.lit.engine.dto.request.UpdateClientIpRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
 import com.keji.green.lit.engine.enums.UserRole;
@@ -260,6 +261,24 @@ public class AuthServiceImpl implements AuthService {
             return false;
         }
         return true;
+    }
+
+    @Override
+    public void updateClientIp(UpdateClientIpRequest request) {
+        // 获取当前登录用户信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
+        }
+        
+        // 获取当前用户信息
+        String phone = authentication.getName();
+        User currentUser = userService.queryNormalUserByPhone(phone);
+        
+        // 更新客户端IP
+        if (userService.updateClientIp(currentUser.getUid(), request.getClientIp(), currentUser.getVersion()) <= 0) {
+            throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "更新客户端IP失败，请稍后重试");
+        }
     }
 
     /**

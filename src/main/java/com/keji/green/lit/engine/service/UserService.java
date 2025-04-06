@@ -34,4 +34,14 @@ public interface UserService extends UserDetailsService {
      * 根据uid更新密码
      */
     int resetPasswordByUid(Long uid, String newPassword, Integer version);
+    
+    /**
+     * 更新客户端IP
+     * 
+     * @param uid 用户ID
+     * @param clientIp 客户端IP:端口
+     * @param version 版本号
+     * @return 更新结果，大于0表示更新成功
+     */
+    int updateClientIp(Long uid, String clientIp, Integer version);
 }
