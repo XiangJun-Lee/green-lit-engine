@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.dto;
+package com.keji.green.lit.engine.dto.response;
 
 import com.keji.green.lit.engine.model.User;
 import lombok.AllArgsConstructor;
@@ -32,26 +32,13 @@ public class UserResponse {
      * 账号创建时间
      */
     private Date gmtCreate;
-    
-    /**
-     * 最后登录时间
-     */
-    private Date lastLoginTime;
-    
-    /**
-     * 积分余额
-     */
-    private Integer pointsBalance;
+
     
     /**
      * 简历文本内容
      */
     private String resumeText;
-    
-    /**
-     * 客户端连接信息
-     */
-    private String clientConnection;
+
 
     /**
      * 状态
@@ -70,9 +57,9 @@ public class UserResponse {
         return UserResponse.builder()
                 .uid(user.getUid())
                 .phone(user.getPhone())
-                .gmtCreate(user.getGmtCreate())
-                .pointsBalance(user.getPointsBalance())
+                .email(user.getEmail())
                 .resumeText(user.getResumeText())
+                .gmtCreate(user.getGmtCreate())
                 .build();
     }
 } 

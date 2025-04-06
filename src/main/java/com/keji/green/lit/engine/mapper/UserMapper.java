@@ -2,7 +2,6 @@ package com.keji.green.lit.engine.mapper;
 
 import com.keji.green.lit.engine.model.User;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 
 import java.util.Optional;
 
@@ -35,10 +34,6 @@ public interface UserMapper {
     /**
      * 根据手机号更新用户
      */
-    int updateByPhoneSelective(User row);
+    int updateSelectiveByPhone(User row);
 
-    /**
-     * 检查手机号是否已存在
-     */
-    boolean existsByPhone(@Param("phone") String phone);
 }

@@ -27,6 +27,8 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     @Resource
     private RedisUtils redisUtils;
 
+    private static final String VERIFICATION_CODE_KEY_PREFIX = "verificationCode:%s";
+
     private final Random random = new Random();
 
     @Value("${sms.verification.expiration:60}")
@@ -42,7 +44,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
     @Override
     public String generateAndSendCode(String phone) {
         String code = String.format("%06d", random.nextInt(1000000));
-        String key = "verificationCode:" + phone;
+        String key = getVerificationCodeKey(phone);
         redisUtils.set(key, code, verificationCodeExpiration);
         log.debug("Stored verification code for phone number: {},code:{}", phone, code);
         return code;
@@ -58,7 +60,7 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
      */
     @Override
     public boolean verifyCode(String phone, String code) {
-        String key = "verificationCode:" + phone;
+        String key = getVerificationCodeKey(phone);
         String storedCode = redisUtils.get(key);
         if (StringUtils.isBlank(storedCode)){
             throw new BusinessException(VERIFICATION_CODE_EXPIRED);
@@ -69,5 +71,9 @@ public class VerificationCodeServiceImpl implements VerificationCodeService {
             return true;
         }
         return false;
+    }
+
+    private static String getVerificationCodeKey(String phone) {
+        return String.format(VERIFICATION_CODE_KEY_PREFIX, phone);
     }
 } 

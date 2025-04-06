@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.dto;
+package com.keji.green.lit.engine.dto.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

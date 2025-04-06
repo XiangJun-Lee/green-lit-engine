@@ -3,22 +3,21 @@
 <mapper namespace="com.keji.green.lit.engine.mapper.UserMapper">
   <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.User">
     <id column="uid" jdbcType="BIGINT" property="uid" />
-    <result column="points_balance" jdbcType="INTEGER" property="pointsBalance" />
     <result column="status" jdbcType="INTEGER" property="status" />
-    <result column="last_login_time" jdbcType="TIMESTAMP" property="lastLoginTime" />
     <result column="password" jdbcType="VARCHAR" property="password" />
     <result column="phone" jdbcType="VARCHAR" property="phone" />
     <result column="user_role" jdbcType="SMALLINT" property="userRole" />
     <result column="email" jdbcType="VARCHAR" property="email" />
     <result column="registration_time" jdbcType="TIMESTAMP" property="registrationTime" />
+    <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />
+    <result column="version" jdbcType="INTEGER" property="version" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
-    <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />
   </resultMap>
 
   <sql id="Base_Column_List">
-    uid, points_balance, status, last_login_time, password, phone, user_role, email, 
-    registration_time, gmt_create, gmt_modify,resume_text
+    uid, status, last_login_time, password, phone, user_role, email,
+    registration_time, gmt_create, gmt_modify,resume_text,version
   </sql>
 
   <select id="selectByUid" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -36,9 +35,6 @@
   </select>
 
   <insert id="insertSelective" parameterType="com.keji.green.lit.engine.model.User">
-    <selectKey keyProperty="uid" order="AFTER" resultType="java.lang.Long">
-      SELECT LAST_INSERT_ID()
-    </selectKey>
     insert into user_info
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="pointsBalance != null">
@@ -148,11 +144,13 @@
       <if test="resumeText != null">
         resume_text = #{resumeText,jdbcType=LONGVARCHAR},
       </if>
+      version = version + 1
     </set>
     where uid = #{uid,jdbcType=BIGINT}
+    and version = #{version,jdbcType=INTEGER}
   </update>
 
-  <update id="updateByPhoneSelective" parameterType="com.keji.green.lit.engine.model.User">
+  <update id="updateSelectiveByPhone" parameterType="com.keji.green.lit.engine.model.User">
     update user_info
     <set>
       <if test="pointsBalance != null">
@@ -185,14 +183,10 @@
       <if test="resumeText != null">
         resume_text = #{resumeText,jdbcType=LONGVARCHAR},
       </if>
+      version = version + 1
     </set>
     where phone = #{phone,jdbcType=VARCHAR}
+    and version = #{version,jdbcType=INTEGER}
   </update>
-
-  <select id="existsByPhone" resultType="boolean">
-    select COUNT(1)
-    from user_info
-    where phone = #{phone,jdbcType=VARCHAR}
-  </select>
 
 </mapper>

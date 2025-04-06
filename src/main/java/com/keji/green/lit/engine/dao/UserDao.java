@@ -1,7 +1,5 @@
 package com.keji.green.lit.engine.dao;
 
-import com.keji.green.lit.engine.exception.BusinessException;
-import com.keji.green.lit.engine.exception.ErrorCode;
 import com.keji.green.lit.engine.mapper.UserMapper;
 import com.keji.green.lit.engine.model.User;
 import jakarta.annotation.Resource;
@@ -23,13 +21,6 @@ public class UserDao {
      */
     public Optional<User> findByPhone(String phone) {
         return mapper.selectByPhone(phone);
-    }
-
-    /**
-     * 检查手机号是否已存在
-     */
-    public boolean existsByPhone(String phone) {
-        return mapper.existsByPhone(phone);
     }
 
     /**
@@ -56,6 +47,10 @@ public class UserDao {
         User user = new User();
         user.setUid(uid);
         user.setStatus(userStatus);
+        return mapper.updateSelectiveByUid(user);
+    }
+
+    public int updateSelectiveByUid(User user){
         return mapper.updateSelectiveByUid(user);
     }
 

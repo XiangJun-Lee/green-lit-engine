@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.dto;
+package com.keji.green.lit.engine.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

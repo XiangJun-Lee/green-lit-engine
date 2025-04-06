@@ -1,11 +1,12 @@
 package com.keji.green.lit.engine.controller;
 
 import com.keji.green.lit.engine.common.Result;
-import com.keji.green.lit.engine.dto.LoginRequest;
-import com.keji.green.lit.engine.dto.RegisterRequest;
-import com.keji.green.lit.engine.dto.TokenResponse;
-import com.keji.green.lit.engine.dto.UserResponse;
-import com.keji.green.lit.engine.model.User;
+import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
+import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
+import com.keji.green.lit.engine.dto.request.RegisterRequest;
+import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
+import com.keji.green.lit.engine.dto.response.TokenResponse;
+import com.keji.green.lit.engine.dto.response.UserResponse;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
 import com.keji.green.lit.engine.service.AuthService;
 import com.keji.green.lit.engine.service.UserService;
@@ -18,14 +19,10 @@ import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import static com.keji.green.lit.engine.exception.ErrorCode.RATE_LIMIT_EXCEEDED;
-import static com.keji.green.lit.engine.exception.ErrorCode.USER_NOT_EXIST;
 import static com.keji.green.lit.engine.utils.Constants.*;
 import static org.apache.commons.lang3.math.NumberUtils.INTEGER_ONE;
 
@@ -92,39 +89,19 @@ public class AuthController {
      * @return JWT令牌响应
      */
     @PostMapping("/login")
-    public Result<TokenResponse> loginWithPassword(@Valid @RequestBody LoginRequest request) {
-
-        TokenResponse response = authService.loginWithPassword(request);
-
-        return Result.success(TokenResponse.of(token, user.getUid(), user.getPhone()));
+    public Result<TokenResponse> loginWithPassword(@Valid @RequestBody LoginWithPasswordRequest request) {
+        return Result.success( authService.loginWithPassword(request));
     }
 
     /**
      * 验证码登录
      * 
-     * @param phone 手机号
-     * @param code 验证码
+     * @param request 登录请求，包含手机号和验证码
      * @return JWT令牌响应
      */
     @PostMapping("/login-with-code")
-    public Result<TokenResponse> loginWithCode(
-            @RequestParam @NotBlank(message = "手机号不能为空") 
-            @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone,
-            @RequestParam @NotBlank(message = "验证码不能为空") String code) {
-        String ip = getClientIp();
-        String ipLimitKey = String.format(VERIFICATION_CODE_IP_KEY, ip);
-        String phoneLimitKey = String.format(VERIFICATION_CODE_PHONE_KEY, phone);
-        
-        // 检查IP登录频率限制：5次/分钟
-        if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_FIVE, ONE_MINUTE_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"登录尝试次数过多，请稍后再试");
-        }
-
-        // 检查手机号发送频率限制：1次/分钟
-        if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_ONE, ONE_MINUTE_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
-        }
-        return Result.success(userService.loginWithVerificationCode(phone, code));
+    public Result<TokenResponse> loginWithCode(@Valid @RequestBody LoginWithCodeRequest request) {
+        return Result.success( authService.loginWithVerificationCode(request));
     }
 
     /**
@@ -135,42 +112,18 @@ public class AuthController {
      */
     @PostMapping("/code")
     public Result<Void> sendVerificationCode(
-            @RequestParam @NotBlank(message = "手机号不能为空") 
+            @RequestParam @NotBlank(message = "手机号不能为空")
             @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone) {
-        String ip = getClientIp();
-        String ipLimitKey = String.format(SEND_VERIFICATION_IP_KEY, ip);
-        String phoneLimitKey = String.format(SEND_VERIFICATION_CODE_PHONE_KEY, phone);
-
-        // 检查IP发送频率限制：10次/小时
-        if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_TEN, ONE_HOUR_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"发送验证码次数过多，请稍后再试");
-        }
-
-        // 检查手机号发送频率限制：1次/分钟
-        if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_ONE, ONE_MINUTE_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
-        }
-
-        userService.requestVerificationCode(phone);
+        authService.requestVerificationCode(phone);
         return Result.success();
     }
 
     /**
      * 重置密码
-     * 
-     * @param phone 手机号
-     * @param code 验证码
-     * @param newPassword 新密码
-     * @return 重置结果
      */
     @PostMapping("/reset-password")
-    public Result<Void> resetPassword(
-            @RequestParam @NotBlank(message = "手机号不能为空") 
-            @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone,
-            @RequestParam @NotBlank(message = "验证码不能为空") String code,
-            @RequestParam @NotBlank(message = "密码不能为空") 
-            @Pattern(regexp = "^.{6,20}$", message = "密码长度必须在6-20位之间") String newPassword) {
-        userService.resetPassword(phone, code, newPassword);
+    public Result<Void> resetPassword((@Valid @RequestBody ResetPasswordByPhoneRequest request) {
+        authService.resetPassword(request);
         return Result.success();
     }
 

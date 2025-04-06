@@ -81,6 +81,11 @@ public class User implements UserDetails {
      */
     private String resumeText;
 
+    /**
+     * 版本号
+     */
+    private Integer version;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         UserRole role = UserRole.fromCode(userRole);

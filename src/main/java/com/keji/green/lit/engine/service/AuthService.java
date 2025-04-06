@@ -1,8 +1,10 @@
 package com.keji.green.lit.engine.service;
 
-import com.keji.green.lit.engine.dto.LoginRequest;
-import com.keji.green.lit.engine.dto.RegisterRequest;
-import com.keji.green.lit.engine.dto.TokenResponse;
+import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
+import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
+import com.keji.green.lit.engine.dto.request.RegisterRequest;
+import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
+import com.keji.green.lit.engine.dto.response.TokenResponse;
 import jakarta.validation.Valid;
 
 /**
@@ -12,7 +14,13 @@ import jakarta.validation.Valid;
 public interface AuthService {
 
 
-    void register(@Valid RegisterRequest request);
+    void register(RegisterRequest request);
 
-    TokenResponse loginWithPassword(@Valid LoginRequest request);
+    TokenResponse loginWithPassword(LoginWithPasswordRequest request);
+
+    TokenResponse loginWithVerificationCode(LoginWithCodeRequest request);
+
+    void requestVerificationCode(String phone);
+
+    void resetPassword(@Valid ResetPasswordByPhoneRequest request);
 }

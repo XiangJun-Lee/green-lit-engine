@@ -22,6 +22,7 @@ public enum ErrorCode {
     UNAUTHORIZED(3000, "未授权访问"),
     FORBIDDEN(3001, "禁止访问"),
     AUTH_ERROR(3002, "认证失败"),
+    SAME_PASSWORD(3003, "新旧密码相同"),
     
     // 数据相关错误码 (4000-4999)
     DATA_NOT_FOUND(4000, "数据不存在"),
