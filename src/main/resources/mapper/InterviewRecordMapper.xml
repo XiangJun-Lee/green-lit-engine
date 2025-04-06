@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.keji.green.lit.engine.mapper.InterviewRecordMapper">
+
+  <resultMap id="BaseResultMap" type="InterviewRecord">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="interview_id" jdbcType="VARCHAR" property="interviewId" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
+  </resultMap>
+
+  <resultMap extends="BaseResultMap" id="ResultMapWithBLOBs" type="InterviewRecordWithBLOBs">
+    <result column="question" jdbcType="LONGVARCHAR" property="question" />
+    <result column="answer" jdbcType="LONGVARCHAR" property="answer" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, interview_id, gmt_create, gmt_modify
+  </sql>
+  <sql id="Blob_Column_List">
+    question, answer
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="ResultMapWithBLOBs">
+    select 
+    <include refid="Base_Column_List" />
+    ,
+    <include refid="Blob_Column_List" />
+    from interview_record
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <insert id="insertSelective" parameterType="InterviewRecordWithBLOBs">
+    insert into interview_record
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="interviewId != null">
+        interview_id,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify,
+      </if>
+      <if test="question != null">
+        question,
+      </if>
+      <if test="answer != null">
+        answer,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="interviewId != null">
+        #{interviewId,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+      <if test="question != null">
+        #{question,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="answer != null">
+        #{answer,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="InterviewRecordWithBLOBs">
+    update interview_record
+    <set>
+      <if test="interviewId != null">
+        interview_id = #{interviewId,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+      <if test="question != null">
+        question = #{question,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="answer != null">
+        answer = #{answer,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>
