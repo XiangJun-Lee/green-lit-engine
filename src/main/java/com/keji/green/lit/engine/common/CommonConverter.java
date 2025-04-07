@@ -8,6 +8,7 @@ import com.keji.green.lit.engine.dto.response.InterviewRecordResponse;
 import com.keji.green.lit.engine.dto.response.InterviewSummaryResponse;
 import com.keji.green.lit.engine.model.InterviewInfo;
 import com.keji.green.lit.engine.model.InterviewRecordWithBLOBs;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -29,12 +30,12 @@ public interface CommonConverter {
     CommonConverter INSTANCE = Mappers.getMapper(CommonConverter.class);
 
     // todo 默认快捷方式定义
-    String SHORTCUT_CONFIG = "";
+    String SHORTCUT_CONFIG = "{}";
 
     @Mappings(value = {
             @Mapping(target = "onlineMode", defaultValue = "false"),
             @Mapping(target = "voiceTrigger", defaultValue = "false"),
-            @Mapping(target = "shortcutConfig", expression = "java(updateShortcutConfig(request.getShortcutConfig())")
+            @Mapping(target = "shortcutConfig", expression = "java(updateShortcutConfig(request.getShortcutConfig()))")
     })
     InterviewExtraData convert2InterviewExtraData(CreateInterviewRequest request);
 
@@ -51,19 +52,11 @@ public interface CommonConverter {
     @Mappings({})
     List<InterviewRecordResponse> convert2recordResponseList(List<InterviewRecordWithBLOBs> interviewRecordList);
 
-    default String updateShortcutConfig(String shortcutConfig) {
-        if (StringUtils.isNoneBlank(shortcutConfig)) {
-            try {
-                Map<String, String> stringStringMap = JSON.parseObject(shortcutConfig, new TypeReference<Map<String, String>>() {
-                });
-                if (Objects.nonNull(stringStringMap) && !stringStringMap.isEmpty()) {
-                    return shortcutConfig;
-                }
-            } catch (Exception e) {
-
-            }
+    default String updateShortcutConfig(Map<String,String> shortcutConfig) {
+        if (MapUtils.isEmpty(shortcutConfig)){
+            return SHORTCUT_CONFIG;
         }
-        return SHORTCUT_CONFIG;
+        return JSON.toJSONString(shortcutConfig);
     }
 
 }

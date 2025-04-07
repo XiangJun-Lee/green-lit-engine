@@ -18,12 +18,12 @@ import com.keji.green.lit.engine.service.InterviewService;
 import com.keji.green.lit.engine.service.UserService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -61,10 +61,11 @@ public class InterviewServiceImpl implements InterviewService {
     @Transactional(rollbackFor = Exception.class)
     public InterviewCreateResponse createInterview(CreateInterviewRequest request) {
 
-        InterviewInfo interview = CommonConverter.INSTANCE.convert2InterviewInfo(request);
-        interview.setUid(getCurrentUserId());
         // 生成面试ID (UUID)
         String interviewId = UUID.randomUUID().toString();
+
+        InterviewInfo interview = CommonConverter.INSTANCE.convert2InterviewInfo(request);
+        interview.setUid(getCurrentUserId());
         interview.setInterviewId(interviewId);
         // 构建面试扩展字段
         InterviewExtraData extraData = CommonConverter.INSTANCE.convert2InterviewExtraData(request);
@@ -104,7 +105,7 @@ public class InterviewServiceImpl implements InterviewService {
         queryParam.put("orderByDesc", "id");
         List<InterviewRecordWithBLOBs> interviewRecordList = interviewRecordMapper.selectQuestionByInterviewId(queryParam);
         List<String> questionList = new ArrayList<>();
-        if (!CollectionUtils.isEmpty(interviewRecordList)) {
+        if (CollectionUtils.isNotEmpty(interviewRecordList)) {
             questionList = interviewRecordList.stream().map(InterviewRecordWithBLOBs::getQuestion)
                     .filter(StringUtils::isNotEmpty).toList();
         }
@@ -114,6 +115,7 @@ public class InterviewServiceImpl implements InterviewService {
         record.setInterviewId(interviewId);
         record.setQuestion(request.getQuestion());
         Long recordId = interviewRecordMapper.insertSelective(record);
+
         if (Objects.isNull(recordId) || recordId <= 0) {
             throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试流水失败");
         }
@@ -138,28 +140,23 @@ public class InterviewServiceImpl implements InterviewService {
                 for (int i = 0; i < 10; i++) {
                     String chunk = "这是回答的第" + (i + 1) + "部分。";
                     answer.append(chunk);
-                    emitter.send(SseEmitter.event()
-                            .name("message")
-                            .data(chunk, org.springframework.http.MediaType.TEXT_PLAIN));
+                    emitter.send(SseEmitter.event().name("message").data(chunk, org.springframework.http.MediaType.TEXT_PLAIN));
                     Thread.sleep(500);
                 }
 
                 // 发送完成事件
-                emitter.send(SseEmitter.event()
-                        .name("complete")
-                        .data("完成", org.springframework.http.MediaType.TEXT_PLAIN));
+                emitter.send(SseEmitter.event().name("complete").data("完成", org.springframework.http.MediaType.TEXT_PLAIN));
 
                 // 更新面试流水（答案）
                 LocalDateTime answerTime = LocalDateTime.now();
                 // TODO: 更新面试流水的答案
                 // interviewRecordMapper.updateAnswerById(recordId, answer.toString(), answerTime);
+
                 emitter.complete();
             } catch (Exception e) {
                 log.error("处理面试问题失败: {}", e.getMessage(), e);
                 try {
-                    emitter.send(SseEmitter.event()
-                            .name("error")
-                            .data("处理问题时发生错误: " + e.getMessage(), org.springframework.http.MediaType.TEXT_PLAIN));
+                    emitter.send(SseEmitter.event().name("error").data("处理问题时发生错误: " + e.getMessage(), org.springframework.http.MediaType.TEXT_PLAIN));
                     emitter.complete();
                 } catch (IOException ex) {
                     emitter.completeWithError(ex);
