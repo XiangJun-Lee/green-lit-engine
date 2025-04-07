@@ -1,6 +1,9 @@
 package com.keji.green.lit.engine.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Date;
 
@@ -10,6 +13,9 @@ import java.util.Date;
  * @author xiangjun_lee
  */
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class InterviewInfo {
 
     /**
@@ -20,7 +26,7 @@ public class InterviewInfo {
     /**
      * 用户id
      */
-    private String uid;
+    private Long uid;
 
     /**
      * 面试名称

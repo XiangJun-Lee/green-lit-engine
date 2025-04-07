@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.common;
+package com.keji.green.lit.engine.dto.response;
 
 import lombok.Data;
 

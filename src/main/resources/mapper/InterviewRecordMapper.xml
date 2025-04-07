@@ -28,7 +28,26 @@
     from interview_record
     where id = #{id,jdbcType=BIGINT}
   </select>
+
+  <select id="selectQuestionByInterviewId" parameterType="java.util.Map" resultMap="ResultMapWithBLOBs">
+    select question
+    from interview_record
+    where interview_id = #{interviewId,jdbcType=VARCHAR}
+    <if test="limit != null">
+      limit #{limit}
+    </if>
+    <if test="orderByDesc != null">
+      order by #{orderBy}
+    </if>
+    <if test="orderByAsc != null">
+      order by #{orderBy}
+    </if>
+  </select>
+
   <insert id="insertSelective" parameterType="InterviewRecordWithBLOBs">
+    <selectKey keyProperty="id" order="AFTER" resultType="java.lang.Long">
+      SELECT LAST_INSERT_ID()
+    </selectKey>
     insert into interview_record
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="id != null">

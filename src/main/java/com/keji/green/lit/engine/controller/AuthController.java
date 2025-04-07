@@ -1,6 +1,6 @@
 package com.keji.green.lit.engine.controller;
 
-import com.keji.green.lit.engine.common.Result;
+import com.keji.green.lit.engine.dto.response.Result;
 import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
 import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
@@ -9,7 +9,6 @@ import com.keji.green.lit.engine.dto.request.UpdateClientIpRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
 import com.keji.green.lit.engine.service.AuthService;
-import com.keji.green.lit.engine.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -26,12 +25,6 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
-
-    /**
-     * 用户服务
-     */
-    @Resource
-    private UserService userService;
 
 
 

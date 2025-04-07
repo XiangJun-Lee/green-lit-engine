@@ -1,6 +1,6 @@
 package com.keji.green.lit.engine.exception;
 
-import com.keji.green.lit.engine.common.Result;
+import com.keji.green.lit.engine.dto.response.Result;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;

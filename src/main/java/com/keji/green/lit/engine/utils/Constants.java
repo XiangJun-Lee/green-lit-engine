@@ -18,8 +18,10 @@ public class Constants {
 
 
 
+
     public static final Integer ONE_MINUTE_SECONDS = 60;
     public static final Integer ONE_HOUR_SECONDS = 60 * 60;
+    public static final Long FIVE_MINUTE_MILLISECONDS = 5 * 60 * 1000L;
 
     public static final Integer INTEGER_FIVE = 5;
     public static final Integer INTEGER_TEN = 10;
