@@ -1,7 +1,6 @@
 package com.keji.green.lit.engine.common;
 
 import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.TypeReference;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.InterviewRecordResponse;
@@ -9,7 +8,6 @@ import com.keji.green.lit.engine.dto.response.InterviewSummaryResponse;
 import com.keji.green.lit.engine.model.InterviewInfo;
 import com.keji.green.lit.engine.model.InterviewRecordWithBLOBs;
 import org.apache.commons.collections4.MapUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -18,7 +16,6 @@ import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * @author xiangjun_lee
