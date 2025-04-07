@@ -28,6 +28,27 @@
     where interview_id = #{interviewId,jdbcType=VARCHAR}
   </select>
 
+  <select id="selectPageByUserId" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from interview_info
+    where uid = #{uid,jdbcType=BIGINT}
+    <if test="status != null">
+      and status = #{status,jdbcType=INTEGER}
+    </if>
+    order by gmt_create desc
+    limit #{offset}, #{pageSize}
+  </select>
+
+  <select id="countByUserIdAndStatus" parameterType="java.util.Map" resultType="java.lang.Long">
+    select count(1)
+    from interview_info
+    where uid = #{uid,jdbcType=BIGINT}
+    <if test="status != null">
+      and status = #{status,jdbcType=INTEGER}
+    </if>
+  </select>
+
   <insert id="insertSelective" parameterType="InterviewInfo">
     insert into interview_info
     <trim prefix="(" suffix=")" suffixOverrides=",">

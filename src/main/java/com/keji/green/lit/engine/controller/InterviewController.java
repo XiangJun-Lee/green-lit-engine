@@ -4,9 +4,8 @@ import com.keji.green.lit.engine.dto.response.Result;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.InterviewDetailResponse;
-import com.keji.green.lit.engine.dto.response.InterviewListResponse;
 import com.keji.green.lit.engine.dto.response.InterviewCreateResponse;
-import com.keji.green.lit.engine.dto.response.InterviewSummaryResponse;
+import com.keji.green.lit.engine.dto.response.InterviewInfoResponse;
 import com.keji.green.lit.engine.dto.response.PageResponse;
 import com.keji.green.lit.engine.enums.InterviewStatus;
 import com.keji.green.lit.engine.service.InterviewService;
@@ -66,7 +65,7 @@ public class InterviewController {
      * @return 面试总结信息
      */
     @PostMapping("/{interviewId}/end")
-    public Result<InterviewSummaryResponse> endInterview(@PathVariable String interviewId) {
+    public Result<InterviewInfoResponse> endInterview(@PathVariable String interviewId) {
         return Result.success(interviewService.endInterview(interviewId));
     }
 
@@ -90,7 +89,7 @@ public class InterviewController {
      * @return 分页面试列表
      */
     @GetMapping("/list")
-    public Result<PageResponse<InterviewListResponse>> getInterviewList(
+    public Result<PageResponse<InterviewInfoResponse>> getInterviewList(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) InterviewStatus status) {

@@ -171,7 +171,7 @@ public class InterviewServiceImpl implements InterviewService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public InterviewSummaryResponse endInterview(String interviewId) {
+    public InterviewInfoResponse endInterview(String interviewId) {
         Long uid = getCurrentUserId();
         // 验证面试所有权
         InterviewInfo interviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
@@ -179,7 +179,7 @@ public class InterviewServiceImpl implements InterviewService {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         if (InterviewStatus.isEnd(interviewInfo.getStatus())){
-            return CommonConverter.INSTANCE.convert2InterviewSummaryResponse(interviewInfo);
+            return CommonConverter.INSTANCE.convert2InterviewInfoResponse(interviewInfo);
         }
 
         // 记录结束时间
@@ -190,7 +190,7 @@ public class InterviewServiceImpl implements InterviewService {
         interviewInfoMapper.updateByPrimaryKeySelective(updateInterviewInfo);
 
         // 构建返回结果
-        InterviewSummaryResponse response = new InterviewSummaryResponse();
+        InterviewInfoResponse response = new InterviewInfoResponse();
         response.setInterviewId(interviewId);
         response.setStartTime(interviewInfo.getStartTime());
         response.setEndTime(updateInterviewInfo.getEndTime());
@@ -214,51 +214,45 @@ public class InterviewServiceImpl implements InterviewService {
         queryParam.put("interviewId", interviewId);
         queryParam.put("orderByDesc", "id");
         List<InterviewRecordWithBLOBs> interviewRecordList = interviewRecordMapper.selectQuestionByInterviewId(queryParam);
-
         // 构建面试详情响应
-        InterviewDetailResponse response = new InterviewDetailResponse();
-        response.setInterviewId(interviewId);
-        response.setStatus(interviewInfo.getStatus());
-        response.setStartTime(interviewInfo.getStartTime());
-        if (InterviewStatus.isEnd(interviewInfo.getStatus())){
-            response.setEndTime(interviewInfo.getEndTime());
-        }
-        response.setRecords(CommonConverter.INSTANCE.convert2recordResponseList(interviewRecordList));
-        return response;
+        return CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, interviewRecordList);
     }
 
     /**
      * 分页获取面试列表
      */
     @Override
-    public PageResponse<InterviewListResponse> getInterviewList(Integer pageNum, Integer pageSize, InterviewStatus status) {
+    public PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, InterviewStatus status) {
         // 获取当前用户ID
-        Long userId = getCurrentUserId();
+        Long uid = getCurrentUserId();
 
-        // TODO: 分页查询面试列表
-        // Page<Interview> page = new Page<>(pageNum, pageSize);
-        // Page<Interview> interviewPage = interviewMapper.selectPageByUserId(page, userId, status);
-
-        // 构建列表响应
-        List<InterviewListResponse> responses = new ArrayList<>();
-
-        // 添加模拟数据
-        for (int i = 0; i < 3; i++) {
-            InterviewListResponse response = new InterviewListResponse();
-            response.setInterviewId(UUID.randomUUID().toString());
-            response.setStatus(status != null ? status : InterviewStatus.ONGOING);
-            response.setStartTime(LocalDateTime.now().minusDays(i));
-            if (status == InterviewStatus.ENDED_MANUALLY || status == InterviewStatus.ENDED_AUTOMATICALLY) {
-                response.setEndTime(LocalDateTime.now().minusDays(i).plusHours(1));
-            }
-            response.setTotalPoints(30 + i * 10);
-            response.setQuestionCount(3 + i);
-            response.setCreateTime(LocalDateTime.now().minusDays(i));
-            responses.add(response);
+        // 计算分页查询的偏移量
+        int offset = (pageNum - 1) * pageSize;
+        
+        // 构建查询参数
+        Map<String, Object> params = new HashMap<>();
+        params.put("uid", uid);
+        params.put("offset", offset);
+        params.put("pageSize", pageSize);
+        if (status != null) {
+            params.put("status", status.getCode());
         }
+        
+        // 查询面试列表数据
+        List<InterviewInfo> interviewInfoList = interviewInfoMapper.selectPageByUserId(params);
+        
+        // 统计总记录数
+        long total = interviewInfoMapper.countByUserIdAndStatus(params);
+        
+        // 如果没有数据，直接返回空列表
+        if (CollectionUtils.isEmpty(interviewInfoList)) {
+            return PageResponse.build(new ArrayList<>(), total, pageNum, pageSize);
+        }
+        
+        // 构建列表响应
+        List<InterviewInfoResponse> responses = CommonConverter.INSTANCE.convert2InterviewListResponseList(interviewInfoList);
 
-        // return PageResponse.build(responses, interviewPage.getTotal(), pageNum, pageSize);
-        return PageResponse.build(responses, responses.size(), pageNum, pageSize);
+        return PageResponse.build(responses, total, pageNum, pageSize);
     }
 
 

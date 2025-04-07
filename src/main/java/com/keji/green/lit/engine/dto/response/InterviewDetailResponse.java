@@ -31,16 +31,11 @@ public class InterviewDetailResponse {
      * 结束时间
      */
     private Date endTime;
-    
+
     /**
-     * 面试时长（分钟）
+     * 创建时间
      */
-    private Long durationMinutes;
-    
-    /**
-     * 消耗的总积分
-     */
-    private Integer totalPoints;
+    private Date createTime;
     
     /**
      * 面试提问记录
