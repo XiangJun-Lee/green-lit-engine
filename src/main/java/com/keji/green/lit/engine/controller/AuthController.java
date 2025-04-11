@@ -5,6 +5,7 @@ import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
 import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
+import com.keji.green.lit.engine.dto.request.SendVerificationCodeRequest;
 import com.keji.green.lit.engine.dto.request.UpdateClientIpRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
@@ -26,10 +27,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-
-
     @Resource
     private AuthService authService;
+
     /**
      * 用户注册
      * 
@@ -50,7 +50,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     public Result<TokenResponse> loginWithPassword(@Valid @RequestBody LoginWithPasswordRequest request) {
-        return Result.success( authService.loginWithPassword(request));
+        return Result.success(authService.loginWithPassword(request));
     }
 
     /**
@@ -61,20 +61,18 @@ public class AuthController {
      */
     @PostMapping("/login-with-code")
     public Result<TokenResponse> loginWithCode(@Valid @RequestBody LoginWithCodeRequest request) {
-        return Result.success( authService.loginWithVerificationCode(request));
+        return Result.success(authService.loginWithVerificationCode(request));
     }
 
     /**
      * 发送验证码
      * 
-     * @param phone 手机号
+     * @param request 发送验证码请求
      * @return 发送结果
      */
     @PostMapping("/code")
-    public Result<Void> sendVerificationCode(
-            @RequestParam @NotBlank(message = "手机号不能为空")
-            @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确") String phone) {
-        authService.requestVerificationCode(phone);
+    public Result<Void> sendVerificationCode(@Valid @RequestBody SendVerificationCodeRequest request) {
+        authService.requestVerificationCode(request);
         return Result.success();
     }
 
@@ -134,5 +132,4 @@ public class AuthController {
         authService.updateClientIp(request);
         return Result.success();
     }
-
 } 

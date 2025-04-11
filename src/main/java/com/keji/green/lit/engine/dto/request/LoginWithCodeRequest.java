@@ -24,9 +24,16 @@ public class LoginWithCodeRequest {
     private String phone;
 
     /**
-     * 用户密码
+     * 验证码
      * 不能为空，用于验证用户身份
      */
     @NotBlank(message = "验证码不能为空")
     private String code;
+
+    /**
+     * 验证码场景
+     * 不能为空，用于区分不同业务场景
+     */
+    @NotBlank(message = "验证码场景不能为空")
+    private String scene;
 }

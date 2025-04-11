@@ -4,6 +4,7 @@ import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
 import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
+import com.keji.green.lit.engine.dto.request.SendVerificationCodeRequest;
 import com.keji.green.lit.engine.dto.request.UpdateClientIpRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
@@ -14,14 +15,13 @@ import com.keji.green.lit.engine.dto.response.UserResponse;
  */
 public interface AuthService {
 
-
     void register(RegisterRequest request);
 
     TokenResponse loginWithPassword(LoginWithPasswordRequest request);
 
     TokenResponse loginWithVerificationCode(LoginWithCodeRequest request);
 
-    void requestVerificationCode(String phone);
+    void requestVerificationCode(SendVerificationCodeRequest request);
 
     void resetPassword(ResetPasswordByPhoneRequest request);
 

@@ -29,7 +29,14 @@ public class ResetPasswordByPhoneRequest {
      * 用于验证手机号真实性
      */
     @NotBlank(message = "验证码不能为空")
-    private String verificationCode;
+    private String code;
+
+    /**
+     * 验证码场景
+     * 不能为空，用于区分不同业务场景
+     */
+    @NotBlank(message = "验证码场景不能为空")
+    private String scene;
 
     /**
      * 用户密码

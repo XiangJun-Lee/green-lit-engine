@@ -123,6 +123,12 @@ public class UserServiceImpl implements UserService {
         return userDao.updateSelectiveByUid(user);
     }
 
+    @Override
+    public User findByPhone(String phone) {
+        Optional<User> userDaoByPhone = userDao.findByPhone(phone);
+        return userDaoByPhone.orElse(null);
+    }
+
     /**
      * 根据用户名（手机号）加载用户详情
      * 实现UserDetailsService接口的方法，用于Spring Security认证

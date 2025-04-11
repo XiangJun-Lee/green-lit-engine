@@ -44,4 +44,6 @@ public interface UserService extends UserDetailsService {
      * @return 更新结果，大于0表示更新成功
      */
     int updateClientIp(Long uid, String clientIp, Integer version);
+
+    User findByPhone(String phone);
 }

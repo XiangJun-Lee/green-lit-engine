@@ -4,11 +4,13 @@ import com.keji.green.lit.engine.dto.request.LoginWithCodeRequest;
 import com.keji.green.lit.engine.dto.request.LoginWithPasswordRequest;
 import com.keji.green.lit.engine.dto.request.RegisterRequest;
 import com.keji.green.lit.engine.dto.request.ResetPasswordByPhoneRequest;
+import com.keji.green.lit.engine.dto.request.SendVerificationCodeRequest;
 import com.keji.green.lit.engine.dto.request.UpdateClientIpRequest;
 import com.keji.green.lit.engine.dto.response.TokenResponse;
 import com.keji.green.lit.engine.dto.response.UserResponse;
 import com.keji.green.lit.engine.enums.UserRole;
 import com.keji.green.lit.engine.enums.UserStatusEnum;
+import com.keji.green.lit.engine.enums.VerificationCodeScene;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
@@ -90,7 +92,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void register(RegisterRequest request) {
         // 验证验证码
-        if (!verificationCodeService.verifyCode(request.getPhone(), request.getVerificationCode())) {
+        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(),
+                VerificationCodeScene.valueOf(request.getScene().toUpperCase()))) {
             throw new BusinessException(VERIFICATION_CODE_ERROR);
         }
         // 检查用户是否已存在
@@ -172,7 +175,8 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 校验验证码
-        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode())) {
+        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(), 
+                VerificationCodeScene.valueOf(request.getScene().toUpperCase()))) {
             throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误");
         }
 
@@ -193,29 +197,24 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void requestVerificationCode(String phone) {
+    public void requestVerificationCode(SendVerificationCodeRequest request) {
         String ip = getClientIp();
         String ipLimitKey = String.format(SEND_VERIFICATION_IP_KEY, ip);
-        String phoneLimitKey = String.format(SEND_VERIFICATION_CODE_PHONE_KEY, phone);
-
         // 检查IP发送频率限制：10次/小时
         if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_TEN, ONE_HOUR_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"发送验证码次数过多，请稍后再试");
         }
 
-        // 检查手机号发送频率限制：1次/分钟
-        if (rateLimitService.isRateLimited(phoneLimitKey, INTEGER_ONE, ONE_MINUTE_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"该手机号发送验证码次数过多，请稍后再试");
-        }
-        userService.queryNormalUserByPhone(phone);
-        String code = verificationCodeService.generateAndSendCode(phone);
+        String code = verificationCodeService.generateAndSendCode(request.getPhone(), 
+                VerificationCodeScene.valueOf(request.getScene().toUpperCase()));
         // todo 发送短信验证码
     }
 
     @Override
     public void resetPassword(ResetPasswordByPhoneRequest request) {
         // 验证验证码
-        if (!verificationCodeService.verifyCode(request.getPhone(), request.getVerificationCode())) {
+        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(),
+                VerificationCodeScene.valueOf(request.getScene().toUpperCase()))) {
             throw new BusinessException(VERIFICATION_CODE_ERROR);
         }
         // 获取用户信息
