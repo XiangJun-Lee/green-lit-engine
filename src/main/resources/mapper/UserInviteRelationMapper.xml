@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.keji.green.lit.engine.mapper.UserInviteRelationMapper">
+  <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.UserInviteRelation">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="inviter_uid" jdbcType="BIGINT" property="inviterUid" />
+    <result column="invitee_uid" jdbcType="BIGINT" property="inviteeUid" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, inviter_uid, invitee_uid, gmt_create, gmt_modify
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from user_invite_relation
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from user_invite_relation
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insertSelective" parameterType="com.keji.green.lit.engine.model.UserInviteRelation">
+    insert into user_invite_relation
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="inviterUid != null">
+        inviter_uid,
+      </if>
+      <if test="inviteeUid != null">
+        invitee_uid,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="inviterUid != null">
+        #{inviterUid,jdbcType=BIGINT},
+      </if>
+      <if test="inviteeUid != null">
+        #{inviteeUid,jdbcType=BIGINT},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.keji.green.lit.engine.model.UserInviteRelation">
+    update user_invite_relation
+    <set>
+      <if test="inviterUid != null">
+        inviter_uid = #{inviterUid,jdbcType=BIGINT},
+      </if>
+      <if test="inviteeUid != null">
+        invitee_uid = #{inviteeUid,jdbcType=BIGINT},
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+
+  <select id="selectByInviterId" parameterType="java.lang.Long">
+    select
+    <include refid="Base_Column_List" />
+    from user_invite_relation
+    where inviter_uid = #{inviterId,jdbcType=BIGINT}
+  </select>
+
+  <select id="selectByInviteeId" parameterType="java.lang.Long">
+    select
+    <include refid="Base_Column_List" />
+    from user_invite_relation
+    where invitee_uid = #{inviteeId,jdbcType=BIGINT}
+  </select>
+</mapper>
