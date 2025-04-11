@@ -9,6 +9,9 @@ import java.util.Optional;
 
 /**
  * 用户数据访问对象
+ *
+ * @author xiangjun_lee
+ * @since 2024-04-11
  */
 @Repository
 public class UserDao {
@@ -59,5 +62,12 @@ public class UserDao {
      */
     public Optional<User> findById(Long uid) {
         return mapper.selectByUid(uid);
+    }
+
+    /**
+     * 根据邀请码查询用户
+     */
+    public Optional<User> findByInviteCode(String inviteCode) {
+        return mapper.selectByInviteCode(inviteCode);
     }
 } 

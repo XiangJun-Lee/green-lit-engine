@@ -24,8 +24,10 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * 安全配置类
- * 配置Spring Security的安全策略、认证方式和权限控制
+ * Spring Security配置类
+ *
+ * @author xiangjun_lee
+ * @since 2024-04-11
  */
 @Configuration
 @EnableWebSecurity

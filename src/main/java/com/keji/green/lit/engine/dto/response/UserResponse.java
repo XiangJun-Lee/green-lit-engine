@@ -55,6 +55,11 @@ public class UserResponse {
      * 邮箱
      */
     private String email;
+
+    /**
+     * 邀请码
+     */
+    private String inviteCode;
     
     /**
      * 从User实体创建UserResponse的工厂方法
@@ -67,6 +72,7 @@ public class UserResponse {
                 .email(user.getEmail())
                 .resumeText(user.getResumeText())
                 .gmtCreate(user.getGmtCreate())
+                .inviteCode(user.getInviteCode())
                 .build();
     }
 } 

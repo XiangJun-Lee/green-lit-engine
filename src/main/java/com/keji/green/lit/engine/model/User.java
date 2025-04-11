@@ -81,6 +81,11 @@ public class User implements UserDetails {
      */
     private Integer version;
 
+    /**
+     * 邀请码
+     */
+    private String inviteCode;
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         UserRole role = UserRole.fromCode(userRole);

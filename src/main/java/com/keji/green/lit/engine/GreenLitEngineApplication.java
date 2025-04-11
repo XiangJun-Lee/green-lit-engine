@@ -5,8 +5,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
 
 /**
- * 应用程序入口类
- * 使用@ComponentScan注解明确指定包扫描范围，确保@Resource注解的依赖能正确加载
+ * 应用程序启动类
+ *
+ * @author xiangjun_lee
+ * @since 2024-04-11
  */
 @SpringBootApplication
 @ImportResource("classpath:spring/green-lit-application.xml")

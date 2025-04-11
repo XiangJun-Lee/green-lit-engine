@@ -13,12 +13,15 @@ import com.keji.green.lit.engine.enums.UserStatusEnum;
 import com.keji.green.lit.engine.enums.VerificationCodeScene;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
+import com.keji.green.lit.engine.model.UserInviteRelation;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
 import com.keji.green.lit.engine.service.AuthService;
 import com.keji.green.lit.engine.service.RateLimitService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.service.VerificationCodeService;
+import com.keji.green.lit.engine.utils.InviteCodeGenerator;
 import com.keji.green.lit.engine.utils.UserNameGenerator;
+import com.keji.green.lit.engine.dao.UserInviteRelationDao;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -88,6 +91,11 @@ public class AuthServiceImpl implements AuthService {
     @Resource
     private PasswordEncoder passwordEncoder;
 
+    /**
+     * 用户邀请关系数据访问对象
+     */
+    @Resource
+    private UserInviteRelationDao userInviteRelationDao;
 
     @Override
     public void register(RegisterRequest request) {
@@ -101,6 +109,9 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(USER_ALREADY_EXISTS.getCode(), "该手机号已注册");
         }
 
+        // 生成邀请码
+        String inviteCode = InviteCodeGenerator.generate();
+
         // 创建用户
         User user = User.builder()
                 .phone(request.getPhone())
@@ -108,9 +119,29 @@ public class AuthServiceImpl implements AuthService {
                 .userRole(UserRole.USER.getCode())
                 .email(request.getEmail())
                 .nickName(UserNameGenerator.generate())
+                .inviteCode(inviteCode)
                 .build();
 
         userService.saveUser(user);
+
+        // 如果提供了邀请码，处理邀请关系
+        if (request.getInviteCode() != null && !request.getInviteCode().isEmpty()) {
+            // 查询邀请人
+            User inviter = userService.findByInviteCode(request.getInviteCode());
+            if (Objects.isNull(inviter)) {
+                throw new BusinessException(PARAM_ERROR.getCode(), "无效的邀请码");
+            }
+
+            // 创建邀请关系
+            UserInviteRelation relation = UserInviteRelation.builder()
+                    .inviterUid(inviter.getUid())
+                    .inviteeUid(user.getUid())
+                    .build();
+
+            if (userInviteRelationDao.save(relation) <= 0) {
+                throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "保存邀请关系失败");
+            }
+        }
     }
 
     @Override

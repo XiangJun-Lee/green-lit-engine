@@ -10,8 +10,10 @@ import org.springframework.stereotype.Component;
 import java.util.Random;
 
 /**
- * 阿里云短信服务实现
- * 实现短信服务的防腐层接口
+ * 阿里云短信服务实现类
+ *
+ * @author xiangjun_lee
+ * @since 2024-04-11
  */
 @Slf4j
 @Component

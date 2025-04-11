@@ -8,6 +8,12 @@ import redis.clients.jedis.JedisPool;
 
 import java.util.*;
 
+/**
+ * Redis工具类
+ *
+ * @author xiangjun_lee
+ * @since 2024-04-11
+ */
 @Slf4j
 @Component
 public class RedisUtils {

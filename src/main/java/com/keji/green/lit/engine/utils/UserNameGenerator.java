@@ -4,6 +4,9 @@ import java.util.Random;
 
 /**
  * 用户名生成器
+ *
+ * @author xiangjun_lee
+ * @since 2024-04-11
  * 生成规则：前缀是"greenLit "，后面随机生成6个字符(数字+字母)
  */
 public class UserNameGenerator {

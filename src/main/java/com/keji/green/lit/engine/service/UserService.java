@@ -46,4 +46,12 @@ public interface UserService extends UserDetailsService {
     int updateClientIp(Long uid, String clientIp, Integer version);
 
     User findByPhone(String phone);
+
+    /**
+     * 根据邀请码查询用户
+     * 
+     * @param inviteCode 邀请码
+     * @return 用户信息，如果未找到返回null
+     */
+    User findByInviteCode(String inviteCode);
 }

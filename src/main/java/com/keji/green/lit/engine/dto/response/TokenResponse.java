@@ -6,8 +6,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 令牌响应DTO
- * 用于向客户端返回JWT令牌和相关用户信息
+ * Token响应对象
+ *
+ * @author xiangjun_lee
+ * @since 2024-04-11
  */
 @Data
 @Builder

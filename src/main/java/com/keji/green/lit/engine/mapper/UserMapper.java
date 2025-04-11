@@ -36,4 +36,9 @@ public interface UserMapper {
      */
     int updateSelectiveByPhone(User row);
 
+    /**
+     * 根据邀请码查询用户
+     */
+    Optional<User> selectByInviteCode(String inviteCode);
+
 }

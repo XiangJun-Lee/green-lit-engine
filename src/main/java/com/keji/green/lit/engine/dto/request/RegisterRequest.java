@@ -52,4 +52,10 @@ public class RegisterRequest {
      */
     @Email(message = "邮箱格式不正确")
     private String email;
+
+    /**
+     * 邀请码
+     * 可选字段，用于记录邀请关系
+     */
+    private String inviteCode;
 } 

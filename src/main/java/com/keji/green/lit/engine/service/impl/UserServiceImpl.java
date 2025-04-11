@@ -125,8 +125,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User findByPhone(String phone) {
-        Optional<User> userDaoByPhone = userDao.findByPhone(phone);
-        return userDaoByPhone.orElse(null);
+        return userDao.findByPhone(phone).orElse(null);
+    }
+
+    @Override
+    public User findByInviteCode(String inviteCode) {
+        return userDao.findByInviteCode(inviteCode).orElse(null);
     }
 
     /**

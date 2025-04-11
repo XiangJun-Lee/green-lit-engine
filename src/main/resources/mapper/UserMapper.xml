@@ -11,13 +11,14 @@
     <result column="email" jdbcType="VARCHAR" property="email" />
     <result column="resume_text" jdbcType="LONGNVARCHAR" property="resumeText" />
     <result column="client_ip" jdbcType="VARCHAR" property="clientIp"/>
+    <result column="invite_code" jdbcType="VARCHAR" property="inviteCode" />
     <result column="version" jdbcType="INTEGER" property="version" />
     <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
     <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
   </resultMap>
 
   <sql id="Base_Column_List">
-    uid, status, password, phone, nick_name, user_role, email, gmt_create, gmt_modify, resume_text, version,client_ip
+    uid, status, password, phone, nick_name, user_role, email, gmt_create, gmt_modify, resume_text, version,client_ip, invite_code
   </sql>
 
   <select id="selectByUid" parameterType="java.lang.Long" resultMap="BaseResultMap">
@@ -61,6 +62,9 @@
       <if test="clientIp != null">
         client_ip,
       </if>
+      <if test="inviteCode != null">
+        invite_code,
+      </if>
     </trim>
     <trim prefix="values (" suffix=")" suffixOverrides=",">
       <if test="nickName != null">
@@ -86,6 +90,9 @@
       </if>
       <if test="clientIp != null">
         #{clientIp,jdbcType=VARCHAR},
+      </if>
+      <if test="inviteCode != null">
+        #{inviteCode,jdbcType=VARCHAR},
       </if>
     </trim>
   </insert>
@@ -152,5 +159,12 @@
     where phone = #{phone,jdbcType=VARCHAR}
     and version = #{version,jdbcType=INTEGER}
   </update>
+
+  <select id="selectByInviteCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from user_info
+    where invite_code = #{inviteCode,jdbcType=VARCHAR}
+  </select>
 
 </mapper>
