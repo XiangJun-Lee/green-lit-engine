@@ -33,13 +33,6 @@ public class RegisterRequest {
     private String code;
     
     /**
-     * 验证码场景
-     * 不能为空，用于区分不同业务场景
-     */
-    @NotBlank(message = "验证码场景不能为空")
-    private String scene;
-    
-    /**
      * 用户密码
      * 长度6-20位
      */

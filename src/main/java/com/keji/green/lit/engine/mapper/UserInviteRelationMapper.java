@@ -1,6 +1,7 @@
 package com.keji.green.lit.engine.mapper;
 
 import com.keji.green.lit.engine.model.UserInviteRelation;
+import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
 
@@ -8,6 +9,7 @@ import java.util.List;
  * 用户邀请关系数据访问接口
  * @author xiangjun_lee
  */
+@Mapper
 public interface UserInviteRelationMapper {
     /**
      * 根据主键删除用户邀请关系记录
@@ -41,8 +43,20 @@ public interface UserInviteRelationMapper {
      */
     int updateByPrimaryKeySelective(UserInviteRelation row);
 
+    /**
+     * 根据邀请人ID查询用户邀请关系记录
+     *
+     * @param inviterId 邀请人ID
+     * @return 用户邀请关系实体列表
+     */
     List<UserInviteRelation> selectByInviterId(Long inviterId);
 
+    /**
+     * 根据被邀请人ID查询用户邀请关系记录
+     *
+     * @param inviteeId 被邀请人ID
+     * @return 用户邀请关系实体
+     */
     UserInviteRelation selectByInviteeId(Long inviteeId);
 
 }

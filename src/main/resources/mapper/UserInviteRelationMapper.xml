@@ -77,14 +77,14 @@
     where id = #{id,jdbcType=BIGINT}
   </update>
 
-  <select id="selectByInviterId" parameterType="java.lang.Long">
+  <select id="selectByInviterId" parameterType="java.lang.Long" resultType="UserInviteRelation">
     select
     <include refid="Base_Column_List" />
     from user_invite_relation
     where inviter_uid = #{inviterId,jdbcType=BIGINT}
   </select>
 
-  <select id="selectByInviteeId" parameterType="java.lang.Long">
+  <select id="selectByInviteeId" parameterType="java.lang.Long" resultType="UserInviteRelation">
     select
     <include refid="Base_Column_List" />
     from user_invite_relation

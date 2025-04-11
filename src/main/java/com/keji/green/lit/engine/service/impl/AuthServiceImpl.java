@@ -100,8 +100,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void register(RegisterRequest request) {
         // 验证验证码
-        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(),
-                VerificationCodeScene.valueOf(request.getScene().toUpperCase()))) {
+        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(), VerificationCodeScene.REGISTER)) {
             throw new BusinessException(VERIFICATION_CODE_ERROR);
         }
         // 检查用户是否已存在
@@ -206,8 +205,7 @@ public class AuthServiceImpl implements AuthService {
         }
 
         // 校验验证码
-        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(), 
-                VerificationCodeScene.valueOf(request.getScene().toUpperCase()))) {
+        if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(), VerificationCodeScene.LOGIN)) {
             throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误");
         }
 
@@ -233,10 +231,10 @@ public class AuthServiceImpl implements AuthService {
         String ipLimitKey = String.format(SEND_VERIFICATION_IP_KEY, ip);
         // 检查IP发送频率限制：10次/小时
         if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_TEN, ONE_HOUR_SECONDS)) {
-            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(),"发送验证码次数过多，请稍后再试");
+            throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "发送验证码次数过多，请稍后再试");
         }
 
-        String code = verificationCodeService.generateAndSendCode(request.getPhone(), 
+        String code = verificationCodeService.generateAndSendCode(request.getPhone(),
                 VerificationCodeScene.valueOf(request.getScene().toUpperCase()));
         // todo 发送短信验证码
     }
@@ -300,11 +298,11 @@ public class AuthServiceImpl implements AuthService {
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
         }
-        
+
         // 获取当前用户信息
         String phone = authentication.getName();
         User currentUser = userService.queryNormalUserByPhone(phone);
-        
+
         // 更新客户端IP
         if (userService.updateClientIp(currentUser.getUid(), request.getClientIp(), currentUser.getVersion()) <= 0) {
             throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "更新客户端IP失败，请稍后重试");
