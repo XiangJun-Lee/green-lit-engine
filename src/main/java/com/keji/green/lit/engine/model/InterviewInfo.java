@@ -82,4 +82,9 @@ public class InterviewInfo {
      * 职位要求
      */
     private String jobRequirements;
+
+    /**
+     * 版本
+     */
+    private Integer version;
 }

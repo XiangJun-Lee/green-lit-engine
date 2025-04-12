@@ -59,5 +59,5 @@ public class UpdateInterviewRequest {
      * key: 快捷键功能
      * value: 对应快捷键
      */
-    private Map<String, String> shortcutConfig;
+    private String shortcutConfig;
 } 

@@ -26,13 +26,10 @@ public interface CommonConverter {
 
     CommonConverter INSTANCE = Mappers.getMapper(CommonConverter.class);
 
-    // todo 默认快捷方式定义
-    String SHORTCUT_CONFIG = "{}";
-
     @Mappings(value = {
             @Mapping(target = "onlineMode", defaultValue = "false"),
             @Mapping(target = "voiceTrigger", defaultValue = "false"),
-            @Mapping(target = "shortcutConfig", expression = "java(updateShortcutConfig(request.getShortcutConfig()))")
+            @Mapping(target = "shortcutConfig", defaultValue = "{\\\"cut\\\":\\\"Ctrl+a\\\",\\\"fastAnswer\\\":\\\"Ctrl+b\\\"}")
     })
     InterviewExtraData convert2InterviewExtraData(CreateInterviewRequest request);
 
@@ -61,13 +58,6 @@ public interface CommonConverter {
             @Mapping(target = "records", expression = "java(convert2RecordResponseList(interviewRecordList))")
     })
     InterviewDetailResponse convert2InterviewDetailResponse(InterviewInfo interviewInfo, List<InterviewRecordWithBLOBs> interviewRecordList);
-
-    default String updateShortcutConfig(Map<String, String> shortcutConfig) {
-        if (MapUtils.isEmpty(shortcutConfig)) {
-            return SHORTCUT_CONFIG;
-        }
-        return JSON.toJSONString(shortcutConfig);
-    }
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void update2InterviewInfo(@MappingTarget InterviewInfo updateInterviewInfo, UpdateInterviewRequest request);

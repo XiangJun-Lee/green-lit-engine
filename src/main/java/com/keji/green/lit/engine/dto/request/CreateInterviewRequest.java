@@ -59,7 +59,7 @@ public class CreateInterviewRequest {
      * key: 快捷键功能
      * value: 对应快捷键
      */
-    private Map<String,String> shortcutConfig;
+    private String shortcutConfig;
 
     /**
      * 简历文本内容

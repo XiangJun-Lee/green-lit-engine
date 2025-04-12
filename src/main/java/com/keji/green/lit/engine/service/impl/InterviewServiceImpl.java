@@ -78,7 +78,7 @@ public class InterviewServiceImpl implements InterviewService {
         if (interviewInfoMapper.insertSelective(interview) <= 0) {
             throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试失败");
         }
-        if (StringUtils.isNotBlank(request.getResumeText())){
+        if (StringUtils.isNotBlank(request.getResumeText()) && !StringUtils.equals(request.getResumeText(), currentUser.getResumeText())) {
             User user = new User();
             user.setUid(currentUser.getUid());
             user.setVersion(currentUser.getVersion());
@@ -298,6 +298,7 @@ public class InterviewServiceImpl implements InterviewService {
             }
             InterviewInfo updateInterviewInfo = new InterviewInfo();
             updateInterviewInfo.setInterviewId(interviewId);
+            updateInterviewInfo.setVersion(interviewInfo.getVersion());
             CommonConverter.INSTANCE.update2InterviewInfo(updateInterviewInfo,request);
             // 构建面试扩展字段
             InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData())
