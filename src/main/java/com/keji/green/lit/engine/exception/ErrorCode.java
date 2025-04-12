@@ -35,8 +35,9 @@ public enum ErrorCode {
     INTERVIEW_NOT_FOUND(6000, "面试不存在"),
     INTERVIEW_ALREADY_ENDED(6001, "面试已结束"),
     INTERVIEW_NOT_OWNED(6002, "无权访问该面试"),
-    INSUFFICIENT_POINTS(6003, "积分不足"),
-    POINTS_DEDUCTION_FAILED(6004, "积分扣除失败"),
+    INTERVIEW_ALREADY_STARTED(6003, "面试已开始"),
+    INSUFFICIENT_POINTS(6004, "积分不足"),
+    POINTS_DEDUCTION_FAILED(6005, "积分扣除失败"),
 
     // 外部服务错误码 (5000-5999)
     EXTERNAL_SERVICE_ERROR(5000, "外部服务调用失败");

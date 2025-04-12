@@ -48,4 +48,8 @@ public enum InterviewStatus {
     public static boolean isEnd(int code) {
         return ENDED_MANUALLY.getCode() == code || ENDED_AUTOMATICALLY.getCode() == code;
     }
+
+    public static boolean isOngoing(int code) {
+        return ONGOING.getCode() == code;
+    }
 }

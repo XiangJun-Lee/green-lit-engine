@@ -79,4 +79,13 @@ public interface InterviewService {
      * @return 更新结果
      */
     UpdateInterviewResponse updateInterview(String interviewId, UpdateInterviewRequest request);
+
+    /**
+     * 开始面试
+     * 将面试状态从待开始更新为进行中，记录开始时间
+     *
+     * @param interviewId 面试ID
+     * @return 面试信息
+     */
+    InterviewInfoResponse startInterview(String interviewId);
 } 

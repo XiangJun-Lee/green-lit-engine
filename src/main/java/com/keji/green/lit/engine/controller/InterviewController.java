@@ -65,6 +65,17 @@ public class InterviewController {
     }
 
     /**
+     * 开始面试
+     * 将面试状态从待开始更新为进行中，记录开始时间
+     * @param interviewId 面试ID
+     * @return 面试信息
+     */
+    @PostMapping("/{interviewId}/start")
+    public Result<InterviewInfoResponse> startInterview(@PathVariable String interviewId) {
+        return Result.success(interviewService.startInterview(interviewId));
+    }
+
+    /**
      * 结束面试
      * 记录结束时间，计算面试时长，计算并扣除积分
      * @param interviewId 面试ID

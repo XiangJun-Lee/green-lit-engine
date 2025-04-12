@@ -315,6 +315,49 @@ public class InterviewServiceImpl implements InterviewService {
         }
     }
 
+    @Override
+    public InterviewInfoResponse startInterview(String interviewId) {
+        Long uid = getCurrentUserId();
+        // 验证面试所有权
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!uid.equals(interviewInfo.getUid())) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
+        }
+        // 检查面试状态
+        if (InterviewStatus.isEnd(interviewInfo.getStatus())){
+            throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
+        }
+        if (InterviewStatus.isOngoing(interviewInfo.getStatus())) {
+            InterviewInfoResponse response = new InterviewInfoResponse();
+            response.setInterviewId(interviewId);
+            response.setStatus(interviewInfo.getStatus());
+            response.setStartTime(interviewInfo.getStartTime());
+            response.setCreateTime(interviewInfo.getGmtCreate());
+            return response;
+        }
+
+        // 更新面试状态为进行中
+        InterviewInfo updateInterviewInfo = new InterviewInfo();
+        updateInterviewInfo.setInterviewId(interviewId);
+        updateInterviewInfo.setVersion(interviewInfo.getVersion());
+        updateInterviewInfo.setStatus(InterviewStatus.ONGOING.getCode());
+        updateInterviewInfo.setStartTime(new Date());
+        if (interviewInfoMapper.updateByPrimaryKeySelective(updateInterviewInfo) <= 0) {
+            throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR);
+        }
+        // 构建返回结果
+        InterviewInfoResponse response = new InterviewInfoResponse();
+        response.setInterviewId(interviewId);
+        response.setStatus(updateInterviewInfo.getStatus());
+        response.setStartTime(updateInterviewInfo.getStartTime());
+        response.setCreateTime(interviewInfo.getGmtCreate());
+        return response;
+    }
+
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
