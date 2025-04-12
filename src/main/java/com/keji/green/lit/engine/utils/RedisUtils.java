@@ -180,11 +180,11 @@ public class RedisUtils {
         }
     }
 
-    public void incr(String redisKey) {
+    public long incr(String redisKey) {
         Jedis jedis = null;
         try {
             jedis = getJedis();
-            jedis.incr(redisKey);
+            return jedis.incr(redisKey);
         } finally {
             closeJedis(jedis);
         }

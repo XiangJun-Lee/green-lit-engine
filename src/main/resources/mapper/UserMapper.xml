@@ -35,7 +35,7 @@
     where phone = #{phone,jdbcType=VARCHAR}
   </select>
 
-  <insert id="insertSelective" parameterType="User">
+  <insert id="insertSelective" useGeneratedKeys="true" keyProperty="uid" parameterType="User">
     insert into user_info
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="nickName != null">

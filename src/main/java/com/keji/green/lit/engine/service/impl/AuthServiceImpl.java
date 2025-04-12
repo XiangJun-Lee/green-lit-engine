@@ -32,6 +32,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
 
@@ -98,6 +99,7 @@ public class AuthServiceImpl implements AuthService {
     private UserInviteRelationDao userInviteRelationDao;
 
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public void register(RegisterRequest request) {
         // 验证验证码
         if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(), VerificationCodeScene.REGISTER)) {
@@ -206,7 +208,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 校验验证码
         if (!verificationCodeService.verifyCode(request.getPhone(), request.getCode(), VerificationCodeScene.LOGIN)) {
-            throw new BusinessException(PARAM_ERROR.getCode(), "验证码错误");
+            throw new BusinessException(VERIFICATION_CODE_EXPIRED);
         }
 
         // 获取正常状态的用户
