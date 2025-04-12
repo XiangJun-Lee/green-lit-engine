@@ -5,6 +5,7 @@ import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * @author xiangjun_lee
@@ -15,7 +16,7 @@ public interface InterviewInfoMapper {
     int insertSelective(InterviewInfo row);
 
 
-    InterviewInfo selectByPrimaryKey(String interviewId);
+    Optional<InterviewInfo> selectByPrimaryKey(String interviewId);
 
 
     int updateByPrimaryKeySelective(InterviewInfo row);

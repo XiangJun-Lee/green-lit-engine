@@ -3,15 +3,14 @@ package com.keji.green.lit.engine.common;
 import com.alibaba.fastjson2.JSON;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
+import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.InterviewDetailResponse;
 import com.keji.green.lit.engine.dto.response.InterviewRecordResponse;
 import com.keji.green.lit.engine.dto.response.InterviewInfoResponse;
 import com.keji.green.lit.engine.model.InterviewInfo;
 import com.keji.green.lit.engine.model.InterviewRecordWithBLOBs;
 import org.apache.commons.collections4.MapUtils;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
+import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 
 
@@ -69,4 +68,10 @@ public interface CommonConverter {
         }
         return JSON.toJSONString(shortcutConfig);
     }
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void update2InterviewInfo(@MappingTarget InterviewInfo updateInterviewInfo, UpdateInterviewRequest request);
+
+    @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
+    void update2InterviewExtraData(InterviewExtraData interviewExtraData, UpdateInterviewRequest request);
 }

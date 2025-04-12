@@ -2,10 +2,12 @@ package com.keji.green.lit.engine.service;
 
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
+import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.InterviewDetailResponse;
 import com.keji.green.lit.engine.dto.response.InterviewCreateResponse;
 import com.keji.green.lit.engine.dto.response.InterviewInfoResponse;
 import com.keji.green.lit.engine.dto.response.PageResponse;
+import com.keji.green.lit.engine.dto.response.UpdateInterviewResponse;
 import com.keji.green.lit.engine.enums.InterviewStatus;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -68,4 +70,13 @@ public interface InterviewService {
      * @return 分页面试列表
      */
     PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, InterviewStatus status);
+
+    /**
+     * 更新面试信息
+     *
+     * @param interviewId
+     * @param request     更新请求
+     * @return 更新结果
+     */
+    UpdateInterviewResponse updateInterview(String interviewId, UpdateInterviewRequest request);
 } 

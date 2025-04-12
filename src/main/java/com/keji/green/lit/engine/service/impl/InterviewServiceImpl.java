@@ -5,6 +5,7 @@ import com.keji.green.lit.engine.common.CommonConverter;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
+import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.enums.InterviewStatus;
 import com.keji.green.lit.engine.exception.BusinessException;
@@ -84,8 +85,12 @@ public class InterviewServiceImpl implements InterviewService {
     public SseEmitter askQuestion(String interviewId, AskQuestionRequest request) {
         Long uid = getCurrentUserId();
         // 验证面试所有权
-        InterviewInfo interviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
-        if (Objects.isNull(interviewInfo) || !Objects.equals(uid, interviewInfo.getUid())) {
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!uid.equals(interviewInfo.getUid())) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         // 检查面试状态，确保面试处于进行中状态
@@ -174,8 +179,12 @@ public class InterviewServiceImpl implements InterviewService {
     public InterviewInfoResponse endInterview(String interviewId) {
         Long uid = getCurrentUserId();
         // 验证面试所有权
-        InterviewInfo interviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
-        if (Objects.isNull(interviewInfo) || !Objects.equals(uid, interviewInfo.getUid())) {
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!uid.equals(interviewInfo.getUid())) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         if (InterviewStatus.isEnd(interviewInfo.getStatus())){
@@ -205,8 +214,13 @@ public class InterviewServiceImpl implements InterviewService {
     public InterviewDetailResponse getInterviewDetail(String interviewId) {
         // 验证面试所有权
         Long uid = getCurrentUserId();
-        InterviewInfo interviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
-        if (Objects.isNull(interviewInfo) || !Objects.equals(uid, interviewInfo.getUid())) {
+        // 验证面试所有权
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!uid.equals(interviewInfo.getUid())) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         // 获取面试提问信息
@@ -255,6 +269,39 @@ public class InterviewServiceImpl implements InterviewService {
         return PageResponse.build(responses, total, pageNum, pageSize);
     }
 
+    @Override
+    public UpdateInterviewResponse updateInterview(String interviewId, UpdateInterviewRequest request) {
+        try {
+            Long uid = getCurrentUserId();
+            // 验证面试所有权
+            Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+            if (optionalInterviewInfo.isEmpty()) {
+                throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+            }
+            InterviewInfo interviewInfo = optionalInterviewInfo.get();
+            if (!uid.equals(interviewInfo.getUid())) {
+                throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
+            }
+            if (InterviewStatus.isEnd(interviewInfo.getStatus())){
+                throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
+            }
+            InterviewInfo updateInterviewInfo = new InterviewInfo();
+            updateInterviewInfo.setInterviewId(interviewId);
+            CommonConverter.INSTANCE.update2InterviewInfo(updateInterviewInfo,request);
+            // 构建面试扩展字段
+            InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData())
+                    ? JSON.parseObject(interviewInfo.getExtraData(), InterviewExtraData.class) : new InterviewExtraData();
+            CommonConverter.INSTANCE.update2InterviewExtraData(interviewExtraData, request);
+            updateInterviewInfo.setExtraData(JSON.toJSONString(interviewExtraData));
+            if (interviewInfoMapper.updateByPrimaryKeySelective(updateInterviewInfo) < 0) {
+                throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR);
+            }
+            return UpdateInterviewResponse.builder().result(true).build();
+        } catch (Exception e) {
+            log.error("更新面试信息失败,", e);
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+    }
 
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

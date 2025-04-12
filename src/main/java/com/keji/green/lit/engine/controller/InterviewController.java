@@ -1,12 +1,9 @@
 package com.keji.green.lit.engine.controller;
 
-import com.keji.green.lit.engine.dto.response.Result;
+import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
+import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
-import com.keji.green.lit.engine.dto.response.InterviewDetailResponse;
-import com.keji.green.lit.engine.dto.response.InterviewCreateResponse;
-import com.keji.green.lit.engine.dto.response.InterviewInfoResponse;
-import com.keji.green.lit.engine.dto.response.PageResponse;
 import com.keji.green.lit.engine.enums.InterviewStatus;
 import com.keji.green.lit.engine.service.InterviewService;
 import jakarta.annotation.Resource;
@@ -37,6 +34,15 @@ public class InterviewController {
     @PostMapping("/create")
     public Result<InterviewCreateResponse> createInterview(@Valid @RequestBody CreateInterviewRequest request) {
         return Result.success(interviewService.createInterview(request));
+    }
+
+    /**
+     * 更新面试信息
+     */
+    @PostMapping("/{interviewId}/update")
+    public Result<UpdateInterviewResponse> updateInterview(@PathVariable String interviewId,
+                                                           @Valid @RequestBody UpdateInterviewRequest request) {
+        return Result.success(interviewService.updateInterview(interviewId, request));
     }
 
     /**
