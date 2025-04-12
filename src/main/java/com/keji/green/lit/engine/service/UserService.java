@@ -14,6 +14,11 @@ public interface UserService extends UserDetailsService {
      * 用户注册
      */
     void saveUser(User request);
+
+    /**
+     *  更新用户信息
+     */
+    void updateUserByUid(User request);
     
     /**
      * 注销账号

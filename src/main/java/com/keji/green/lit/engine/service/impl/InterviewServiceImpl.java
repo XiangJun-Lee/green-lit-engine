@@ -64,15 +64,26 @@ public class InterviewServiceImpl implements InterviewService {
 
         // 生成面试ID (UUID)
         String interviewId = UUID.randomUUID().toString();
+        User currentUser = getCurrentUser();
 
         InterviewInfo interview = CommonConverter.INSTANCE.convert2InterviewInfo(request);
-        interview.setUid(getCurrentUserId());
+        if (StringUtils.isNotBlank(interview.getJobRequirements())) {
+            interview.setJobRequirements(interview.getJobRequirements().trim());
+        }
+        interview.setUid(currentUser.getUid());
         interview.setInterviewId(interviewId);
         // 构建面试扩展字段
         InterviewExtraData extraData = CommonConverter.INSTANCE.convert2InterviewExtraData(request);
         interview.setExtraData(JSON.toJSONString(extraData));
         if (interviewInfoMapper.insertSelective(interview) <= 0) {
             throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试失败");
+        }
+        if (StringUtils.isNotBlank(request.getResumeText())){
+            User user = new User();
+            user.setUid(currentUser.getUid());
+            user.setVersion(currentUser.getVersion());
+            user.setResumeText(request.getResumeText().trim());
+            userService.updateUserByUid(user);
         }
         return new InterviewCreateResponse(interviewId);
     }
@@ -311,5 +322,14 @@ public class InterviewServiceImpl implements InterviewService {
         String phone = authentication.getName();
         User user = userService.queryNormalUserByPhone(phone);
         return user.getUid();
+    }
+
+    private User getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED);
+        }
+        String phone = authentication.getName();
+        return userService.queryNormalUserByPhone(phone);
     }
 } 

@@ -6,6 +6,7 @@ import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -52,6 +53,16 @@ public class UserServiceImpl implements UserService {
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         if (userDao.createUser(user) <= 0) {
             throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "注册失败，请联系管理员");
+        }
+    }
+
+    @Override
+    public void updateUserByUid(User request) {
+        if (StringUtils.isNotBlank(request.getPassword())){
+            request.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        if (userDao.updateSelectiveByUid(request) <= 0) {
+            throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "更新失败，请稍后重试");
         }
     }
 

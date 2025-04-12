@@ -73,5 +73,5 @@ public interface CommonConverter {
     void update2InterviewInfo(@MappingTarget InterviewInfo updateInterviewInfo, UpdateInterviewRequest request);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void update2InterviewExtraData(InterviewExtraData interviewExtraData, UpdateInterviewRequest request);
+    void update2InterviewExtraData(@MappingTarget InterviewExtraData interviewExtraData, UpdateInterviewRequest request);
 }

@@ -61,4 +61,9 @@ public class CreateInterviewRequest {
      */
     private Map<String,String> shortcutConfig;
 
+    /**
+     * 简历文本内容
+     */
+    private String resumeText;
+
 }

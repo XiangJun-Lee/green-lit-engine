@@ -50,83 +50,89 @@
   </select>
 
   <insert id="insertSelective" parameterType="InterviewInfo">
-    insert into interview_info
-    <trim prefix="(" suffix=")" suffixOverrides=",">
-      <if test="interviewId != null">
-        interview_id,
-      </if>
-      <if test="interviewName != null">
-        interview_name,
-      </if>
-      <if test="interviewLanguage != null">
-        interview_language,
-      </if>
-      <if test="programmingLanguage != null">
-        programming_language,
-      </if>
-      <if test="positionInfo != null">
-        position_info,
-      </if>
-      <if test="extraData != null">
-        extra_data,
-      </if>
-      <if test="startTime != null">
-        start_time,
-      </if>
-      <if test="endTime != null">
-        end_time,
-      </if>
-      <if test="status != null">
-        status,
-      </if>
-      <if test="gmtCreate != null">
-        gmt_create,
-      </if>
-      <if test="gmtModify != null">
-        gmt_modify,
-      </if>
-      <if test="jobRequirements != null">
-        job_requirements,
-      </if>
-    </trim>
-    <trim prefix="values (" suffix=")" suffixOverrides=",">
-      <if test="interviewId != null">
-        #{interviewId,jdbcType=VARCHAR},
-      </if>
-      <if test="interviewName != null">
-        #{interviewName,jdbcType=VARCHAR},
-      </if>
-      <if test="interviewLanguage != null">
-        #{interviewLanguage,jdbcType=VARCHAR},
-      </if>
-      <if test="programmingLanguage != null">
-        #{programmingLanguage,jdbcType=VARCHAR},
-      </if>
-      <if test="positionInfo != null">
-        #{positionInfo,jdbcType=VARCHAR},
-      </if>
-      <if test="extraData != null">
-        #{extraData,jdbcType=VARCHAR},
-      </if>
-      <if test="startTime != null">
-        #{startTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="endTime != null">
-        #{endTime,jdbcType=TIMESTAMP},
-      </if>
-      <if test="status != null">
-        #{status,jdbcType=INTEGER},
-      </if>
-      <if test="gmtCreate != null">
-        #{gmtCreate,jdbcType=TIMESTAMP},
-      </if>
-      <if test="gmtModify != null">
-        #{gmtModify,jdbcType=TIMESTAMP},
-      </if>
-      <if test="jobRequirements != null">
-        #{jobRequirements,jdbcType=LONGVARCHAR},
-      </if>
-    </trim>
+      insert into interview_info
+      <trim prefix="(" suffix=")" suffixOverrides=",">
+          <if test="interviewId != null">
+              interview_id,
+          </if>
+          <if test="uid != null">
+              uid,
+          </if>
+          <if test="interviewName != null">
+              interview_name,
+          </if>
+          <if test="interviewLanguage != null">
+              interview_language,
+          </if>
+          <if test="programmingLanguage != null">
+              programming_language,
+          </if>
+          <if test="positionInfo != null">
+              position_info,
+          </if>
+          <if test="extraData != null">
+              extra_data,
+          </if>
+          <if test="startTime != null">
+              start_time,
+          </if>
+          <if test="endTime != null">
+              end_time,
+          </if>
+          <if test="status != null">
+              status,
+          </if>
+          <if test="gmtCreate != null">
+              gmt_create,
+          </if>
+          <if test="gmtModify != null">
+              gmt_modify,
+          </if>
+          <if test="jobRequirements != null">
+              job_requirements,
+          </if>
+      </trim>
+      <trim prefix="values (" suffix=")" suffixOverrides=",">
+          <if test="interviewId != null">
+              #{interviewId,jdbcType=VARCHAR},
+          </if>
+          <if test="uid != null">
+              #{uid,jdbcType=BIGINT},
+          </if>
+          <if test="interviewName != null">
+              #{interviewName,jdbcType=VARCHAR},
+          </if>
+          <if test="interviewLanguage != null">
+              #{interviewLanguage,jdbcType=VARCHAR},
+          </if>
+          <if test="programmingLanguage != null">
+              #{programmingLanguage,jdbcType=VARCHAR},
+          </if>
+          <if test="positionInfo != null">
+              #{positionInfo,jdbcType=VARCHAR},
+          </if>
+          <if test="extraData != null">
+              #{extraData,jdbcType=VARCHAR},
+          </if>
+          <if test="startTime != null">
+              #{startTime,jdbcType=TIMESTAMP},
+          </if>
+          <if test="endTime != null">
+              #{endTime,jdbcType=TIMESTAMP},
+          </if>
+          <if test="status != null">
+              #{status,jdbcType=INTEGER},
+          </if>
+          <if test="gmtCreate != null">
+              #{gmtCreate,jdbcType=TIMESTAMP},
+          </if>
+          <if test="gmtModify != null">
+              #{gmtModify,jdbcType=TIMESTAMP},
+          </if>
+          <if test="jobRequirements != null">
+              #{jobRequirements,jdbcType=LONGVARCHAR},
+          </if>
+      </trim>
   </insert>
   <update id="updateByPrimaryKeySelective" parameterType="InterviewInfo">
 
