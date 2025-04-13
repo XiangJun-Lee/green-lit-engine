@@ -3,8 +3,6 @@ package com.keji.green.lit.engine.dto.request;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
-import java.util.Map;
-
 /**
  * 更新面试信息请求
  *
