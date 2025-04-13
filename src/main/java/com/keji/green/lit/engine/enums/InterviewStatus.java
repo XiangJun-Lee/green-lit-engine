@@ -13,11 +13,6 @@ import lombok.RequiredArgsConstructor;
 public enum InterviewStatus {
 
     /**
-     * 待开始
-     */
-    NOT_STARTED(0, "待开始"),
-
-    /**
      * 进行中
      */
     ONGOING(1, "进行中"),

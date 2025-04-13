@@ -19,6 +19,8 @@ public interface InterviewInfoMapper {
     Optional<InterviewInfo> selectByPrimaryKey(String interviewId);
 
 
+    int updateByPrimaryKeySelectiveCAS(InterviewInfo row);
+
     int updateByPrimaryKeySelective(InterviewInfo row);
     
     /**
