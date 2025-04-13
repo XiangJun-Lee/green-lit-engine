@@ -39,12 +39,10 @@ public class UserResponse {
      */
     private Date gmtCreate;
 
-    
     /**
      * 简历文本内容
      */
     private String resumeText;
-
 
     /**
      * 状态
@@ -60,6 +58,11 @@ public class UserResponse {
      * 邀请码
      */
     private String inviteCode;
+
+    /**
+     * 邀请人数
+     */
+    private String inviteeCount;
     
     /**
      * 从User实体创建UserResponse的工厂方法

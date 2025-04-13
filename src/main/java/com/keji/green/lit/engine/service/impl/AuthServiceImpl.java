@@ -15,10 +15,7 @@ import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.model.UserInviteRelation;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
-import com.keji.green.lit.engine.service.AuthService;
-import com.keji.green.lit.engine.service.RateLimitService;
-import com.keji.green.lit.engine.service.UserService;
-import com.keji.green.lit.engine.service.VerificationCodeService;
+import com.keji.green.lit.engine.service.*;
 import com.keji.green.lit.engine.utils.InviteCodeGenerator;
 import com.keji.green.lit.engine.utils.UserNameGenerator;
 import com.keji.green.lit.engine.dao.UserInviteRelationDao;
@@ -266,7 +263,14 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
         }
         String phone = authentication.getName();
-        return UserResponse.fromUser(userService.queryNormalUserByPhone(phone));
+        UserResponse userResponse = UserResponse.fromUser(userService.queryNormalUserByPhone(phone));
+        try {
+            long inviteeCount = userInviteRelationDao.selectCountByInviterId(userResponse.getUid());
+            userResponse.setInviteeCount(String.valueOf(inviteeCount));
+        } catch (Exception e) {
+            log.warn("查询用户邀请人数失败", e);
+        }
+        return userResponse;
     }
 
     @Override

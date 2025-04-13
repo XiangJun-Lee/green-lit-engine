@@ -59,4 +59,6 @@ public interface UserInviteRelationMapper {
      */
     UserInviteRelation selectByInviteeId(Long inviteeId);
 
+    long  selectCountByInviterId(Long inviterId);
+
 }

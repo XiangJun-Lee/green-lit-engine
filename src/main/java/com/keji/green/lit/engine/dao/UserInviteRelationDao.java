@@ -39,4 +39,8 @@ public class UserInviteRelationDao {
     public UserInviteRelation findByInviteeId(Long inviteeId) {
         return mapper.selectByInviteeId(inviteeId);
     }
-} 
+
+    public long selectCountByInviterId(Long inviterId) {
+        return mapper.selectCountByInviterId(inviterId);
+    }
+}
