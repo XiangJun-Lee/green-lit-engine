@@ -5,30 +5,37 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 面试记录基础信息
  * @author xiangjun_lee
  */
 @Data
-public class InterviewRecord {
-
+public class QuestionAnswerRecord {
     /**
-     * id
+     * 主键ID
      */
     private Long id;
 
     /**
-     * 面试记录id
+     * 关联的面试ID
      */
     private String interviewId;
 
     /**
-     * 面试记录创建时间
+     * 面试问题
+     */
+    private String question;
+
+    /**
+     * 面试答案
+     */
+    private String answer;
+
+    /**
+     * 创建时间
      */
     private Date gmtCreate;
 
-
     /**
-     * 面试记录修改时间
+     * 修改时间
      */
     private Date gmtModify;
 }

@@ -37,7 +37,7 @@
         </javaClientGenerator>
 
         <!-- 需要生成的表配置 -->
-        <table tableName="user_info" domainObjectName="User" enableCountByExample="false" enableUpdateByExample="false"
+        <table tableName="question_answer_record" domainObjectName="QuestionAnswerRecord" enableCountByExample="false" enableUpdateByExample="false"
                enableDeleteByExample="false" enableSelectByExample="false" selectByExampleQueryId="false">
             <generatedKey column="uid" sqlStatement="MySql" identity="true"/>
         </table>

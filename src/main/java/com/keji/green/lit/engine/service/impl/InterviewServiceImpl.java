@@ -11,9 +11,9 @@ import com.keji.green.lit.engine.enums.InterviewStatus;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.exception.ErrorCode;
 import com.keji.green.lit.engine.mapper.InterviewInfoMapper;
-import com.keji.green.lit.engine.mapper.InterviewRecordMapper;
+import com.keji.green.lit.engine.mapper.QuestionAnswerRecordMapper;
 import com.keji.green.lit.engine.model.InterviewInfo;
-import com.keji.green.lit.engine.model.InterviewRecordWithBLOBs;
+import com.keji.green.lit.engine.model.QuestionAnswerRecord;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.InterviewService;
 import com.keji.green.lit.engine.service.UserService;
@@ -52,7 +52,7 @@ public class InterviewServiceImpl implements InterviewService {
     private InterviewInfoMapper interviewInfoMapper;
 
     @Resource
-    private InterviewRecordMapper interviewRecordMapper;
+    private QuestionAnswerRecordMapper questionAnswerRecordMapper;
 
 
     // TODO: 注入算法服务客户端
@@ -124,20 +124,18 @@ public class InterviewServiceImpl implements InterviewService {
         queryParam.put("interviewId", interviewId);
         queryParam.put("limit", 5);
         queryParam.put("orderByDesc", "id");
-        List<InterviewRecordWithBLOBs> interviewRecordList = interviewRecordMapper.selectQuestionByInterviewId(queryParam);
+        List<QuestionAnswerRecord> interviewRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
         List<String> questionList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(interviewRecordList)) {
-            questionList = interviewRecordList.stream().map(InterviewRecordWithBLOBs::getQuestion)
+            questionList = interviewRecordList.stream().map(QuestionAnswerRecord::getQuestion)
                     .filter(StringUtils::isNotEmpty).toList();
         }
         String currentQuestion = request.getQuestion();
         // TODO: 保存面试流水到数据库
-        InterviewRecordWithBLOBs record = new InterviewRecordWithBLOBs();
+        QuestionAnswerRecord record = new QuestionAnswerRecord();
         record.setInterviewId(interviewId);
         record.setQuestion(request.getQuestion());
-        Long recordId = interviewRecordMapper.insertSelective(record);
-
-        if (Objects.isNull(recordId) || recordId <= 0) {
+        if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
             throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试流水失败");
         }
 
@@ -236,8 +234,9 @@ public class InterviewServiceImpl implements InterviewService {
         // 获取面试提问信息
         Map<String, Object> queryParam = new HashMap<>();
         queryParam.put("interviewId", interviewId);
+        queryParam.put("limit", 5);
         queryParam.put("orderByDesc", "id");
-        List<InterviewRecordWithBLOBs> interviewRecordList = interviewRecordMapper.selectQuestionByInterviewId(queryParam);
+        List<QuestionAnswerRecord> interviewRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
         // 构建面试详情响应
         return CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, interviewRecordList);
     }

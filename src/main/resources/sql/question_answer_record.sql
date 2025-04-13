@@ -1,4 +1,4 @@
-CREATE TABLE `interview_record`
+CREATE TABLE `question_answer_record`
 (
     `id`           bigint      NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `interview_id` varchar(36) NOT NULL COMMENT '关联的面试ID',
@@ -9,4 +9,4 @@ CREATE TABLE `interview_record`
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4
-  COLLATE = utf8mb4_0900_ai_ci COMMENT ='面试记录流水表';
+  COLLATE = utf8mb4_0900_ai_ci COMMENT ='面试问答记录表'; 

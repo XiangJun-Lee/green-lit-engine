@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.keji.green.lit.engine.mapper.QuestionAnswerRecordMapper">
+  <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.QuestionAnswerRecord">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="interview_id" jdbcType="VARCHAR" property="interviewId" />
+    <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate" />
+    <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify" />
+    <result column="question" jdbcType="LONGVARCHAR" property="question" />
+    <result column="answer" jdbcType="LONGVARCHAR" property="answer" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, interview_id, question, answer,gmt_create, gmt_modify
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from question_answer_record
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from question_answer_record
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insertSelective" useGeneratedKeys="true" keyProperty="id" parameterType="com.keji.green.lit.engine.model.QuestionAnswerRecord">
+    insert into question_answer_record
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="interviewId != null">
+        interview_id,
+      </if>
+      <if test="gmtCreate != null">
+        gmt_create,
+      </if>
+      <if test="gmtModify != null">
+        gmt_modify,
+      </if>
+      <if test="question != null">
+        question,
+      </if>
+      <if test="answer != null">
+        answer,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="interviewId != null">
+        #{interviewId,jdbcType=VARCHAR},
+      </if>
+      <if test="gmtCreate != null">
+        #{gmtCreate,jdbcType=TIMESTAMP},
+      </if>
+      <if test="gmtModify != null">
+        #{gmtModify,jdbcType=TIMESTAMP},
+      </if>
+      <if test="question != null">
+        #{question,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="answer != null">
+        #{answer,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.keji.green.lit.engine.model.QuestionAnswerRecord">
+      update question_answer_record
+      <set>
+          <if test="interviewId != null">
+              interview_id = #{interviewId,jdbcType=VARCHAR},
+          </if>
+          <if test="gmtCreate != null">
+              gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+          </if>
+          <if test="gmtModify != null">
+              gmt_modify = #{gmtModify,jdbcType=TIMESTAMP},
+          </if>
+          <if test="question != null">
+              question = #{question,jdbcType=LONGVARCHAR},
+          </if>
+          <if test="answer != null">
+              answer = #{answer,jdbcType=LONGVARCHAR},
+          </if>
+      </set>
+      where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.keji.green.lit.engine.model.QuestionAnswerRecord">
+    update question_answer_record
+    set interview_id = #{interviewId,jdbcType=VARCHAR},
+      gmt_create = #{gmtCreate,jdbcType=TIMESTAMP},
+      gmt_modify = #{gmtModify,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <select id="selectByInterviewId" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from question_answer_record
+    where interview_id = #{interviewId,jdbcType=VARCHAR}
+    order by gmt_create desc
+  </select>
+  <select id="countByInterviewId" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(1)
+    from question_answer_record
+    where interview_id = #{interviewId,jdbcType=VARCHAR}
+  </select>
+
+
+  <select id="selectListByInterviewId" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from interview_record
+    where interview_id = #{interviewId,jdbcType=VARCHAR}
+    <if test="limit != null">
+      limit #{limit}
+    </if>
+    <if test="orderByDesc != null">
+      order by #{orderBy}
+    </if>
+    <if test="orderByAsc != null">
+      order by #{orderBy}
+    </if>
+  </select>
+</mapper>
