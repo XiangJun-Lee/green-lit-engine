@@ -1,10 +1,21 @@
 package com.keji.green.lit.engine.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Date;
 
+/**
+ * @author xiangjun_lee
+ */
 @Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class UsageRecord {
+
     /**
      * 主键ID
      */
@@ -13,7 +24,7 @@ public class UsageRecord {
     /**
      * 面试ID
      */
-    private Long interviewId;
+    private String interviewId;
 
     /**
      * 用户ID
@@ -23,12 +34,12 @@ public class UsageRecord {
     /**
      * 使用类型
      */
-    private String usageType;
+    private Integer usageType;
 
     /**
      * 使用时长（秒）
      */
-    private Integer durationSeconds;
+    private Long durationSeconds;
 
     /**
      * 费用（分）

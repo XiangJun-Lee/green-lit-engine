@@ -12,6 +12,7 @@ public enum ErrorCode {
     // 系统级错误码 (1000-1999)
     SYSTEM_ERROR(1000, "系统错误"),
     PARAM_ERROR(1001, "参数错误"),
+    CONCURRENT_LOCK_CONFLICT(1002, "操作过于频繁，请稍后重试"),
     
     // 业务级错误码 (2000-2999)
     RATE_LIMIT_EXCEEDED(2000, "访问频率超限"),

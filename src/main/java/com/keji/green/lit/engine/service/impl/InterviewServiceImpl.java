@@ -5,23 +5,30 @@ import com.keji.green.lit.engine.common.CommonConverter;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
+import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
 import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.enums.InterviewStatus;
+import com.keji.green.lit.engine.enums.UsageTypeEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.exception.ErrorCode;
 import com.keji.green.lit.engine.mapper.InterviewInfoMapper;
 import com.keji.green.lit.engine.mapper.QuestionAnswerRecordMapper;
+import com.keji.green.lit.engine.mapper.UsageRecordMapper;
 import com.keji.green.lit.engine.model.InterviewInfo;
 import com.keji.green.lit.engine.model.QuestionAnswerRecord;
+import com.keji.green.lit.engine.model.UsageRecord;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.InterviewService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
+import com.keji.green.lit.engine.utils.RedisUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -32,6 +39,7 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static com.keji.green.lit.engine.utils.Constants.FIVE_MINUTE_MILLISECONDS;
 import static com.keji.green.lit.engine.utils.Constants.INTEGER_FIVE;
@@ -54,6 +62,14 @@ public class InterviewServiceImpl implements InterviewService {
     @Resource
     private QuestionAnswerRecordMapper questionAnswerRecordMapper;
 
+    @Resource
+    private UsageRecordMapper usageRecordMapper;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private RedisUtils redisUtils;
 
     // TODO: 注入算法服务客户端
 
@@ -310,6 +326,55 @@ public class InterviewServiceImpl implements InterviewService {
         } catch (Exception e) {
             log.error("更新面试信息失败,", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void recordSttUsage(String interviewId, RecordSttUsageRequest request) {
+        // 验证面试所有权
+        Long uid = getCurrentUserId();
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!uid.equals(interviewInfo.getUid())) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
+        }
+        if (InterviewStatus.isEnd(interviewInfo.getStatus())){
+            throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
+        }
+
+        // 获取分布式锁
+        String lockKey = String.format("lock:stt:record-usage:%s", interviewId);
+        String threadId = String.valueOf(Thread.currentThread().getId());
+        
+        try {
+            // 尝试获取锁，设置过期时间为1秒
+            boolean locked = redisUtils.lock(lockKey, threadId, NumberUtils.LONG_ONE);
+            if (!locked) {
+                throw new BusinessException(ErrorCode.CONCURRENT_LOCK_CONFLICT);
+            }
+            // 更新面试信息
+            int updateCount = interviewInfoMapper.updateSttUsageByInterviewId(interviewId, request.getDurationSeconds(), request.getCostInCents());
+            if (updateCount <= 0) {
+                throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "更新面试信息失败");
+            }
+
+            // 记录使用记录
+            UsageRecord usageRecord = UsageRecord.builder()
+                    .interviewId(interviewId)
+                    .uid(uid)
+                    .usageType(UsageTypeEnum.STT.getCode())
+                    .durationSeconds(request.getDurationSeconds())
+                    .costInCents(request.getCostInCents())
+                    .build();
+            if (usageRecordMapper.insertSelective(usageRecord) <= 0) {
+                throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "记录使用记录失败");
+            }
+        } finally {
+            redisUtils.unlock(lockKey, threadId);
         }
     }
 

@@ -2,9 +2,11 @@ package com.keji.green.lit.engine.utils;
 
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.stereotype.Component;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.params.SetParams;
 
 import java.util.*;
 
@@ -198,6 +200,36 @@ public class RedisUtils {
         try {
             jedis = getJedis();
             return String.valueOf(jedis.incr(key));
+        } finally {
+            closeJedis(jedis);
+        }
+    }
+
+    public boolean unlock(String key, Object value) {
+        Jedis jedis = null;
+        try {
+            jedis = getJedis();
+            String script = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
+            Object result = jedis.eval(script, Collections.singletonList(key), Collections.singletonList(value.toString()));
+            log.info("unlock key {}, result is {}", key, result.toString());
+            return NumberUtils.LONG_ONE.equals(result);
+        } finally {
+            closeJedis(jedis);
+        }
+    }
+
+    public boolean lock(String key, Object value, long seconds) {
+        Jedis jedis = null;
+        try {
+            jedis = getJedis();
+            SetParams setParams = new SetParams();
+            setParams.nx();
+            setParams.ex(seconds);
+            String result = jedis.set(key, value.toString(), setParams);
+            if ("OK".equals(result)) {
+                return true;
+            }
+            return false;
         } finally {
             closeJedis(jedis);
         }

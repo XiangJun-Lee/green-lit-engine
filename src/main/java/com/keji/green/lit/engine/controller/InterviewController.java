@@ -4,6 +4,7 @@ import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
+import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
 import com.keji.green.lit.engine.enums.InterviewStatus;
 import com.keji.green.lit.engine.service.InterviewService;
 import jakarta.annotation.Resource;
@@ -100,5 +101,19 @@ public class InterviewController {
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) InterviewStatus status) {
         return Result.success(interviewService.getInterviewList(pageNum, pageSize, status));
+    }
+
+    /**
+     * 记录 STT 使用情况
+     *
+     * @param interviewId 面试ID
+     * @param request 使用情况请求
+     */
+    @PostMapping("/{interviewId}/stt/record-usage")
+    public Result<Void> recordSttUsage(
+            @PathVariable String interviewId,
+            @Valid @RequestBody RecordSttUsageRequest request) {
+        interviewService.recordSttUsage(interviewId, request);
+        return Result.success();
     }
 } 

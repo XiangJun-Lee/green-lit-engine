@@ -44,7 +44,7 @@ public interface InterviewInfoMapper {
      * @param costInCents 语音识别花费
      * @return 更新记录数
      */
-    int updateSttUsageByInterviewId(String interviewId, Long durationSeconds, Integer costInCents);
+    int updateSttUsageByInterviewId(String interviewId, Long durationSeconds, Long costInCents);
 
     /**
      * 更新面试的语音识别时长和语音识别花费
@@ -52,5 +52,5 @@ public interface InterviewInfoMapper {
      * @param costInCents 语音识别花费
      * @return 更新记录数
      */
-    int updateAgUsageByInterviewId(String interviewId, Integer costInCents);
+    int updateAgUsageByInterviewId(String interviewId, Long costInCents);
 }
