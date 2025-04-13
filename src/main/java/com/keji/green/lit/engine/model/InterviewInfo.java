@@ -69,16 +69,6 @@ public class InterviewInfo {
     private Integer status;
 
     /**
-     * 创建时间
-     */
-    private Date gmtCreate;
-
-    /**
-     * 修改时间
-     */
-    private Date gmtModify;
-
-    /**
      * 职位要求
      */
     private String jobRequirements;
@@ -87,4 +77,34 @@ public class InterviewInfo {
      * 版本
      */
     private Integer version;
+
+    /**
+     * 语音转文字总时长(秒)
+     */
+    private Long sttTotalSeconds;
+
+    /**
+     * 语音转文字总费用(分)
+     */
+    private Long sttTotalCost;
+
+    /**
+     * 智能问答总次数
+     */
+    private Integer agTotalCount;
+
+    /**
+     * 智能问答总费用(分)
+     */
+    private Long agTotalCost;
+
+    /**
+     * 创建时间
+     */
+    private Date gmtCreate;
+
+    /**
+     * 修改时间
+     */
+    private Date gmtModify;
 }

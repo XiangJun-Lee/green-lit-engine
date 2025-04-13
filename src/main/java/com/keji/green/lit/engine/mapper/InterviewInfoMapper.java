@@ -36,4 +36,21 @@ public interface InterviewInfoMapper {
      * @return 满足条件的面试数量
      */
     long countByUserIdAndStatus(Map<String, Object> params);
+
+    /**
+     * 更新面试的语音识别时长和语音识别花费
+     * @param interviewId 面试ID
+     * @param durationSeconds 语音识别时长
+     * @param costInCents 语音识别花费
+     * @return 更新记录数
+     */
+    int updateSttUsageByInterviewId(String interviewId, Long durationSeconds, Integer costInCents);
+
+    /**
+     * 更新面试的语音识别时长和语音识别花费
+     * @param interviewId 面试ID
+     * @param costInCents 语音识别花费
+     * @return 更新记录数
+     */
+    int updateAgUsageByInterviewId(String interviewId, Integer costInCents);
 }

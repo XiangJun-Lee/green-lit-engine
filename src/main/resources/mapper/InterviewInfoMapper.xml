@@ -13,13 +13,18 @@
         <result column="end_time" jdbcType="TIMESTAMP" property="endTime"/>
         <result column="status" jdbcType="INTEGER" property="status"/>
         <result column="job_requirements" jdbcType="LONGVARCHAR" property="jobRequirements"/>
+        <result column="stt_total_seconds" jdbcType="BIGINT" property="sttTotalSeconds"/>
+        <result column="stt_total_cost" jdbcType="BIGINT" property="sttTotalCost"/>
+        <result column="ag_total_count" jdbcType="INTEGER" property="agTotalCount"/>
+        <result column="ag_total_cost" jdbcType="BIGINT" property="agTotalCost"/>
         <result column="version" jdbcType="INTEGER" property="version"/>
         <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
         <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
     </resultMap>
     <sql id="Base_Column_List">
         interview_id, uid, interview_name, interview_language, programming_language, position_info,
-    extra_data, start_time, end_time, status, gmt_create, gmt_modify, job_requirements, version
+    extra_data, start_time, end_time, status, gmt_create, gmt_modify, job_requirements, version, stt_total_seconds,
+    stt_total_cost, ag_total_count, ag_total_cost
     </sql>
 
     <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
@@ -92,6 +97,18 @@
             <if test="jobRequirements != null">
                 job_requirements,
             </if>
+            <if test="stt_total_seconds != null">
+                stt_total_seconds,
+            </if>
+            <if test="stt_total_cost != null">
+                stt_total_cost,
+            </if>
+            <if test="ag_total_count != null">
+                ag_total_count,
+            </if>
+            <if test="ag_total_cost != null">
+                ag_total_cost,
+            </if>
         </trim>
         <trim prefix="values (" suffix=")" suffixOverrides=",">
             <if test="interviewId != null">
@@ -133,6 +150,18 @@
             <if test="jobRequirements != null">
                 #{jobRequirements,jdbcType=LONGVARCHAR},
             </if>
+            <if test="stt_total_seconds != null">
+                #{stt_total_seconds,jdbcType=BIGINT},
+            </if>
+            <if test="stt_total_cost != null">
+                #{stt_total_cost,jdbcType=BIGINT},
+            </if>
+            <if test="ag_total_count != null">
+                #{ag_total_count,jdbcType=INTEGER},
+            </if>
+            <if test="ag_total_cost != null">
+                #{ag_total_cost,jdbcType=BIGINT},
+            </if>
         </trim>
     </insert>
     <update id="updateByPrimaryKeySelectiveCAS" parameterType="InterviewInfo">
@@ -173,7 +202,6 @@
     </update>
 
     <update id="updateByPrimaryKeySelective" parameterType="InterviewInfo">
-
         update interview_info
         <set>
             <if test="interviewName != null">
@@ -208,4 +236,20 @@
         where interview_id = #{interviewId,jdbcType=VARCHAR}
         and version = #{version,jdbcType=INTEGER}
     </update>
+
+    <update id="updateSttUsageByInterviewId">
+        UPDATE interview_info
+        SET
+            stt_total_seconds = stt_total_seconds + #{durationSeconds,jdbcType=BIGINT},
+            stt_total_cost = stt_total_cost + #{costInCents,jdbcType=BIGINT}
+        WHERE interview_id = #{interviewId,jdbcType=VARCHAR}
+    </update>
+
+    <update id="updateAgUsageByInterviewId">
+        UPDATE interview_info
+        SET ag_total_count = ag_total_count + 1,
+            ag_total_cost  = ag_total_cost + #{costInCents,jdbcType=BIGINT}
+        WHERE interview_id = #{interviewId,jdbcType=VARCHAR}
+    </update>
+
 </mapper>
