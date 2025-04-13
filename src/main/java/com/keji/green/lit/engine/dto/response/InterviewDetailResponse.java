@@ -40,5 +40,5 @@ public class InterviewDetailResponse {
     /**
      * 面试提问记录
      */
-    private List<InterviewRecordResponse> records;
+    private List<QuestionAnswerRecordResponse> records;
 } 

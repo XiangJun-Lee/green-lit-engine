@@ -110,7 +110,7 @@
   <select id="selectListByInterviewId" parameterType="java.util.Map" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
-    from interview_record
+    from question_answer_record
     where interview_id = #{interviewId,jdbcType=VARCHAR}
     <if test="limit != null">
       limit #{limit}

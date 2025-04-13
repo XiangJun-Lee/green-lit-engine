@@ -28,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
 import static com.keji.green.lit.engine.utils.Constants.FIVE_MINUTE_MILLISECONDS;
 import static com.keji.green.lit.engine.utils.Constants.INTEGER_FIVE;
@@ -64,9 +62,6 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Resource
     private UsageRecordMapper usageRecordMapper;
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
 
     @Resource
     private RedisUtils redisUtils;
@@ -140,10 +135,10 @@ public class InterviewServiceImpl implements InterviewService {
         queryParam.put("interviewId", interviewId);
         queryParam.put("limit", 5);
         queryParam.put("orderByDesc", "id");
-        List<QuestionAnswerRecord> interviewRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
+        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
         List<String> questionList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(interviewRecordList)) {
-            questionList = interviewRecordList.stream().map(QuestionAnswerRecord::getQuestion)
+        if (CollectionUtils.isNotEmpty(questionAnswerRecordList)) {
+            questionList = questionAnswerRecordList.stream().map(QuestionAnswerRecord::getQuestion)
                     .filter(StringUtils::isNotEmpty).toList();
         }
         String currentQuestion = request.getQuestion();
@@ -176,7 +171,7 @@ public class InterviewServiceImpl implements InterviewService {
                 // 更新面试流水（答案）
                 LocalDateTime answerTime = LocalDateTime.now();
                 // TODO: 更新面试流水的答案
-                // interviewRecordMapper.updateAnswerById(recordId, answer.toString(), answerTime);
+//                 questionAnswerRecordMapper.updateByPrimaryKeySelective(recordId, answer.toString(), answerTime);
 
                 emitter.complete();
             } catch (Exception e) {
@@ -252,9 +247,9 @@ public class InterviewServiceImpl implements InterviewService {
         queryParam.put("interviewId", interviewId);
         queryParam.put("limit", 5);
         queryParam.put("orderByDesc", "id");
-        List<QuestionAnswerRecord> interviewRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
+        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
         // 构建面试详情响应
-        return CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, interviewRecordList);
+        return CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, questionAnswerRecordList);
     }
 
     /**
