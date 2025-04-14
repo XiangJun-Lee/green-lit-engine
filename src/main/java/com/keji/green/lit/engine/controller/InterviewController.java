@@ -92,7 +92,6 @@ public class InterviewController {
      * 分页查询用户的面试记录
      * @param pageNum 页码
      * @param pageSize 每页大小
-     * @param status 面试状态（可选）
      * @return 分页面试列表
      */
     @GetMapping("/list")

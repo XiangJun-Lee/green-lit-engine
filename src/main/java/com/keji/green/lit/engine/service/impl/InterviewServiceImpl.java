@@ -203,7 +203,9 @@ public class InterviewServiceImpl implements InterviewService {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         if (InterviewStatus.isEnd(interviewInfo.getStatus())){
-            return CommonConverter.INSTANCE.convert2InterviewInfoResponse(interviewInfo);
+            InterviewInfoResponse response = CommonConverter.INSTANCE.convert2InterviewInfoResponse(interviewInfo);
+            response.setTotalMinutes(DateTimeUtils.minutesBetween(interviewInfo.getStartTime(), interviewInfo.getEndTime()));
+            return response;
         }
 
         // 记录结束时间
@@ -219,7 +221,10 @@ public class InterviewServiceImpl implements InterviewService {
         // 构建返回结果
         InterviewInfoResponse response = new InterviewInfoResponse();
         response.setInterviewId(interviewId);
+        response.setInterviewName(interviewInfo.getInterviewName());
         response.setStartTime(interviewInfo.getStartTime());
+        response.setAgTotalCost(interviewInfo.getAgTotalCost());
+        response.setTotalMinutes(DateTimeUtils.minutesBetween(interviewInfo.getStartTime(), updateInterviewInfo.getEndTime()));
         response.setEndTime(updateInterviewInfo.getEndTime());
         response.setStatus(updateInterviewInfo.getStatus());
         return response;
