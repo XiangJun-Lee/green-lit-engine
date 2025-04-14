@@ -98,9 +98,8 @@ public class InterviewController {
     @GetMapping("/list")
     public Result<PageResponse<InterviewInfoResponse>> getInterviewList(
             @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) Integer status) {
-        return Result.success(interviewService.getInterviewList(pageNum, pageSize, status));
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return Result.success(interviewService.getInterviewList(pageNum, pageSize));
     }
 
     /**

@@ -255,7 +255,7 @@ public class InterviewServiceImpl implements InterviewService {
      * 分页获取面试列表
      */
     @Override
-    public PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, Integer status) {
+    public PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize) {
         // 获取当前用户ID
         Long uid = getCurrentUserId();
 
@@ -267,9 +267,6 @@ public class InterviewServiceImpl implements InterviewService {
         params.put("uid", uid);
         params.put("offset", offset);
         params.put("pageSize", pageSize);
-        if (Objects.nonNull(status) && InterviewStatus.isValid(status)) {
-            params.put("status", status);
-        }
         
         // 查询面试列表数据
         List<InterviewInfo> interviewInfoList = interviewInfoMapper.selectPageByUserId(params);

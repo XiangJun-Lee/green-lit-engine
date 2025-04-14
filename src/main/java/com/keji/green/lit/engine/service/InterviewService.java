@@ -9,7 +9,6 @@ import com.keji.green.lit.engine.dto.response.InterviewCreateResponse;
 import com.keji.green.lit.engine.dto.response.InterviewInfoResponse;
 import com.keji.green.lit.engine.dto.response.PageResponse;
 import com.keji.green.lit.engine.dto.response.UpdateInterviewResponse;
-import com.keji.green.lit.engine.enums.InterviewStatus;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 /**
@@ -64,13 +63,12 @@ public interface InterviewService {
     
     /**
      * 分页获取面试列表
-     * 
-     * @param pageNum 页码
+     *
+     * @param pageNum  页码
      * @param pageSize 每页大小
-     * @param status 面试状态（可选）
      * @return 分页面试列表
      */
-    PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, Integer status);
+    PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize);
 
     /**
      * 更新面试信息
