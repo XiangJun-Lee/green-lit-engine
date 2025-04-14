@@ -252,4 +252,13 @@
         WHERE interview_id = #{interviewId,jdbcType=VARCHAR}
     </update>
 
+    <update id="forceEndInterviewByInterviewIdList">
+        UPDATE interview_info
+        SET status = 2
+        WHERE interview_id IN
+        <foreach collection="interviewIdList" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
 </mapper>

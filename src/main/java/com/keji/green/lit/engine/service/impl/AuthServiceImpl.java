@@ -113,7 +113,6 @@ public class AuthServiceImpl implements AuthService {
         // 创建用户
         User user = User.builder()
                 .phone(request.getPhone())
-                .password(request.getPassword())
                 .userRole(UserRole.USER.getCode())
                 .email(request.getEmail())
                 .nickName(UserNameGenerator.generate())

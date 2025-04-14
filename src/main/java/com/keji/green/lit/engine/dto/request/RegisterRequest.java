@@ -31,14 +31,6 @@ public class RegisterRequest {
      */
     @NotBlank(message = "验证码不能为空")
     private String code;
-    
-    /**
-     * 用户密码
-     * 长度6-20位
-     */
-    @NotBlank(message = "密码不能为空")
-    @Pattern(regexp = "^.{6,20}$", message = "密码长度必须在6-20位之间")
-    private String password;
 
     /**
      * 邮箱

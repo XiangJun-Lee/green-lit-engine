@@ -39,8 +39,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static com.keji.green.lit.engine.utils.Constants.FIVE_MINUTE_MILLISECONDS;
-import static com.keji.green.lit.engine.utils.Constants.INTEGER_FIVE;
+import static com.keji.green.lit.engine.utils.Constants.*;
 
 /**
  * 面试服务实现类
@@ -90,7 +89,7 @@ public class InterviewServiceImpl implements InterviewService {
         interview.setExtraData(JSON.toJSONString(extraData));
         Date startTime = new Date();
         interview.setStartTime(startTime);
-        interview.setEndTime(DateTimeUtils.plusHours(startTime, INTEGER_FIVE));
+        interview.setEndTime(DateTimeUtils.plusHours(startTime, INTERVIEW_MAX_HOURS));
         if (interviewInfoMapper.insertSelective(interview) <= 0) {
             throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试失败");
         }
@@ -256,7 +255,7 @@ public class InterviewServiceImpl implements InterviewService {
      * 分页获取面试列表
      */
     @Override
-    public PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, InterviewStatus status) {
+    public PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, Integer status) {
         // 获取当前用户ID
         Long uid = getCurrentUserId();
 
@@ -268,8 +267,8 @@ public class InterviewServiceImpl implements InterviewService {
         params.put("uid", uid);
         params.put("offset", offset);
         params.put("pageSize", pageSize);
-        if (status != null) {
-            params.put("status", status.getCode());
+        if (Objects.nonNull(status) && InterviewStatus.isValid(status)) {
+            params.put("status", status);
         }
         
         // 查询面试列表数据
@@ -285,6 +284,26 @@ public class InterviewServiceImpl implements InterviewService {
         
         // 构建列表响应
         List<InterviewInfoResponse> responses = CommonConverter.INSTANCE.convert2InterviewListResponseList(interviewInfoList);
+
+        // 未正确结束的面试id
+        List<String> unEndedInterviewIds = new ArrayList<>();
+        for (InterviewInfoResponse response : responses) {
+            Date startTime = response.getStartTime();
+            Date endTime = response.getEndTime();
+            Date now = new Date();
+            if (Objects.nonNull(endTime) && DateTimeUtils.hoursBetween(endTime, now) >= INTERVIEW_MAX_HOURS && !InterviewStatus.isEnd(response.getStatus())) {
+                unEndedInterviewIds.add(response.getInterviewId());
+                response.setStatus(InterviewStatus.ENDED_AUTOMATICALLY.getCode());
+            }
+            response.setTotalMinutes(DateTimeUtils.minutesBetween(startTime, endTime));
+        }
+        try {
+            if (CollectionUtils.isNotEmpty(unEndedInterviewIds)){
+                interviewInfoMapper.forceEndInterviewByInterviewIdList(unEndedInterviewIds);
+            }
+        } catch (Exception e) {
+            log.warn("强制结束面试失败,interviewIdList:{}", unEndedInterviewIds, e);
+        }
 
         return PageResponse.build(responses, total, pageNum, pageSize);
     }

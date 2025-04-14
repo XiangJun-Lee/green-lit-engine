@@ -17,6 +17,11 @@ public class InterviewInfoResponse {
     private String interviewId;
 
     /**
+     * 面试名称
+     */
+    private String interviewName;
+
+    /**
      * 面试状态
      */
     private Integer status;
@@ -30,6 +35,16 @@ public class InterviewInfoResponse {
      * 结束时间（如果已结束）
      */
     private Date endTime;
+
+    /**
+     * 总时长（分钟）
+     */
+    private Long totalMinutes;
+
+    /**
+     * 总问题数
+     */
+    private Long agTotalCost;
 
     /**
      * 创建时间

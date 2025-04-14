@@ -27,4 +27,6 @@ public class Constants {
     public static final Integer INTEGER_FIVE = 5;
     public static final Integer INTEGER_TEN = 10;
     public static final Integer INTEGER_TWENTY = 20;
+
+    public static final Integer INTERVIEW_MAX_HOURS = 5;
 }

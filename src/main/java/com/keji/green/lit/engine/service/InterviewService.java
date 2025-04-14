@@ -70,7 +70,7 @@ public interface InterviewService {
      * @param status 面试状态（可选）
      * @return 分页面试列表
      */
-    PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, InterviewStatus status);
+    PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, Integer status);
 
     /**
      * 更新面试信息

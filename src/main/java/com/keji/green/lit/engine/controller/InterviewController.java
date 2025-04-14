@@ -99,7 +99,7 @@ public class InterviewController {
     public Result<PageResponse<InterviewInfoResponse>> getInterviewList(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) InterviewStatus status) {
+            @RequestParam(required = false) Integer status) {
         return Result.success(interviewService.getInterviewList(pageNum, pageSize, status));
     }
 
