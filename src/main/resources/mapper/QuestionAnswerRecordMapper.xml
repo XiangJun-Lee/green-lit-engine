@@ -112,14 +112,14 @@
     <include refid="Base_Column_List" />
     from question_answer_record
     where interview_id = #{interviewId,jdbcType=VARCHAR}
-    <if test="limit != null">
-      limit #{limit}
-    </if>
     <if test="orderByDesc != null">
-      order by #{orderBy}
+      order by #{orderByDesc}
     </if>
     <if test="orderByAsc != null">
-      order by #{orderBy}
+      order by #{orderByAsc}
+    </if>
+    <if test="limit != null">
+      limit #{limit}
     </if>
   </select>
 </mapper>

@@ -54,7 +54,7 @@ public interface CommonConverter {
             @Mapping(target = "createTime", source = "interviewInfo.gmtCreate"),
             @Mapping(target = "records", expression = "java(convert2RecordResponseList(questionAnswerRecordList))")
     })
-    InterviewDetailResponse convert2InterviewDetailResponse(InterviewInfo interviewInfo, List<QuestionAnswerRecord> questionAnswerRecordList);
+    InterviewDetailResponse convert2InterviewDetailResponse(InterviewInfo interviewInfo, InterviewExtraData interviewExtraData, List<QuestionAnswerRecord> questionAnswerRecordList);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void update2InterviewInfo(@MappingTarget InterviewInfo updateInterviewInfo, UpdateInterviewRequest request);

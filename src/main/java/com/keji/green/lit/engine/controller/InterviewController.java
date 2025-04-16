@@ -5,7 +5,6 @@ import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
-import com.keji.green.lit.engine.enums.InterviewStatus;
 import com.keji.green.lit.engine.service.InterviewService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;

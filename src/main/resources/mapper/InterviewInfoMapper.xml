@@ -231,10 +231,8 @@
             <if test="jobRequirements != null">
                 job_requirements = #{jobRequirements,jdbcType=LONGVARCHAR},
             </if>
-            version = version+1
         </set>
         where interview_id = #{interviewId,jdbcType=VARCHAR}
-        and version = #{version,jdbcType=INTEGER}
     </update>
 
     <update id="updateSttUsageByInterviewId">

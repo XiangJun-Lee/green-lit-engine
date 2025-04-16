@@ -3,6 +3,7 @@ package com.keji.green.lit.engine.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.keji.green.lit.engine.common.CommonConverter;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
+import com.keji.green.lit.engine.dto.bean.QuestionAnswerRecordListQueryParam;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
@@ -20,6 +21,7 @@ import com.keji.green.lit.engine.model.QuestionAnswerRecord;
 import com.keji.green.lit.engine.model.UsageRecord;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.InterviewService;
+import com.keji.green.lit.engine.service.QuestionAnswerRecordService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.RedisUtils;
@@ -64,6 +66,9 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Resource
     private RedisUtils redisUtils;
+
+    @Resource
+    private QuestionAnswerRecordService questionAnswerRecordService;
 
     // TODO: 注入算法服务客户端
 
@@ -216,7 +221,9 @@ public class InterviewServiceImpl implements InterviewService {
         if (endTime.before(interviewInfo.getEndTime())) {
             updateInterviewInfo.setEndTime(endTime);
         }
-        interviewInfoMapper.updateByPrimaryKeySelective(updateInterviewInfo);
+        if (interviewInfoMapper.updateByPrimaryKeySelective(updateInterviewInfo)<=0){
+            throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "结束面试失败，请稍后重试");
+        }
 
         // 构建返回结果
         InterviewInfoResponse response = new InterviewInfoResponse();
@@ -236,24 +243,42 @@ public class InterviewServiceImpl implements InterviewService {
     @Override
     public InterviewDetailResponse getInterviewDetail(String interviewId) {
         // 验证面试所有权
-        Long uid = getCurrentUserId();
+        User currentUser = getCurrentUser();
         // 验证面试所有权
         Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
         if (optionalInterviewInfo.isEmpty()) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
         }
         InterviewInfo interviewInfo = optionalInterviewInfo.get();
-        if (!uid.equals(interviewInfo.getUid())) {
+        if (!currentUser.getUid().equals(interviewInfo.getUid())) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
+        InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData()) ? JSON.parseObject(interviewInfo.getExtraData(), InterviewExtraData.class) : null;
         // 获取面试提问信息
-        Map<String, Object> queryParam = new HashMap<>();
-        queryParam.put("interviewId", interviewId);
-        queryParam.put("limit", 5);
-        queryParam.put("orderByDesc", "id");
-        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
+        QuestionAnswerRecordListQueryParam queryParam = new QuestionAnswerRecordListQueryParam();
+        queryParam.setInterviewId(interviewId);
+        queryParam.setLimit(interviewInfo.getAgTotalCount());
+        queryParam.setOrderBy("id");
+        queryParam.setOrderByDesc(true);
+        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordService.questionAnswerRecordsList(queryParam);
+        // todo mock 数据
+        if (CollectionUtils.isEmpty(questionAnswerRecordList)) {
+            QuestionAnswerRecord questionAnswerRecord = new QuestionAnswerRecord();
+            questionAnswerRecord.setId(1L);
+            questionAnswerRecord.setQuestion("请问什么是jvm");
+            QuestionAnswerRecord questionAnswerRecord2 = new QuestionAnswerRecord();
+            questionAnswerRecord2.setId(2L);
+            questionAnswerRecord2.setQuestion("谈一谈你对java的理解");
+            questionAnswerRecordList.add(questionAnswerRecord);
+            questionAnswerRecordList.add(questionAnswerRecord2);
+        }
         // 构建面试详情响应
-        return CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, questionAnswerRecordList);
+        InterviewDetailResponse result = CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, interviewExtraData, questionAnswerRecordList);
+        result.setResumeText(currentUser.getResumeText());
+
+        // todo mock 数据
+        result.setBalance(1000L);
+        return result;
     }
 
     /**
