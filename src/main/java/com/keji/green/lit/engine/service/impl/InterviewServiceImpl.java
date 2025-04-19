@@ -112,7 +112,6 @@ public class InterviewServiceImpl implements InterviewService {
      * 提问并获取答案（流式）
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public SseEmitter askQuestion(String interviewId, AskQuestionRequest request) {
         Long uid = getCurrentUserId();
         // 验证面试所有权
