@@ -35,6 +35,8 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <fastjson.version>2.0.32</fastjson.version>
 
+        <dysmsapi20170525.version>3.1.2</dysmsapi20170525.version>
+        <credentials-java.version>1.0.2</credentials-java.version>
     </properties>
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -169,7 +171,13 @@
             <groupId>com.aliyun</groupId>
             <artifactId>dysmsapi20170525</artifactId>
             <!-- 请将 'the-latest-version' 替换为最新版本号：https://mvnrepository.com/artifact/com.aliyun/dysmsapi20170525 -->
-            <version>3.1.2</version>
+            <version>${dysmsapi20170525.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>credentials-java</artifactId>
+            <version>${credentials-java.version}</version>
         </dependency>
     </dependencies>
 
