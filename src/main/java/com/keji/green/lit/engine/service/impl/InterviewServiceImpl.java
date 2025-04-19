@@ -146,12 +146,16 @@ public class InterviewServiceImpl implements InterviewService {
                     .filter(StringUtils::isNotEmpty).toList();
         }
         String currentQuestion = request.getQuestion();
-        // TODO: 保存面试流水到数据库
-        QuestionAnswerRecord record = new QuestionAnswerRecord();
-        record.setInterviewId(interviewId);
-        record.setQuestion(request.getQuestion());
-        if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
-            throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试流水失败");
+        try {
+            // TODO: 保存面试流水到数据库
+            QuestionAnswerRecord record = new QuestionAnswerRecord();
+            record.setInterviewId(interviewId);
+            record.setQuestion(request.getQuestion());
+            if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
+
+            }
+        } catch (Exception e) {
+            log.error("保存面试流水失败", e);
         }
 
         // 异步调用算法服务
