@@ -12,13 +12,11 @@ import com.keji.green.lit.engine.enums.UserRole;
 import com.keji.green.lit.engine.enums.UserStatusEnum;
 import com.keji.green.lit.engine.enums.VerificationCodeScene;
 import com.keji.green.lit.engine.exception.BusinessException;
+import com.keji.green.lit.engine.integration.SmsWrapService;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.model.UserInviteRelation;
 import com.keji.green.lit.engine.security.JwtTokenProvider;
-import com.keji.green.lit.engine.service.AuthService;
-import com.keji.green.lit.engine.service.RateLimitService;
-import com.keji.green.lit.engine.service.UserService;
-import com.keji.green.lit.engine.service.VerificationCodeService;
+import com.keji.green.lit.engine.service.*;
 import com.keji.green.lit.engine.utils.InviteCodeGenerator;
 import com.keji.green.lit.engine.utils.UserNameGenerator;
 import com.keji.green.lit.engine.dao.UserInviteRelationDao;
@@ -98,6 +96,9 @@ public class AuthServiceImpl implements AuthService {
     @Resource
     private UserInviteRelationDao userInviteRelationDao;
 
+    @Resource
+    private SmsWrapService aliyunSmsWrapService;
+
     @Override
     @Transactional(rollbackFor = Throwable.class)
     public void register(RegisterRequest request) {
@@ -116,7 +117,6 @@ public class AuthServiceImpl implements AuthService {
         // 创建用户
         User user = User.builder()
                 .phone(request.getPhone())
-                .password(request.getPassword())
                 .userRole(UserRole.USER.getCode())
                 .email(request.getEmail())
                 .nickName(UserNameGenerator.generate())
@@ -235,10 +235,9 @@ public class AuthServiceImpl implements AuthService {
         if (rateLimitService.isRateLimited(ipLimitKey, INTEGER_TEN, ONE_HOUR_SECONDS)) {
             throw new BusinessException(RATE_LIMIT_EXCEEDED.getCode(), "发送验证码次数过多，请稍后再试");
         }
-
-        String code = verificationCodeService.generateAndSendCode(request.getPhone(),
-                VerificationCodeScene.valueOf(request.getScene().toUpperCase()));
-        // todo 发送短信验证码
+        VerificationCodeScene codeScene = VerificationCodeScene.valueOf(request.getScene().toUpperCase());
+        String code = verificationCodeService.generateAndSendCode(request.getPhone(), codeScene);
+        aliyunSmsWrapService.sendVerificationCode(request.getPhone(), codeScene, code);
     }
 
     @Override
@@ -266,7 +265,14 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
         }
         String phone = authentication.getName();
-        return UserResponse.fromUser(userService.queryNormalUserByPhone(phone));
+        UserResponse userResponse = UserResponse.fromUser(userService.queryNormalUserByPhone(phone));
+        try {
+            long inviteeCount = userInviteRelationDao.selectCountByInviterId(userResponse.getUid());
+            userResponse.setInviteeCount(String.valueOf(inviteeCount));
+        } catch (Exception e) {
+            log.warn("查询用户邀请人数失败", e);
+        }
+        return userResponse;
     }
 
     @Override

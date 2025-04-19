@@ -1,12 +1,21 @@
 package com.keji.green.lit.engine.integration.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.aliyun.dysmsapi20170525.Client;
+import com.aliyun.dysmsapi20170525.models.SendSmsRequest;
+import com.aliyun.dysmsapi20170525.models.SendSmsResponse;
+import com.keji.green.lit.engine.enums.VerificationCodeScene;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.exception.ErrorCode;
 import com.keji.green.lit.engine.integration.SmsWrapService;
+import com.keji.green.lit.engine.utils.AliyunSmsClientFactory;
+import com.keji.green.lit.engine.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -16,7 +25,7 @@ import java.util.Random;
  * @since 2024-04-11
  */
 @Slf4j
-@Component
+@Service("aliyunSmsWrapService")
 public class AliyunSmsWrapServiceImpl implements SmsWrapService {
 
     @Value("${aliyun.sms.access-key-id}")
@@ -25,43 +34,50 @@ public class AliyunSmsWrapServiceImpl implements SmsWrapService {
     @Value("${aliyun.sms.access-key-secret}")
     private String accessKeySecret;
 
-    @Value("${aliyun.sms.sign-name}")
+//    @Value("${aliyun.sms.sign-name}")
     private String signName;
 
     @Value("${aliyun.sms.template-code}")
     private String templateCode;
 
+    @Value("${aliyun.sms.endpoint}")
+    private String endpoint;
+
+    private final Random random = new Random();
+
     @Override
-    public boolean sendVerificationCode(String phone, String code) {
+    public boolean sendVerificationCode(String phone, VerificationCodeScene codeScene, String code) {
         try {
-            // TODO: 实现阿里云短信发送逻辑
-            // 这里需要集成阿里云SDK，调用发送短信的API
-            // 示例代码：
-            // IClientProfile profile = DefaultProfile.getProfile("cn-hangzhou", accessKeyId, accessKeySecret);
-            // IAcsClient client = new DefaultAcsClient(profile);
-            // CommonRequest request = new CommonRequest();
-            // request.setSysMethod(MethodType.POST);
-            // request.setSysDomain("dysmsapi.aliyuncs.com");
-            // request.setSysVersion("2017-05-25");
-            // request.setSysAction("SendSms");
-            // request.putQueryParameter("PhoneNumbers", phone);
-            // request.putQueryParameter("SignName", signName);
-            // request.putQueryParameter("TemplateCode", templateCode);
-            // request.putQueryParameter("TemplateParam", "{\"code\":\"" + code + "\"}");
-            // CommonResponse response = client.getCommonResponse(request);
-            // return response.getHttpResponse().isSuccess();
+            // 创建阿里云短信客户端
+            Client client = AliyunSmsClientFactory.createClient(accessKeyId, accessKeySecret, endpoint);
+
+            // 构建短信模板参数
+            Map<String, String> templateParam = new HashMap<>();
+            templateParam.put("code", code);
+
+            // 构建发送短信请求
+            SendSmsRequest sendSmsRequest = new SendSmsRequest()
+                    .setPhoneNumbers(phone)
+                    .setSignName("阿里云短信测试")
+                    .setTemplateCode("SMS_154950909")
+                    .setTemplateParam(JsonUtils.toJson(templateParam));
+
+            // 发送短信
+            SendSmsResponse response = client.sendSms(sendSmsRequest);
             
-            // 临时返回true，实际实现时需要替换为真实的发送结果
-            return true;
+            // 记录发送日志
+            log.info("发送短信验证码，手机号：{}，验证码：{}，响应：{}", phone, code, JSON.toJSONString(response));
+
+            // 判断发送是否成功
+            return "OK".equals(response.getBody().getCode());
         } catch (Exception e) {
             log.error("发送短信失败，手机号：{}，验证码：{}", phone, code, e);
-            throw new BusinessException(ErrorCode.EXTERNAL_SERVICE_ERROR, "发送短信失败", e);
+            throw new BusinessException(ErrorCode.EXTERNAL_SERVICE_ERROR, "网络异常，请稍后重试", e);
         }
     }
 
     @Override
     public String generateVerificationCode() {
-        Random random = new Random();
         StringBuilder code = new StringBuilder();
         for (int i = 0; i < 6; i++) {
             code.append(random.nextInt(10));

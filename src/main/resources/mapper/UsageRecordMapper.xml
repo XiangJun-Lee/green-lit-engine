@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.keji.green.lit.engine.mapper.UsageRecordMapper">
+    <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.UsageRecord">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="interview_id" jdbcType="BIGINT" property="interviewId"/>
+        <result column="uid" jdbcType="BIGINT" property="uid"/>
+        <result column="usage_type" jdbcType="VARCHAR" property="usageType"/>
+        <result column="duration_seconds" jdbcType="INTEGER" property="durationSeconds"/>
+        <result column="cost_in_cents" jdbcType="BIGINT" property="costInCents"/>
+        <result column="description" jdbcType="VARCHAR" property="description"/>
+        <result column="gmt_create" jdbcType="TIMESTAMP" property="gmtCreate"/>
+        <result column="gmt_modify" jdbcType="TIMESTAMP" property="gmtModify"/>
+    </resultMap>
+    <sql id="Base_Column_List">
+        id, interview_id, uid, usage_type, duration_seconds, cost_in_cents, description, 
+    gmt_create, gmt_modify
+    </sql>
+    <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from usage_record
+        where id = #{id,jdbcType=BIGINT}
+    </select>
+    <select id="selectByInterviewId" parameterType="java.lang.String" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from usage_record
+        where interview_id = #{interviewId,jdbcType=VARCHAR}
+    </select>
+    <select id="selectByUid" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from usage_record
+        where uid = #{uid,jdbcType=BIGINT}
+    </select>
+    <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+        delete
+        from usage_record
+        where id = #{id,jdbcType=BIGINT}
+    </delete>
+    <insert id="insertSelective" parameterType="com.keji.green.lit.engine.model.UsageRecord">
+        insert into usage_record
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                id,
+            </if>
+            <if test="interviewId != null">
+                interview_id,
+            </if>
+            <if test="uid != null">
+                uid,
+            </if>
+            <if test="usageType != null">
+                usage_type,
+            </if>
+            <if test="durationSeconds != null">
+                duration_seconds,
+            </if>
+            <if test="costInCents != null">
+                cost_in_cents,
+            </if>
+            <if test="description != null">
+                description,
+            </if>
+            <if test="gmtCreate != null">
+                gmt_create,
+            </if>
+            <if test="gmtModify != null">
+                gmt_modify,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="id != null">
+                #{id,jdbcType=BIGINT},
+            </if>
+            <if test="interviewId != null">
+                #{interviewId,jdbcType=BIGINT},
+            </if>
+            <if test="uid != null">
+                #{uid,jdbcType=BIGINT},
+            </if>
+            <if test="usageType != null">
+                #{usageType,jdbcType=VARCHAR},
+            </if>
+            <if test="durationSeconds != null">
+                #{durationSeconds,jdbcType=INTEGER},
+            </if>
+            <if test="costInCents != null">
+                #{costInCents,jdbcType=BIGINT},
+            </if>
+            <if test="description != null">
+                #{description,jdbcType=VARCHAR},
+            </if>
+            <if test="gmtCreate != null">
+                #{gmtCreate,jdbcType=TIMESTAMP},
+            </if>
+            <if test="gmtModify != null">
+                #{gmtModify,jdbcType=TIMESTAMP},
+            </if>
+        </trim>
+    </insert>
+</mapper>

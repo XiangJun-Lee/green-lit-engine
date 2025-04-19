@@ -7,7 +7,7 @@ import lombok.Data;
  * @author xiangjun_lee
  */
 @Data
-public class InterviewRecordResponse {
+public class QuestionAnswerRecordResponse {
     
     /**
      * 记录ID

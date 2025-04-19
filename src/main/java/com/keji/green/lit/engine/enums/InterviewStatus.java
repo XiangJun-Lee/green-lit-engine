@@ -40,6 +40,15 @@ public enum InterviewStatus {
         return null;
     }
 
+    public static boolean isValid(int code) {
+        for (InterviewStatus status : InterviewStatus.values()) {
+            if (status.getCode() == code) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isEnd(int code) {
         return ENDED_MANUALLY.getCode() == code || ENDED_AUTOMATICALLY.getCode() == code;
     }

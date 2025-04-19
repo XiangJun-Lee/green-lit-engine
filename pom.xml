@@ -164,6 +164,13 @@
             <artifactId>fastjson</artifactId>
             <version>${fastjson.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>dysmsapi20170525</artifactId>
+            <!-- 请将 'the-latest-version' 替换为最新版本号：https://mvnrepository.com/artifact/com.aliyun/dysmsapi20170525 -->
+            <version>3.1.2</version>
+        </dependency>
     </dependencies>
 
     <build>

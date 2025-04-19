@@ -4,7 +4,7 @@ import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
-import com.keji.green.lit.engine.enums.InterviewStatus;
+import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
 import com.keji.green.lit.engine.service.InterviewService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -91,14 +91,26 @@ public class InterviewController {
      * 分页查询用户的面试记录
      * @param pageNum 页码
      * @param pageSize 每页大小
-     * @param status 面试状态（可选）
      * @return 分页面试列表
      */
     @GetMapping("/list")
     public Result<PageResponse<InterviewInfoResponse>> getInterviewList(
             @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) InterviewStatus status) {
-        return Result.success(interviewService.getInterviewList(pageNum, pageSize, status));
+            @RequestParam(defaultValue = "10") Integer pageSize) {
+        return Result.success(interviewService.getInterviewList(pageNum, pageSize));
+    }
+
+    /**
+     * 记录 STT 使用情况
+     *
+     * @param interviewId 面试ID
+     * @param request 使用情况请求
+     */
+    @PostMapping("/{interviewId}/stt/record-usage")
+    public Result<Void> recordSttUsage(
+            @PathVariable String interviewId,
+            @Valid @RequestBody RecordSttUsageRequest request) {
+        interviewService.recordSttUsage(interviewId, request);
+        return Result.success();
     }
 } 

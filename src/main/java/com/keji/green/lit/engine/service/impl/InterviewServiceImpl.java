@@ -3,25 +3,33 @@ package com.keji.green.lit.engine.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.keji.green.lit.engine.common.CommonConverter;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
+import com.keji.green.lit.engine.dto.bean.QuestionAnswerRecordListQueryParam;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
+import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
 import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.enums.InterviewStatus;
+import com.keji.green.lit.engine.enums.UsageTypeEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.exception.ErrorCode;
 import com.keji.green.lit.engine.mapper.InterviewInfoMapper;
 import com.keji.green.lit.engine.mapper.QuestionAnswerRecordMapper;
+import com.keji.green.lit.engine.mapper.UsageRecordMapper;
 import com.keji.green.lit.engine.model.InterviewInfo;
 import com.keji.green.lit.engine.model.QuestionAnswerRecord;
+import com.keji.green.lit.engine.model.UsageRecord;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.InterviewService;
+import com.keji.green.lit.engine.service.QuestionAnswerRecordService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
+import com.keji.green.lit.engine.utils.RedisUtils;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -33,8 +41,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
-import static com.keji.green.lit.engine.utils.Constants.FIVE_MINUTE_MILLISECONDS;
-import static com.keji.green.lit.engine.utils.Constants.INTEGER_FIVE;
+import static com.keji.green.lit.engine.utils.Constants.*;
 
 /**
  * 面试服务实现类
@@ -54,6 +61,14 @@ public class InterviewServiceImpl implements InterviewService {
     @Resource
     private QuestionAnswerRecordMapper questionAnswerRecordMapper;
 
+    @Resource
+    private UsageRecordMapper usageRecordMapper;
+
+    @Resource
+    private RedisUtils redisUtils;
+
+    @Resource
+    private QuestionAnswerRecordService questionAnswerRecordService;
 
     // TODO: 注入算法服务客户端
 
@@ -79,7 +94,7 @@ public class InterviewServiceImpl implements InterviewService {
         interview.setExtraData(JSON.toJSONString(extraData));
         Date startTime = new Date();
         interview.setStartTime(startTime);
-        interview.setEndTime(DateTimeUtils.plusHours(startTime, INTEGER_FIVE));
+        interview.setEndTime(DateTimeUtils.plusHours(startTime, INTERVIEW_MAX_HOURS));
         if (interviewInfoMapper.insertSelective(interview) <= 0) {
             throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试失败");
         }
@@ -124,10 +139,10 @@ public class InterviewServiceImpl implements InterviewService {
         queryParam.put("interviewId", interviewId);
         queryParam.put("limit", 5);
         queryParam.put("orderByDesc", "id");
-        List<QuestionAnswerRecord> interviewRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
+        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
         List<String> questionList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(interviewRecordList)) {
-            questionList = interviewRecordList.stream().map(QuestionAnswerRecord::getQuestion)
+        if (CollectionUtils.isNotEmpty(questionAnswerRecordList)) {
+            questionList = questionAnswerRecordList.stream().map(QuestionAnswerRecord::getQuestion)
                     .filter(StringUtils::isNotEmpty).toList();
         }
         String currentQuestion = request.getQuestion();
@@ -160,7 +175,7 @@ public class InterviewServiceImpl implements InterviewService {
                 // 更新面试流水（答案）
                 LocalDateTime answerTime = LocalDateTime.now();
                 // TODO: 更新面试流水的答案
-                // interviewRecordMapper.updateAnswerById(recordId, answer.toString(), answerTime);
+//                 questionAnswerRecordMapper.updateByPrimaryKeySelective(recordId, answer.toString(), answerTime);
 
                 emitter.complete();
             } catch (Exception e) {
@@ -193,7 +208,9 @@ public class InterviewServiceImpl implements InterviewService {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         if (InterviewStatus.isEnd(interviewInfo.getStatus())){
-            return CommonConverter.INSTANCE.convert2InterviewInfoResponse(interviewInfo);
+            InterviewInfoResponse response = CommonConverter.INSTANCE.convert2InterviewInfoResponse(interviewInfo);
+            response.setTotalMinutes(DateTimeUtils.minutesBetween(interviewInfo.getStartTime(), interviewInfo.getEndTime()));
+            return response;
         }
 
         // 记录结束时间
@@ -204,12 +221,17 @@ public class InterviewServiceImpl implements InterviewService {
         if (endTime.before(interviewInfo.getEndTime())) {
             updateInterviewInfo.setEndTime(endTime);
         }
-        interviewInfoMapper.updateByPrimaryKeySelective(updateInterviewInfo);
+        if (interviewInfoMapper.updateByPrimaryKeySelective(updateInterviewInfo)<=0){
+            throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "结束面试失败，请稍后重试");
+        }
 
         // 构建返回结果
         InterviewInfoResponse response = new InterviewInfoResponse();
         response.setInterviewId(interviewId);
+        response.setInterviewName(interviewInfo.getInterviewName());
         response.setStartTime(interviewInfo.getStartTime());
+        response.setAgTotalCost(interviewInfo.getAgTotalCost());
+        response.setTotalMinutes(DateTimeUtils.minutesBetween(interviewInfo.getStartTime(), updateInterviewInfo.getEndTime()));
         response.setEndTime(updateInterviewInfo.getEndTime());
         response.setStatus(updateInterviewInfo.getStatus());
         return response;
@@ -221,31 +243,49 @@ public class InterviewServiceImpl implements InterviewService {
     @Override
     public InterviewDetailResponse getInterviewDetail(String interviewId) {
         // 验证面试所有权
-        Long uid = getCurrentUserId();
+        User currentUser = getCurrentUser();
         // 验证面试所有权
         Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
         if (optionalInterviewInfo.isEmpty()) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
         }
         InterviewInfo interviewInfo = optionalInterviewInfo.get();
-        if (!uid.equals(interviewInfo.getUid())) {
+        if (!currentUser.getUid().equals(interviewInfo.getUid())) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
+        InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData()) ? JSON.parseObject(interviewInfo.getExtraData(), InterviewExtraData.class) : null;
         // 获取面试提问信息
-        Map<String, Object> queryParam = new HashMap<>();
-        queryParam.put("interviewId", interviewId);
-        queryParam.put("limit", 5);
-        queryParam.put("orderByDesc", "id");
-        List<QuestionAnswerRecord> interviewRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
+        QuestionAnswerRecordListQueryParam queryParam = new QuestionAnswerRecordListQueryParam();
+        queryParam.setInterviewId(interviewId);
+        queryParam.setLimit(interviewInfo.getAgTotalCount());
+        queryParam.setOrderBy("id");
+        queryParam.setOrderByDesc(true);
+        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordService.questionAnswerRecordsList(queryParam);
+        // todo mock 数据
+        if (CollectionUtils.isEmpty(questionAnswerRecordList)) {
+            QuestionAnswerRecord questionAnswerRecord = new QuestionAnswerRecord();
+            questionAnswerRecord.setId(1L);
+            questionAnswerRecord.setQuestion("请问什么是jvm");
+            QuestionAnswerRecord questionAnswerRecord2 = new QuestionAnswerRecord();
+            questionAnswerRecord2.setId(2L);
+            questionAnswerRecord2.setQuestion("谈一谈你对java的理解");
+            questionAnswerRecordList.add(questionAnswerRecord);
+            questionAnswerRecordList.add(questionAnswerRecord2);
+        }
         // 构建面试详情响应
-        return CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, interviewRecordList);
+        InterviewDetailResponse result = CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, interviewExtraData, questionAnswerRecordList);
+        result.setResumeText(currentUser.getResumeText());
+
+        // todo mock 数据
+        result.setBalance(1000L);
+        return result;
     }
 
     /**
      * 分页获取面试列表
      */
     @Override
-    public PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize, InterviewStatus status) {
+    public PageResponse<InterviewInfoResponse> getInterviewList(Integer pageNum, Integer pageSize) {
         // 获取当前用户ID
         Long uid = getCurrentUserId();
 
@@ -257,9 +297,6 @@ public class InterviewServiceImpl implements InterviewService {
         params.put("uid", uid);
         params.put("offset", offset);
         params.put("pageSize", pageSize);
-        if (status != null) {
-            params.put("status", status.getCode());
-        }
         
         // 查询面试列表数据
         List<InterviewInfo> interviewInfoList = interviewInfoMapper.selectPageByUserId(params);
@@ -274,6 +311,26 @@ public class InterviewServiceImpl implements InterviewService {
         
         // 构建列表响应
         List<InterviewInfoResponse> responses = CommonConverter.INSTANCE.convert2InterviewListResponseList(interviewInfoList);
+
+        // 未正确结束的面试id
+        List<String> unEndedInterviewIds = new ArrayList<>();
+        for (InterviewInfoResponse response : responses) {
+            Date startTime = response.getStartTime();
+            Date endTime = response.getEndTime();
+            Date now = new Date();
+            if (Objects.nonNull(endTime) && DateTimeUtils.hoursBetween(endTime, now) >= INTERVIEW_MAX_HOURS && !InterviewStatus.isEnd(response.getStatus())) {
+                unEndedInterviewIds.add(response.getInterviewId());
+                response.setStatus(InterviewStatus.ENDED_AUTOMATICALLY.getCode());
+            }
+            response.setTotalMinutes(DateTimeUtils.minutesBetween(startTime, endTime));
+        }
+        try {
+            if (CollectionUtils.isNotEmpty(unEndedInterviewIds)){
+                interviewInfoMapper.forceEndInterviewByInterviewIdList(unEndedInterviewIds);
+            }
+        } catch (Exception e) {
+            log.warn("强制结束面试失败,interviewIdList:{}", unEndedInterviewIds, e);
+        }
 
         return PageResponse.build(responses, total, pageNum, pageSize);
     }
@@ -310,6 +367,55 @@ public class InterviewServiceImpl implements InterviewService {
         } catch (Exception e) {
             log.error("更新面试信息失败,", e);
             throw new BusinessException(ErrorCode.SYSTEM_ERROR);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void recordSttUsage(String interviewId, RecordSttUsageRequest request) {
+        // 验证面试所有权
+        Long uid = getCurrentUserId();
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!uid.equals(interviewInfo.getUid())) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
+        }
+        if (InterviewStatus.isEnd(interviewInfo.getStatus())){
+            throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
+        }
+
+        // 获取分布式锁
+        String lockKey = String.format("lock:stt:record-usage:%s", interviewId);
+        String threadId = String.valueOf(Thread.currentThread().getId());
+
+        try {
+            // 尝试获取锁，设置过期时间为1秒
+            boolean locked = redisUtils.lock(lockKey, threadId, NumberUtils.LONG_ONE);
+            if (!locked) {
+                throw new BusinessException(ErrorCode.CONCURRENT_LOCK_CONFLICT);
+            }
+            // 更新面试信息
+            int updateCount = interviewInfoMapper.updateSttUsageByInterviewId(interviewId, request.getDurationSeconds(), request.getCostInCents());
+            if (updateCount <= 0) {
+                throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "更新面试信息失败");
+            }
+
+            // 记录使用记录
+            UsageRecord usageRecord = UsageRecord.builder()
+                    .interviewId(interviewId)
+                    .uid(uid)
+                    .usageType(UsageTypeEnum.STT.getCode())
+                    .durationSeconds(request.getDurationSeconds())
+                    .costInCents(request.getCostInCents())
+                    .build();
+            if (usageRecordMapper.insertSelective(usageRecord) <= 0) {
+                throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "记录使用记录失败");
+            }
+        } finally {
+            redisUtils.unlock(lockKey, threadId);
         }
     }
 

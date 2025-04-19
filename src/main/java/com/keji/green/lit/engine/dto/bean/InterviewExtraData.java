@@ -2,8 +2,6 @@ package com.keji.green.lit.engine.dto.bean;
 
 import lombok.Data;
 
-import java.util.Map;
-
 /**
  * @author xiangjun_lee
  * @date 2025/4/6 16:26

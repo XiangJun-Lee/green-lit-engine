@@ -90,4 +90,11 @@
     from user_invite_relation
     where invitee_uid = #{inviteeId,jdbcType=BIGINT}
   </select>
+
+  <select id="selectCountByInviterId" parameterType="java.lang.Long" resultType="java.lang.Long">
+    select count(1)
+    from user_invite_relation
+    where inviter_uid = #{inviterId,jdbcType=BIGINT}
+  </select>
+
 </mapper>

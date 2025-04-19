@@ -4,7 +4,7 @@ import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.InterviewDetailResponse;
-import com.keji.green.lit.engine.dto.response.InterviewRecordResponse;
+import com.keji.green.lit.engine.dto.response.QuestionAnswerRecordResponse;
 import com.keji.green.lit.engine.dto.response.InterviewInfoResponse;
 import com.keji.green.lit.engine.model.InterviewInfo;
 import com.keji.green.lit.engine.model.QuestionAnswerRecord;
@@ -43,7 +43,7 @@ public interface CommonConverter {
     InterviewInfoResponse convert2InterviewInfoResponse(InterviewInfo interviewInfo);
 
     @Mappings({})
-    List<InterviewRecordResponse> convert2RecordResponseList(List<QuestionAnswerRecord> interviewRecordList);
+    List<QuestionAnswerRecordResponse> convert2RecordResponseList(List<QuestionAnswerRecord> questionAnswerRecordList);
 
     @Mappings({
             @Mapping(target = "createTime", source = "gmtCreate"),
@@ -52,9 +52,9 @@ public interface CommonConverter {
 
     @Mappings({
             @Mapping(target = "createTime", source = "interviewInfo.gmtCreate"),
-            @Mapping(target = "records", expression = "java(convert2RecordResponseList(interviewRecordList))")
+            @Mapping(target = "records", expression = "java(convert2RecordResponseList(questionAnswerRecordList))")
     })
-    InterviewDetailResponse convert2InterviewDetailResponse(InterviewInfo interviewInfo, List<QuestionAnswerRecord> interviewRecordList);
+    InterviewDetailResponse convert2InterviewDetailResponse(InterviewInfo interviewInfo, InterviewExtraData interviewExtraData, List<QuestionAnswerRecord> questionAnswerRecordList);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     void update2InterviewInfo(@MappingTarget InterviewInfo updateInterviewInfo, UpdateInterviewRequest request);
