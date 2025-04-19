@@ -65,6 +65,12 @@ public class UserResponse {
     private String inviteeCount;
 
     /**
+     * 余额
+     * todo 待补充
+     */
+    private Integer balance;
+
+    /**
      * 从User实体创建UserResponse的工厂方法
      */
     public static UserResponse fromUser(User user) {
