@@ -2,6 +2,7 @@ package com.keji.green.lit.engine.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.keji.green.lit.engine.common.CommonConverter;
+import com.keji.green.lit.engine.dto.bean.FastAnswerParam;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
 import com.keji.green.lit.engine.dto.bean.QuestionAnswerRecordListQueryParam;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -112,15 +114,16 @@ public class InterviewServiceImpl implements InterviewService {
      * 提问并获取答案（流式）
      */
     @Override
+    @Transactional(rollbackFor = Throwable.class)
     public SseEmitter askQuestion(String interviewId, AskQuestionRequest request) {
-        Long uid = getCurrentUserId();
+        User currentUser = getCurrentUser();
         // 验证面试所有权
         Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
         if (optionalInterviewInfo.isEmpty()) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
         }
         InterviewInfo interviewInfo = optionalInterviewInfo.get();
-        if (!uid.equals(interviewInfo.getUid())) {
+        if (!currentUser.getUid().equals(interviewInfo.getUid())) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         // 检查面试状态，确保面试处于进行中状态
@@ -130,63 +133,50 @@ public class InterviewServiceImpl implements InterviewService {
 
         // TODO 检查用户积分是否充足
 
-        // 创建SSE发射器，超时设置为5分钟
-        SseEmitter emitter = new SseEmitter(FIVE_MINUTE_MILLISECONDS);
-
-        // 记录面试流水（问题）
-        Map<String, Object> queryParam = new HashMap<>();
-        queryParam.put("interviewId", interviewId);
-        queryParam.put("limit", 5);
-        queryParam.put("orderByDesc", "id");
-        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
-        List<String> questionList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(questionAnswerRecordList)) {
-            questionList = questionAnswerRecordList.stream().map(QuestionAnswerRecord::getQuestion)
-                    .filter(StringUtils::isNotEmpty).toList();
-        }
-        String currentQuestion = request.getQuestion();
         try {
-            // TODO: 保存面试流水到数据库
             QuestionAnswerRecord record = new QuestionAnswerRecord();
             record.setInterviewId(interviewId);
             record.setQuestion(request.getQuestion());
             if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
-
+                // todo 异步重试
             }
         } catch (Exception e) {
             log.error("保存面试流水失败", e);
         }
 
+        String resumeText = currentUser.getResumeText();
+        FastAnswerParam fastAnswerParam = new FastAnswerParam();
+        if (StringUtils.isNotBlank(resumeText)) {
+            fastAnswerParam.setResumeText(resumeText);
+        }
+        fastAnswerParam.setInterviewInfo(JSON.toJSONString(interviewInfo));
+        if (StringUtils.isNotBlank(request.getHistoryChat())) {
+            List<String> historyChat = JSON.parseArray(request.getHistoryChat(), String.class);
+            fastAnswerParam.setHistoryChat(historyChat);
+        }
+
+        // 创建SSE发射器，超时设置为10分钟
+        SseEmitter emitter = new SseEmitter(TEN_MINUTE_MILLISECONDS);
         // 异步调用算法服务
         CompletableFuture.runAsync(() -> {
             try {
                 // TODO: 调用算法服务，获取答案
-                // String answer = algorithmClient.getAnswer(request.getQuestion());
                 StringBuilder answer = new StringBuilder();
-
                 // 模拟流式返回
                 for (int i = 0; i < 10; i++) {
                     String chunk = "这是回答的第" + (i + 1) + "部分。";
                     answer.append(chunk);
-                    emitter.send(SseEmitter.event().name("message").data(chunk, org.springframework.http.MediaType.TEXT_PLAIN));
+                    emitter.send(SseEmitter.event().name("message").data(chunk, MediaType.TEXT_PLAIN));
                     Thread.sleep(500);
                 }
-
                 // 发送完成事件
-                emitter.send(SseEmitter.event().name("complete").data("完成", org.springframework.http.MediaType.TEXT_PLAIN));
-
-                // 更新面试流水（答案）
-                LocalDateTime answerTime = LocalDateTime.now();
-                // TODO: 更新面试流水的答案
-//                 questionAnswerRecordMapper.updateByPrimaryKeySelective(recordId, answer.toString(), answerTime);
-
+                emitter.send(SseEmitter.event().name("complete").data("完成", MediaType.TEXT_PLAIN));
                 emitter.complete();
             } catch (Exception e) {
                 log.error("处理面试问题失败: {}", e.getMessage(), e);
                 try {
-                    emitter.send(SseEmitter.event().name("error").data("处理问题时发生错误: " + e.getMessage(), org.springframework.http.MediaType.TEXT_PLAIN));
                     emitter.complete();
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     emitter.completeWithError(ex);
                 }
             }
