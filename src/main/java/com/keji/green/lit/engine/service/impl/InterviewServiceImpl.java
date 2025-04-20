@@ -2,9 +2,9 @@ package com.keji.green.lit.engine.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.keji.green.lit.engine.common.CommonConverter;
-import com.keji.green.lit.engine.dto.bean.FastAnswerParam;
+import com.keji.green.lit.engine.dto.request.FastAnswerParam;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
-import com.keji.green.lit.engine.dto.bean.QuestionAnswerRecordListQueryParam;
+import com.keji.green.lit.engine.dto.response.QuestionAnswerRecordListQueryParam;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
@@ -41,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -110,7 +109,7 @@ public class InterviewServiceImpl implements InterviewService {
             user.setUid(currentUser.getUid());
             user.setVersion(currentUser.getVersion());
             user.setResumeText(request.getResumeText().trim());
-            userService.updateUserByUid(user);
+            userService.updateUserByUidCAS(user);
         }
         return new InterviewCreateResponse(interviewId);
     }
@@ -516,15 +515,6 @@ public class InterviewServiceImpl implements InterviewService {
                     emitter.send(SseEmitter.event().name("answer").data(result, MediaType.TEXT_PLAIN));
                     Thread.sleep(1000); // 模拟延迟
                 }
-                
-                // 更新面试记录的答案
-                QuestionAnswerRecord updateRecord = new QuestionAnswerRecord();
-                updateRecord.setId(record.getId()); // 使用之前创建的记录ID
-                updateRecord.setAnswer(ocrResult.toString().trim()); // 使用OCR识别结果作为答案
-                if (questionAnswerRecordMapper.updateByPrimaryKeySelective(updateRecord) <= 0) {
-                    log.error("更新答案失败, recordId: {}", record.getId());
-                }
-                
                 emitter.complete();
             } catch (Exception e) {
                 log.error("答案生成处理失败", e);

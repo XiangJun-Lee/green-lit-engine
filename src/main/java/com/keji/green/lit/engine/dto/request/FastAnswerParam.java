@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.dto.bean;
+package com.keji.green.lit.engine.dto.request;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import lombok.Data;

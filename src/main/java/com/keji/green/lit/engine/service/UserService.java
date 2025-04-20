@@ -18,7 +18,7 @@ public interface UserService extends UserDetailsService {
     /**
      *  更新用户信息
      */
-    void updateUserByUid(User request);
+    void updateUserByUidCAS(User request);
     
     /**
      * 注销账号
@@ -59,4 +59,6 @@ public interface UserService extends UserDetailsService {
      * @return 用户信息，如果未找到返回null
      */
     User findByInviteCode(String inviteCode);
+
+    void updateUserByUid(User request);
 }

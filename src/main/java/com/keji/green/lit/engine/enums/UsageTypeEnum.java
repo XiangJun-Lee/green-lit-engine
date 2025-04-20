@@ -20,7 +20,12 @@ public enum UsageTypeEnum {
     /**
      * 语音问答
      */
-    AG(2, "语音问答");
+    AG(2, "语音问答"),
+    
+    /**
+     * 简历美化
+     */
+    RESUME_ENHANCE(3, "简历美化");
 
     private final int code;
     private final String desc;

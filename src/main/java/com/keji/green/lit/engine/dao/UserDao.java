@@ -15,7 +15,7 @@ import java.util.Optional;
  */
 @Repository
 public class UserDao {
-    
+
     @Resource
     private UserMapper mapper;
 
@@ -40,7 +40,7 @@ public class UserDao {
         User user = new User();
         user.setUid(uid);
         user.setPassword(encodedPassword);
-        return mapper.updateSelectiveByUid(user);
+        return mapper.updateSelectiveByUidCAS(user);
     }
 
     /**
@@ -50,10 +50,14 @@ public class UserDao {
         User user = new User();
         user.setUid(uid);
         user.setStatus(userStatus);
-        return mapper.updateSelectiveByUid(user);
+        return mapper.updateSelectiveByUidCAS(user);
     }
 
-    public int updateSelectiveByUid(User user){
+    public int updateSelectiveByUidCAS(User user) {
+        return mapper.updateSelectiveByUidCAS(user);
+    }
+
+    public int updateSelectiveByUid(User user) {
         return mapper.updateSelectiveByUid(user);
     }
 

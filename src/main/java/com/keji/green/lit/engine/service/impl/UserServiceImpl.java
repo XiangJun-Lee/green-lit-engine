@@ -57,11 +57,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUserByUid(User request) {
+    public void updateUserByUidCAS(User request) {
         if (StringUtils.isNotBlank(request.getPassword())){
             request.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        if (userDao.updateSelectiveByUid(request) <= 0) {
+        if (userDao.updateSelectiveByUidCAS(request) <= 0) {
             throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "更新失败，请稍后重试");
         }
     }
@@ -121,7 +121,7 @@ public class UserServiceImpl implements UserService {
         user.setUid(uid);
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setVersion(version);
-        return userDao.updateSelectiveByUid(user);
+        return userDao.updateSelectiveByUidCAS(user);
 
     }
 
@@ -131,7 +131,7 @@ public class UserServiceImpl implements UserService {
         user.setUid(uid);
         user.setClientIp(clientIp);
         user.setVersion(version);
-        return userDao.updateSelectiveByUid(user);
+        return userDao.updateSelectiveByUidCAS(user);
     }
 
     @Override
@@ -142,6 +142,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByInviteCode(String inviteCode) {
         return userDao.findByInviteCode(inviteCode).orElse(null);
+    }
+
+    @Override
+    public void updateUserByUid(User request) {
+        if (StringUtils.isNotBlank(request.getPassword())){
+            request.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        if (userDao.updateSelectiveByUid(request) <= 0) {
+            throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "更新失败，请稍后重试");
+        }
     }
 
     /**
