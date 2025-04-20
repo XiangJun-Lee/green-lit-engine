@@ -3,7 +3,6 @@ package com.keji.green.lit.engine.mapper;
 import com.keji.green.lit.engine.model.InterviewInfo;
 import org.apache.ibatis.annotations.Mapper;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

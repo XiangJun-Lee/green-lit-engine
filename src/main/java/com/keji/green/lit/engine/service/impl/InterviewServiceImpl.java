@@ -134,11 +134,17 @@ public class InterviewServiceImpl implements InterviewService {
         if (InterviewStatus.isEnd(interviewInfo.getStatus())) {
             throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
         }
+        InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData())
+                ? JSON.parseObject(interviewInfo.getExtraData(), InterviewExtraData.class) : new InterviewExtraData();
+        UsageTypeEnum usageTypeEnum = UsageTypeEnum.FAST_ANSWER;
+        if (Objects.nonNull(interviewExtraData) && Objects.equals(Boolean.TRUE, interviewExtraData.getOnlineMode())){
+            usageTypeEnum = UsageTypeEnum.ONLINE_ANSWER;
+        }
 
         // TODO 检查用户积分是否充足
 
         try {
-            transactionalService.fastAnswerCharging(interviewInfo);
+            transactionalService.fastAnswerCharging(interviewInfo, usageTypeEnum);
         } catch (Exception e) {
             log.error("快速答题扣费失败", e);
             throw new BusinessException(ErrorCode.POINTS_DEDUCTION_FAILED);
@@ -412,7 +418,7 @@ public class InterviewServiceImpl implements InterviewService {
             UsageRecord usageRecord = UsageRecord.builder()
                     .interviewId(interviewId)
                     .uid(uid)
-                    .usageType(UsageTypeEnum.STT.getCode())
+                    .usageType(UsageTypeEnum.SPEECH_TO_TEXT.getCode())
                     .durationSeconds(request.getDurationSeconds())
                     .costInCents(request.getCostInCents())
                     .build();
@@ -442,8 +448,15 @@ public class InterviewServiceImpl implements InterviewService {
             throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
         }
 
+        InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData())
+                ? JSON.parseObject(interviewInfo.getExtraData(), InterviewExtraData.class) : new InterviewExtraData();
+        UsageTypeEnum usageTypeEnum = UsageTypeEnum.SCREENSHOT_ANSWER;
+        if (Objects.nonNull(interviewExtraData) && Objects.equals(Boolean.TRUE, interviewExtraData.getOnlineMode())){
+            usageTypeEnum = UsageTypeEnum.ONLINE_SCREENSHOT_ANSWER;
+        }
+
         try {
-            transactionalService.fastAnswerCharging(interviewInfo);
+            transactionalService.fastAnswerCharging(interviewInfo, usageTypeEnum);
         } catch (Exception e) {
             log.error("快速答题扣费失败", e);
             throw new BusinessException(ErrorCode.POINTS_DEDUCTION_FAILED);

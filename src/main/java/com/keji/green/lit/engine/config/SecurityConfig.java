@@ -104,6 +104,7 @@ public class SecurityConfig {
      * @throws Exception 配置异常
      */
     @Bean
+    @Lazy
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }

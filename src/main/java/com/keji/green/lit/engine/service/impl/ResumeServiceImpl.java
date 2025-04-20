@@ -41,13 +41,11 @@ public class ResumeServiceImpl implements ResumeService {
         }
         String phone = authentication.getName();
         User user = userService.queryNormalUserByPhone(phone);
-        Object principal = authentication.getPrincipal();
-
 
         // TODO: 校验余额是否充足
         
         // 模拟扣款，假设每次美化花费10分
-        long costInCents = 100L;
+        long costInCents = 10L;
         // 模拟算法调用，这里简单地在原始简历前后添加一些标记
         String enhancedResume = "=== 美化后的简历 ===\n" + request.getResumeText() + "\n=== 美化结束 ===";
         
