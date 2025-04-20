@@ -10,7 +10,7 @@ public class AccountDto implements Serializable {
 
     private static final long serialVersionUID = -6749243131059493189L;
 
-    private long userId;
+    private Long userId;
 
     private Integer accountType;
 

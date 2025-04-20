@@ -101,7 +101,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     public boolean trade(TradeDto tradeDto) {
 
         // 查询账户信息
-        List<Account> accounts = accountMapper.queryAccount(tradeDto.getUserId(), tradeDto.getAccountType(), tradeDto.getAccountSubTypes());
+        List<Account> accounts = accountMapper.queryAccount(tradeDto.getUserId(), tradeDto.getAccountType(), tradeDto.getSubAccountTypes());
         if (accounts.isEmpty()) {
             throw new BusinessException(ACCOUNT_NOT_EXIST, "账户不存在");
         }
@@ -187,7 +187,11 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
     @Override
     public List<Account> queryAccount(AccountDto accountDto) {
-        List<Account> accounts = accountMapper.queryAccount(accountDto.getUserId(), accountDto.getAccountType(), accountDto.getSubTypes());
+        Map<String, Object> params = new HashMap<>();
+        params.put("user_id", accountDto.getUserId());
+        List<Account> accounts = new ArrayList<>();
+        accounts = accountMapper.queryAccountByCond(params);
+//        List<Account> accounts = accountMapper.queryAccount(accountDto.getUserId(), accountDto.getAccountType(), accountDto.getSubTypes());
         return accounts;
     }
 
