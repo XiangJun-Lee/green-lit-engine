@@ -30,4 +30,9 @@ public class Constants {
     public static final Integer INTEGER_TWENTY = 20;
 
     public static final Integer INTERVIEW_MAX_HOURS = 5;
+
+    /**
+     * SSE超时时间（毫秒）
+     */
+    public static final long SSE_TIMEOUT = 5 * 60 * 1000; // 5分钟
 }

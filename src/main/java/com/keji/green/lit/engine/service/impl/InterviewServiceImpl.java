@@ -8,6 +8,7 @@ import com.keji.green.lit.engine.dto.bean.QuestionAnswerRecordListQueryParam;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
+import com.keji.green.lit.engine.dto.request.ScreenshotQuestionRequest;
 import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.enums.InterviewStatus;
@@ -422,6 +423,121 @@ public class InterviewServiceImpl implements InterviewService {
         } finally {
             redisUtils.unlock(lockKey, threadId);
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public SseEmitter screenshotQuestion(String interviewId, ScreenshotQuestionRequest request) {
+        User currentUser = getCurrentUser();
+        // 验证面试所有权
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!currentUser.getUid().equals(interviewInfo.getUid())) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
+        }
+        // 检查面试状态，确保面试处于进行中状态
+        if (InterviewStatus.isEnd(interviewInfo.getStatus())) {
+            throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
+        }
+
+        try {
+            transactionalService.fastAnswerCharging(interviewInfo);
+        } catch (Exception e) {
+            log.error("快速答题扣费失败", e);
+            throw new BusinessException(ErrorCode.POINTS_DEDUCTION_FAILED);
+        }
+
+        // 创建初始记录
+        QuestionAnswerRecord record = new QuestionAnswerRecord();
+        record.setInterviewId(interviewId);
+        record.setQuestion("[图片]"); // 初始标记为图片类型的问题
+        try {
+            if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
+                // todo 异步重试
+            }
+        } catch (Exception e) {
+            log.error("保存面试流水失败", e);
+        }
+
+        // 创建SSE发射器
+        SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
+        
+        // 用于存储OCR识别结果
+        StringBuilder ocrResult = new StringBuilder();
+        
+        // 第一个异步线程：处理OCR识别
+        CompletableFuture<Void> ocrFuture = CompletableFuture.runAsync(() -> {
+            try {
+                // TODO: 调用算法服务进行图片识别
+                // 这里需要实现与算法服务的交互，将图片base64编码发送给算法服务
+                // 并接收算法服务返回的流式OCR结果
+                
+                // 模拟OCR流式返回
+                String[] ocrResults = {"正在识别图片...", "识别完成", "图片内容: 这是一段示例文本"};
+                for (String result : ocrResults) {
+                    emitter.send(SseEmitter.event().name("ocr").data(result, MediaType.TEXT_PLAIN));
+                    ocrResult.append(result).append("\n");
+                    Thread.sleep(1000); // 模拟延迟
+                }
+
+                // OCR识别完成后，更新问题记录
+                QuestionAnswerRecord updateRecord = new QuestionAnswerRecord();
+                updateRecord.setId(record.getId()); // 使用之前创建的记录ID
+                updateRecord.setQuestion(ocrResult.toString().trim()); // 使用OCR识别结果作为问题
+                if (questionAnswerRecordMapper.updateByPrimaryKeySelective(updateRecord) <= 0) {
+                    log.error("更新OCR识别结果失败, recordId: {}", record.getId());
+                }
+            } catch (Exception e) {
+                log.error("图片识别处理失败", e);
+                try {
+                    emitter.send(SseEmitter.event().name("ocr").data("图片识别失败: " + e.getMessage(), MediaType.TEXT_PLAIN));
+                } catch (IOException ex) {
+                    log.error("发送OCR错误信息失败", ex);
+                }
+            }
+        });
+        
+        // 第二个异步线程：处理答案生成
+        CompletableFuture<Void> answerFuture = CompletableFuture.runAsync(() -> {
+            try {
+                // 等待OCR识别完成
+                ocrFuture.join();
+                
+                // TODO: 调用算法服务生成答案
+                // 这里需要实现与算法服务的交互，将OCR识别结果发送给算法服务
+                // 并接收算法服务返回的流式答案
+                
+                // 模拟答案流式返回
+                String[] answerResults = {"正在生成答案...", "根据图片内容分析...", "答案: 这是一个示例答案"};
+                for (String result : answerResults) {
+                    emitter.send(SseEmitter.event().name("answer").data(result, MediaType.TEXT_PLAIN));
+                    Thread.sleep(1000); // 模拟延迟
+                }
+                
+                // 更新面试记录的答案
+                QuestionAnswerRecord updateRecord = new QuestionAnswerRecord();
+                updateRecord.setId(record.getId()); // 使用之前创建的记录ID
+                updateRecord.setAnswer(ocrResult.toString().trim()); // 使用OCR识别结果作为答案
+                if (questionAnswerRecordMapper.updateByPrimaryKeySelective(updateRecord) <= 0) {
+                    log.error("更新答案失败, recordId: {}", record.getId());
+                }
+                
+                emitter.complete();
+            } catch (Exception e) {
+                log.error("答案生成处理失败", e);
+                try {
+                    emitter.send(SseEmitter.event().name("answer").data("答案生成失败: " + e.getMessage(), MediaType.TEXT_PLAIN));
+                    emitter.complete();
+                } catch (IOException ex) {
+                    log.error("发送答案错误信息失败", ex);
+                }
+            }
+        });
+
+        return emitter;
     }
 
     private Long getCurrentUserId() {

@@ -4,6 +4,7 @@ import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
 import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
+import com.keji.green.lit.engine.dto.request.ScreenshotQuestionRequest;
 import com.keji.green.lit.engine.dto.response.InterviewDetailResponse;
 import com.keji.green.lit.engine.dto.response.InterviewCreateResponse;
 import com.keji.green.lit.engine.dto.response.InterviewInfoResponse;
@@ -87,4 +88,17 @@ public interface InterviewService {
      * @param request 使用情况请求
      */
     void recordSttUsage(String interviewId, RecordSttUsageRequest request);
+
+    /**
+     * 截图快答（流式）
+     * 1. 检查用户积分是否充足
+     * 2. 扣除积分
+     * 3. 将图片转成base64编码传给算法服务
+     * 4. 算法服务以流式的形式将ocr返回
+     * 
+     * @param interviewId 面试ID
+     * @param request 截图请求
+     * @return SSE流式响应
+     */
+    SseEmitter screenshotQuestion(String interviewId, ScreenshotQuestionRequest request);
 }
