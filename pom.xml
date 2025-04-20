@@ -37,6 +37,7 @@
 
         <dysmsapi20170525.version>3.1.2</dysmsapi20170525.version>
         <credentials-java.version>1.0.2</credentials-java.version>
+        <guava.version>33.4.8-jre</guava.version>
     </properties>
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -178,6 +179,12 @@
             <groupId>com.aliyun</groupId>
             <artifactId>credentials-java</artifactId>
             <version>${credentials-java.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
         </dependency>
     </dependencies>
 
