@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.4</version>
+        <version>3.2.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.green.lit</groupId>
@@ -37,7 +37,7 @@
 
         <dysmsapi20170525.version>3.1.2</dysmsapi20170525.version>
         <credentials-java.version>1.0.2</credentials-java.version>
-        <guava.version>33.4.8-jre</guava.version>
+        <guava.version>32.1.3-jre</guava.version>
     </properties>
     <dependencies>
         <!-- Spring Boot Starters -->
