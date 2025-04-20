@@ -1,6 +1,6 @@
 package com.keji.green.lit.engine.service;
 
-import com.keji.green.lit.engine.dto.bean.QuestionAnswerRecordListQueryParam;
+import com.keji.green.lit.engine.dto.response.QuestionAnswerRecordListQueryParam;
 import com.keji.green.lit.engine.model.QuestionAnswerRecord;
 
 import java.util.List;

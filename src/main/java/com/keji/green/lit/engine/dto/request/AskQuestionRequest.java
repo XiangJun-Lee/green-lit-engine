@@ -17,7 +17,7 @@ public class AskQuestionRequest {
     private String question;
 
     /**
-     * 含上下文的问题
+     * 历史对话
      */
-    private String questionWithContext;
+    private String historyChat;
 } 

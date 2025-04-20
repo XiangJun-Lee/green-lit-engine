@@ -5,7 +5,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.4.4</version>
+        <version>3.2.3</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.green.lit</groupId>
@@ -35,6 +35,9 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <fastjson.version>2.0.32</fastjson.version>
 
+        <dysmsapi20170525.version>3.1.2</dysmsapi20170525.version>
+        <credentials-java.version>1.0.2</credentials-java.version>
+        <guava.version>32.1.3-jre</guava.version>
     </properties>
     <dependencies>
         <!-- Spring Boot Starters -->
@@ -173,8 +176,22 @@
             <groupId>com.aliyun</groupId>
             <artifactId>dysmsapi20170525</artifactId>
             <!-- 请将 'the-latest-version' 替换为最新版本号：https://mvnrepository.com/artifact/com.aliyun/dysmsapi20170525 -->
-            <version>3.1.2</version>
+            <version>${dysmsapi20170525.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.aliyun</groupId>
+            <artifactId>credentials-java</artifactId>
+            <version>${credentials-java.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+            <scope>compile</scope>
+        </dependency>
+        
     </dependencies>
 
     <build>

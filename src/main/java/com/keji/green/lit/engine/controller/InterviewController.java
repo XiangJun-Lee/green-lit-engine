@@ -5,6 +5,7 @@ import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
+import com.keji.green.lit.engine.dto.request.ScreenshotQuestionRequest;
 import com.keji.green.lit.engine.service.InterviewService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
@@ -112,5 +113,22 @@ public class InterviewController {
             @Valid @RequestBody RecordSttUsageRequest request) {
         interviewService.recordSttUsage(interviewId, request);
         return Result.success();
+    }
+
+    /**
+     * 截图快答接口（流式）
+     * 1. 检查用户积分
+     * 2. 扣除积分
+     * 3. 将图片转成base64编码传给算法服务
+     * 4. 算法服务以流式的形式将ocr返回
+     * @param interviewId 面试ID
+     * @param request 截图请求
+     * @return 流式应答
+     */
+    @PostMapping("/{interviewId}/screenshot")
+    public SseEmitter screenshotQuestion(
+            @PathVariable String interviewId,
+            @Valid @RequestBody ScreenshotQuestionRequest request) {
+        return interviewService.screenshotQuestion(interviewId, request);
     }
 } 

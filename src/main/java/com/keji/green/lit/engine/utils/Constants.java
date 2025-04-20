@@ -23,12 +23,18 @@ public class Constants {
     public static final Integer ONE_HOUR_SECONDS = 60 * 60;
     public static final Integer ONE_DAY_SECONDS = 60 * 60 * 24;
     public static final Long FIVE_MINUTE_MILLISECONDS = 5 * 60 * 1000L;
+    public static final Long TEN_MINUTE_MILLISECONDS = 10 * 60 * 1000L;
 
     public static final Integer INTEGER_FIVE = 5;
     public static final Integer INTEGER_TEN = 10;
     public static final Integer INTEGER_TWENTY = 20;
 
     public static final Integer INTERVIEW_MAX_HOURS = 5;
+
+    /**
+     * SSE超时时间（毫秒）
+     */
+    public static final long SSE_TIMEOUT = 5 * 60 * 1000; // 5分钟
 
     public final static Long DEFAULT_SEQ = 0L;
 

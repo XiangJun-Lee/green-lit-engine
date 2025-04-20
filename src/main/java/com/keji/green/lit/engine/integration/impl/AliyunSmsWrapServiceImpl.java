@@ -28,28 +28,13 @@ import java.util.Random;
 @Service("aliyunSmsWrapService")
 public class AliyunSmsWrapServiceImpl implements SmsWrapService {
 
-    @Value("${aliyun.sms.access-key-id}")
-    private String accessKeyId;
-
-    @Value("${aliyun.sms.access-key-secret}")
-    private String accessKeySecret;
-
-//    @Value("${aliyun.sms.sign-name}")
-    private String signName;
-
-    @Value("${aliyun.sms.template-code}")
-    private String templateCode;
-
-    @Value("${aliyun.sms.endpoint}")
-    private String endpoint;
-
     private final Random random = new Random();
 
     @Override
     public boolean sendVerificationCode(String phone, VerificationCodeScene codeScene, String code) {
         try {
             // 创建阿里云短信客户端
-            Client client = AliyunSmsClientFactory.createClient(accessKeyId, accessKeySecret, endpoint);
+            Client client = AliyunSmsClientFactory.createClient();
 
             // 构建短信模板参数
             Map<String, String> templateParam = new HashMap<>();

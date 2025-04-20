@@ -27,6 +27,11 @@ public interface UserMapper {
     Optional<User> selectByPhone(String phone);
 
     /**
+     * 根据主键更新用户(CAS)
+     */
+    int updateSelectiveByUidCAS(User row);
+
+    /**
      * 根据主键更新用户
      */
     int updateSelectiveByUid(User row);

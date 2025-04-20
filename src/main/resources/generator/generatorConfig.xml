@@ -18,7 +18,7 @@
                         zeroDateTimeBehavior=convertToNull;
                         serverTimezone=Asia/Shanghai"
                         userId="root"
-                        password="10180719"/>
+                        password="test1234"/>
 
         <!-- 生成的 Java 模型类的包名和位置 -->
         <javaModelGenerator targetPackage="com.keji.green.lit.engine.model" targetProject="src/main/java">

@@ -2,11 +2,13 @@ package com.keji.green.lit.engine.service.impl;
 
 import com.alibaba.fastjson.JSON;
 import com.keji.green.lit.engine.common.CommonConverter;
+import com.keji.green.lit.engine.dto.request.FastAnswerParam;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
-import com.keji.green.lit.engine.dto.bean.QuestionAnswerRecordListQueryParam;
+import com.keji.green.lit.engine.dto.response.QuestionAnswerRecordListQueryParam;
 import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
+import com.keji.green.lit.engine.dto.request.ScreenshotQuestionRequest;
 import com.keji.green.lit.engine.dto.request.UpdateInterviewRequest;
 import com.keji.green.lit.engine.dto.response.*;
 import com.keji.green.lit.engine.enums.InterviewStatus;
@@ -22,6 +24,7 @@ import com.keji.green.lit.engine.model.UsageRecord;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.InterviewService;
 import com.keji.green.lit.engine.service.QuestionAnswerRecordService;
+import com.keji.green.lit.engine.service.TransactionalService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.RedisUtils;
@@ -30,6 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -37,7 +41,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 
@@ -69,6 +72,9 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Resource
     private QuestionAnswerRecordService questionAnswerRecordService;
+
+    @Resource
+    private TransactionalService transactionalService;
 
     // TODO: 注入算法服务客户端
 
@@ -103,7 +109,7 @@ public class InterviewServiceImpl implements InterviewService {
             user.setUid(currentUser.getUid());
             user.setVersion(currentUser.getVersion());
             user.setResumeText(request.getResumeText().trim());
-            userService.updateUserByUid(user);
+            userService.updateUserByUidCAS(user);
         }
         return new InterviewCreateResponse(interviewId);
     }
@@ -112,78 +118,83 @@ public class InterviewServiceImpl implements InterviewService {
      * 提问并获取答案（流式）
      */
     @Override
-    @Transactional(rollbackFor = Exception.class)
+    @Transactional(rollbackFor = Throwable.class)
     public SseEmitter askQuestion(String interviewId, AskQuestionRequest request) {
-        Long uid = getCurrentUserId();
+        User currentUser = getCurrentUser();
         // 验证面试所有权
         Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
         if (optionalInterviewInfo.isEmpty()) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
         }
         InterviewInfo interviewInfo = optionalInterviewInfo.get();
-        if (!uid.equals(interviewInfo.getUid())) {
+        if (!currentUser.getUid().equals(interviewInfo.getUid())) {
             throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
         }
         // 检查面试状态，确保面试处于进行中状态
         if (InterviewStatus.isEnd(interviewInfo.getStatus())) {
             throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
         }
+        InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData())
+                ? JSON.parseObject(interviewInfo.getExtraData(), InterviewExtraData.class) : new InterviewExtraData();
+        UsageTypeEnum usageTypeEnum = UsageTypeEnum.FAST_ANSWER;
+        if (Objects.nonNull(interviewExtraData) && Objects.equals(Boolean.TRUE, interviewExtraData.getOnlineMode())){
+            usageTypeEnum = UsageTypeEnum.ONLINE_ANSWER;
+        }
 
         // TODO 检查用户积分是否充足
 
-        // 创建SSE发射器，超时设置为5分钟
-        SseEmitter emitter = new SseEmitter(FIVE_MINUTE_MILLISECONDS);
-
-        // 记录面试流水（问题）
-        Map<String, Object> queryParam = new HashMap<>();
-        queryParam.put("interviewId", interviewId);
-        queryParam.put("limit", 5);
-        queryParam.put("orderByDesc", "id");
-        List<QuestionAnswerRecord> questionAnswerRecordList = questionAnswerRecordMapper.selectListByInterviewId(queryParam);
-        List<String> questionList = new ArrayList<>();
-        if (CollectionUtils.isNotEmpty(questionAnswerRecordList)) {
-            questionList = questionAnswerRecordList.stream().map(QuestionAnswerRecord::getQuestion)
-                    .filter(StringUtils::isNotEmpty).toList();
+        try {
+            transactionalService.fastAnswerCharging(interviewInfo, usageTypeEnum);
+        } catch (Exception e) {
+            log.error("快速答题扣费失败", e);
+            throw new BusinessException(ErrorCode.POINTS_DEDUCTION_FAILED);
         }
-        String currentQuestion = request.getQuestion();
-        // TODO: 保存面试流水到数据库
-        QuestionAnswerRecord record = new QuestionAnswerRecord();
-        record.setInterviewId(interviewId);
-        record.setQuestion(request.getQuestion());
-        if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
-            throw new BusinessException(ErrorCode.DATABASE_WRITE_ERROR, "创建面试流水失败");
+        try {
+            QuestionAnswerRecord record = new QuestionAnswerRecord();
+            record.setInterviewId(interviewId);
+            record.setQuestion(request.getQuestion());
+            if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
+                // todo 异步重试
+            }
+        } catch (Exception e) {
+            log.error("保存面试流水失败", e);
         }
 
+        String resumeText = currentUser.getResumeText();
+        FastAnswerParam fastAnswerParam = new FastAnswerParam();
+        if (StringUtils.isNotBlank(resumeText)) {
+            fastAnswerParam.setResumeText(resumeText);
+        }
+        fastAnswerParam.setInterviewInfo(JSON.toJSONString(interviewInfo));
+        if (StringUtils.isNotBlank(request.getHistoryChat())) {
+            List<String> historyChat = JSON.parseArray(request.getHistoryChat(), String.class);
+            fastAnswerParam.setHistoryChat(historyChat);
+        }
+        log.info("快速答题参数：{}", JSON.toJSONString(fastAnswerParam));
+
+
+        // 创建SSE发射器，超时设置为10分钟
+        SseEmitter emitter = new SseEmitter(TEN_MINUTE_MILLISECONDS);
         // 异步调用算法服务
         CompletableFuture.runAsync(() -> {
             try {
                 // TODO: 调用算法服务，获取答案
-                // String answer = algorithmClient.getAnswer(request.getQuestion());
                 StringBuilder answer = new StringBuilder();
-
                 // 模拟流式返回
                 for (int i = 0; i < 10; i++) {
                     String chunk = "这是回答的第" + (i + 1) + "部分。";
                     answer.append(chunk);
-                    emitter.send(SseEmitter.event().name("message").data(chunk, org.springframework.http.MediaType.TEXT_PLAIN));
+                    emitter.send(SseEmitter.event().name("message").data(chunk, MediaType.TEXT_PLAIN));
                     Thread.sleep(500);
                 }
-
                 // 发送完成事件
-                emitter.send(SseEmitter.event().name("complete").data("完成", org.springframework.http.MediaType.TEXT_PLAIN));
-
-                // 更新面试流水（答案）
-                LocalDateTime answerTime = LocalDateTime.now();
-                // TODO: 更新面试流水的答案
-//                 questionAnswerRecordMapper.updateByPrimaryKeySelective(recordId, answer.toString(), answerTime);
-
+                emitter.send(SseEmitter.event().name("complete").data("完成", MediaType.TEXT_PLAIN));
                 emitter.complete();
             } catch (Exception e) {
                 log.error("处理面试问题失败: {}", e.getMessage(), e);
                 try {
-                    emitter.send(SseEmitter.event().name("error").data("处理问题时发生错误: " + e.getMessage(), org.springframework.http.MediaType.TEXT_PLAIN));
                     emitter.complete();
-                } catch (IOException ex) {
+                } catch (Exception ex) {
                     emitter.completeWithError(ex);
                 }
             }
@@ -407,7 +418,7 @@ public class InterviewServiceImpl implements InterviewService {
             UsageRecord usageRecord = UsageRecord.builder()
                     .interviewId(interviewId)
                     .uid(uid)
-                    .usageType(UsageTypeEnum.STT.getCode())
+                    .usageType(UsageTypeEnum.SPEECH_TO_TEXT.getCode())
                     .durationSeconds(request.getDurationSeconds())
                     .costInCents(request.getCostInCents())
                     .build();
@@ -417,6 +428,119 @@ public class InterviewServiceImpl implements InterviewService {
         } finally {
             redisUtils.unlock(lockKey, threadId);
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Throwable.class)
+    public SseEmitter screenshotQuestion(String interviewId, ScreenshotQuestionRequest request) {
+        User currentUser = getCurrentUser();
+        // 验证面试所有权
+        Optional<InterviewInfo> optionalInterviewInfo = interviewInfoMapper.selectByPrimaryKey(interviewId);
+        if (optionalInterviewInfo.isEmpty()) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_FOUND);
+        }
+        InterviewInfo interviewInfo = optionalInterviewInfo.get();
+        if (!currentUser.getUid().equals(interviewInfo.getUid())) {
+            throw new BusinessException(ErrorCode.INTERVIEW_NOT_OWNED);
+        }
+        // 检查面试状态，确保面试处于进行中状态
+        if (InterviewStatus.isEnd(interviewInfo.getStatus())) {
+            throw new BusinessException(ErrorCode.INTERVIEW_ALREADY_ENDED);
+        }
+
+        InterviewExtraData interviewExtraData = StringUtils.isNotBlank(interviewInfo.getExtraData())
+                ? JSON.parseObject(interviewInfo.getExtraData(), InterviewExtraData.class) : new InterviewExtraData();
+        UsageTypeEnum usageTypeEnum = UsageTypeEnum.SCREENSHOT_ANSWER;
+        if (Objects.nonNull(interviewExtraData) && Objects.equals(Boolean.TRUE, interviewExtraData.getOnlineMode())){
+            usageTypeEnum = UsageTypeEnum.ONLINE_SCREENSHOT_ANSWER;
+        }
+
+        try {
+            transactionalService.fastAnswerCharging(interviewInfo, usageTypeEnum);
+        } catch (Exception e) {
+            log.error("快速答题扣费失败", e);
+            throw new BusinessException(ErrorCode.POINTS_DEDUCTION_FAILED);
+        }
+
+        // 创建初始记录
+        QuestionAnswerRecord record = new QuestionAnswerRecord();
+        record.setInterviewId(interviewId);
+        record.setQuestion("[图片]"); // 初始标记为图片类型的问题
+        try {
+            if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
+                // todo 异步重试
+            }
+        } catch (Exception e) {
+            log.error("保存面试流水失败", e);
+        }
+
+        // 创建SSE发射器
+        SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
+        
+        // 用于存储OCR识别结果
+        StringBuilder ocrResult = new StringBuilder();
+        
+        // 第一个异步线程：处理OCR识别
+        CompletableFuture<Void> ocrFuture = CompletableFuture.runAsync(() -> {
+            try {
+                // TODO: 调用算法服务进行图片识别
+                // 这里需要实现与算法服务的交互，将图片base64编码发送给算法服务
+                // 并接收算法服务返回的流式OCR结果
+                
+                // 模拟OCR流式返回
+                String[] ocrResults = {"正在识别图片...", "识别完成", "图片内容: 这是一段示例文本"};
+                for (String result : ocrResults) {
+                    emitter.send(SseEmitter.event().name("ocr").data(result, MediaType.TEXT_PLAIN));
+                    ocrResult.append(result).append("\n");
+                    Thread.sleep(1000); // 模拟延迟
+                }
+
+                // OCR识别完成后，更新问题记录
+                QuestionAnswerRecord updateRecord = new QuestionAnswerRecord();
+                updateRecord.setId(record.getId()); // 使用之前创建的记录ID
+                updateRecord.setQuestion(ocrResult.toString().trim()); // 使用OCR识别结果作为问题
+                if (questionAnswerRecordMapper.updateByPrimaryKeySelective(updateRecord) <= 0) {
+                    log.error("更新OCR识别结果失败, recordId: {}", record.getId());
+                }
+            } catch (Exception e) {
+                log.error("图片识别处理失败", e);
+                try {
+                    emitter.send(SseEmitter.event().name("ocr").data("图片识别失败: " + e.getMessage(), MediaType.TEXT_PLAIN));
+                } catch (IOException ex) {
+                    log.error("发送OCR错误信息失败", ex);
+                }
+            }
+        });
+        
+        // 第二个异步线程：处理答案生成
+        CompletableFuture<Void> answerFuture = CompletableFuture.runAsync(() -> {
+            try {
+                // 等待OCR识别完成
+                ocrFuture.join();
+                
+                // TODO: 调用算法服务生成答案
+                // 这里需要实现与算法服务的交互，将OCR识别结果发送给算法服务
+                // 并接收算法服务返回的流式答案
+                
+                // 模拟答案流式返回
+                String[] answerResults = {"正在生成答案...", "根据图片内容分析...", "答案: 这是一个示例答案"};
+                for (String result : answerResults) {
+                    emitter.send(SseEmitter.event().name("answer").data(result, MediaType.TEXT_PLAIN));
+                    Thread.sleep(1000); // 模拟延迟
+                }
+                emitter.complete();
+            } catch (Exception e) {
+                log.error("答案生成处理失败", e);
+                try {
+                    emitter.send(SseEmitter.event().name("answer").data("答案生成失败: " + e.getMessage(), MediaType.TEXT_PLAIN));
+                    emitter.complete();
+                } catch (IOException ex) {
+                    log.error("发送答案错误信息失败", ex);
+                }
+            }
+        });
+
+        return emitter;
     }
 
     private Long getCurrentUserId() {

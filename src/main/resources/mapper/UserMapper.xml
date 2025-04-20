@@ -97,7 +97,7 @@
     </trim>
   </insert>
 
-  <update id="updateSelectiveByUid" parameterType="com.keji.green.lit.engine.model.User">
+  <update id="updateSelectiveByUidCAS" parameterType="com.keji.green.lit.engine.model.User">
     update user_info
     <set>
       <if test="nickName != null">
@@ -128,6 +128,38 @@
     </set>
     where uid = #{uid,jdbcType=BIGINT}
     and version = #{version,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateSelectiveByUid" parameterType="com.keji.green.lit.engine.model.User">
+    update user_info
+    <set>
+      <if test="nickName != null">
+        nick_name = #{nickName,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        status = #{status,jdbcType=INTEGER},
+      </if>
+      <if test="password != null">
+        password = #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="phone != null">
+        phone = #{phone,jdbcType=VARCHAR},
+      </if>
+      <if test="userRole != null">
+        user_role = #{userRole,jdbcType=SMALLINT},
+      </if>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="resumeText != null">
+        resume_text = #{resumeText,jdbcType=LONGVARCHAR},
+      </if>
+      <if test="clientIp != null">
+        client_ip = #{clientIp,jdbcType=VARCHAR},
+      </if>
+      version = version + 1
+    </set>
+    where uid = #{uid,jdbcType=BIGINT}
   </update>
 
   <update id="updateSelectiveByPhone" parameterType="com.keji.green.lit.engine.model.User">

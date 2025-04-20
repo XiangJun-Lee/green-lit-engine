@@ -50,18 +50,21 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void saveUser(User user) {
         // 创建用户
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // todo 一期不要pwd
+        if (StringUtils.isNotBlank(user.getPassword())){
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         if (userDao.createUser(user) <= 0) {
             throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "注册失败，请联系管理员");
         }
     }
 
     @Override
-    public void updateUserByUid(User request) {
+    public void updateUserByUidCAS(User request) {
         if (StringUtils.isNotBlank(request.getPassword())){
             request.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        if (userDao.updateSelectiveByUid(request) <= 0) {
+        if (userDao.updateSelectiveByUidCAS(request) <= 0) {
             throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "更新失败，请稍后重试");
         }
     }
@@ -121,7 +124,7 @@ public class UserServiceImpl implements UserService {
         user.setUid(uid);
         user.setPassword(passwordEncoder.encode(newPassword));
         user.setVersion(version);
-        return userDao.updateSelectiveByUid(user);
+        return userDao.updateSelectiveByUidCAS(user);
 
     }
 
@@ -131,7 +134,7 @@ public class UserServiceImpl implements UserService {
         user.setUid(uid);
         user.setClientIp(clientIp);
         user.setVersion(version);
-        return userDao.updateSelectiveByUid(user);
+        return userDao.updateSelectiveByUidCAS(user);
     }
 
     @Override
@@ -142,6 +145,16 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findByInviteCode(String inviteCode) {
         return userDao.findByInviteCode(inviteCode).orElse(null);
+    }
+
+    @Override
+    public void updateUserByUid(User request) {
+        if (StringUtils.isNotBlank(request.getPassword())){
+            request.setPassword(passwordEncoder.encode(request.getPassword()));
+        }
+        if (userDao.updateSelectiveByUid(request) <= 0) {
+            throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "更新失败，请稍后重试");
+        }
     }
 
     /**
