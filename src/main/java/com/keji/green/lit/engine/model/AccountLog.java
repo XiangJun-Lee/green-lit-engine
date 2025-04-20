@@ -5,17 +5,18 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Date;
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AccountLog {
+public class AccountLog implements Serializable {
 
     private Long id;
 
-    private Byte shardingKey;
+    private int shardingKey;
 
     private Long accountId;
 
@@ -25,18 +26,18 @@ public class AccountLog {
 
     private Long userId;
 
-    private Byte accountType;
+    private int accountType;
 
-    private Byte subType;
+    private int subType;
 
     private Long otherAccount;
 
-    private Byte otherAccountType;
+    private int otherAccountType;
 
 
-    private Byte otherAccountSubType;
+    private int otherAccountSubType;
 
-    private Byte actionType;
+    private int actionType;
 
     private String prodType;
 

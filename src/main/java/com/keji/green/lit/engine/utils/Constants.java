@@ -29,4 +29,7 @@ public class Constants {
     public static final Integer INTEGER_TWENTY = 20;
 
     public static final Integer INTERVIEW_MAX_HOURS = 5;
+
+    public final static Long DEFAULT_SEQ = 0L;
+
 }
