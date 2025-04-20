@@ -50,7 +50,10 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void saveUser(User user) {
         // 创建用户
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        // todo 一期不要pwd
+        if (StringUtils.isNotBlank(user.getPassword())){
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
         if (userDao.createUser(user) <= 0) {
             throw new BusinessException(DATABASE_WRITE_ERROR.getCode(), "注册失败，请联系管理员");
         }
