@@ -41,7 +41,9 @@ public enum ErrorCode {
     POINTS_DEDUCTION_FAILED(6005, "积分扣除失败"),
 
     // 外部服务错误码 (5000-5999)
-    EXTERNAL_SERVICE_ERROR(5000, "外部服务调用失败");
+    EXTERNAL_SERVICE_ERROR(5000, "外部服务调用失败"),
+
+    ;
 
     private final int code;
     private final String message;

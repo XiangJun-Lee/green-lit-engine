@@ -23,6 +23,7 @@ import com.keji.green.lit.engine.model.UsageRecord;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.InterviewService;
 import com.keji.green.lit.engine.service.QuestionAnswerRecordService;
+import com.keji.green.lit.engine.service.TransactionalService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.RedisUtils;
@@ -71,6 +72,9 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Resource
     private QuestionAnswerRecordService questionAnswerRecordService;
+
+    @Resource
+    private TransactionalService transactionalService;
 
     // TODO: 注入算法服务客户端
 
@@ -134,6 +138,12 @@ public class InterviewServiceImpl implements InterviewService {
         // TODO 检查用户积分是否充足
 
         try {
+            transactionalService.fastAnswerCharging(interviewInfo);
+        } catch (Exception e) {
+            log.error("快速答题扣费失败", e);
+            throw new BusinessException(ErrorCode.POINTS_DEDUCTION_FAILED);
+        }
+        try {
             QuestionAnswerRecord record = new QuestionAnswerRecord();
             record.setInterviewId(interviewId);
             record.setQuestion(request.getQuestion());
@@ -154,6 +164,8 @@ public class InterviewServiceImpl implements InterviewService {
             List<String> historyChat = JSON.parseArray(request.getHistoryChat(), String.class);
             fastAnswerParam.setHistoryChat(historyChat);
         }
+        log.info("快速答题参数：{}", JSON.toJSONString(fastAnswerParam));
+
 
         // 创建SSE发射器，超时设置为10分钟
         SseEmitter emitter = new SseEmitter(TEN_MINUTE_MILLISECONDS);
