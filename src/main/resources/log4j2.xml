@@ -2,7 +2,7 @@
 <Configuration status="INFO">
     <Properties>
         <Property name="LOG_PATTERN">%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</Property>
-        <Property name="LOG_DIR">/www/wwwlog/green-lit-engine</Property>
+        <Property name="LOG_DIR">/www/wwwlogs/green-lit-engine</Property>
     </Properties>
 
     <Appenders>
