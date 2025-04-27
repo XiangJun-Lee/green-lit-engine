@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.keji.green.lit.engine.model.Account;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.springframework.stereotype.Service;
-
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Select;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +22,8 @@ public interface AccountMapper extends BaseMapper<Account> {
 
     List<Account> queryAccountByCond(Map<String, Object> params);
 
+    @Select("select * from account where ")
+    List<Account> selectListBySql();
     /**
      * 根据账户查询
      * @param accountId
