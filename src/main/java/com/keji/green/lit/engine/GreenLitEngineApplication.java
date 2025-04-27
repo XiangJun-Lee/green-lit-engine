@@ -1,6 +1,5 @@
 package com.keji.green.lit.engine;
 
-import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ImportResource;
@@ -12,7 +11,7 @@ import org.springframework.context.annotation.ImportResource;
  * @since 2024-04-11
  */
 @SpringBootApplication
-@MapperScan(" com.keji.green.lit.engine.mapper")
+//@MapperScan("com.keji.green.lit.engine.mapper")
 @ImportResource("classpath:spring/green-lit-application.xml")
 public class GreenLitEngineApplication {
 
