@@ -13,14 +13,7 @@ public class AccountAlgorithm implements ComplexKeysShardingAlgorithm {
         Collection<String> result = new ArrayList<>();
         List<Long> ids = (List<Long>) complexKeysShardingValue.getColumnNameAndShardingValuesMap().get("user_id");
         Long id = ids.get(0);
-//        List<Integer> gradeList = (List<Integer>) complexKeysShardingValue.getColumnNameAndShardingValuesMap().get("grade");
-//        Iterator<Integer> iterator = gradeList.iterator();
-//        while (iterator.hasNext()) {
-//            Integer grade = iterator.next();
-//            String tableName = logicTableName + ((id + grade) % 2 + 1);
-//            result.add(tableName);
-//        }
-        String tableName = logicTableName + (id  % 10);
+        String tableName = logicTableName + "_"+(id  % 10);
         result.add(tableName);
         return result;
     }

@@ -21,7 +21,7 @@ public interface AccountMapper extends BaseMapper<Account> {
 
     List<Account> queryAccountByCond(Map<String, Object> params);
 
-    @Select("select * from account where ")
+//    @Select("select * from account where ")
     List<Account> selectListBySql();
     /**
      * 根据账户查询
