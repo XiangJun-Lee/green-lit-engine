@@ -12,20 +12,17 @@ import com.keji.green.lit.engine.enums.TransTypeEnum;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.mapper.AccountLogMapper;
 import com.keji.green.lit.engine.mapper.AccountMapper;
-import com.keji.green.lit.engine.mapper.UserMapper;
 import com.keji.green.lit.engine.model.Account;
 import com.keji.green.lit.engine.model.AccountLog;
 import com.keji.green.lit.engine.model.User;
 import com.keji.green.lit.engine.service.AccountService;
 import com.keji.green.lit.engine.utils.AccountUtil;
 import com.keji.green.lit.engine.utils.Constants;
-import io.lettuce.core.internal.LettuceLists;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.Length;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -37,13 +34,13 @@ import static com.keji.green.lit.engine.exception.ErrorCode.*;
 @Service
 public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> implements AccountService {
 
-    @Autowired
+    @Resource
     private AccountMapper accountMapper;
-    @Autowired
+    @Resource
     private AccountLogMapper logMapper;
-    @Autowired
+    @Resource
     private TransactionTemplate template;
-    @Autowired
+    @Resource
     private UserDao userDao;
 
     private final List<SubAccountTypeEnum> subAccountTypeLists = List.of(CASH, PROMOTION);

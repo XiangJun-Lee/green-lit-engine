@@ -11,7 +11,6 @@ import java.util.Date;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("account")
 public class Account {
 
     private Long id;
