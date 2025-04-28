@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.keji.green.lit.engine.mapper.InterviewInfoMapper">
-    <resultMap id="BaseResultMap" type="InterviewInfo">
+    <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.InterviewInfo">
         <id column="interview_id" jdbcType="VARCHAR" property="interviewId"/>
         <result column="uid" jdbcType="VARCHAR" property="uid"/>
         <result column="interview_name" jdbcType="VARCHAR" property="interviewName"/>
@@ -55,7 +55,7 @@
         </if>
     </select>
 
-    <insert id="insertSelective" parameterType="InterviewInfo">
+    <insert id="insertSelective" parameterType="com.keji.green.lit.engine.model.InterviewInfo">
         insert into interview_info
         <trim prefix="(" suffix=")" suffixOverrides=",">
             <if test="interviewId != null">
@@ -164,7 +164,7 @@
             </if>
         </trim>
     </insert>
-    <update id="updateByPrimaryKeySelectiveCAS" parameterType="InterviewInfo">
+    <update id="updateByPrimaryKeySelectiveCAS" parameterType="com.keji.green.lit.engine.model.InterviewInfo">
 
         update interview_info
         <set>
@@ -201,7 +201,7 @@
         and version = #{version,jdbcType=INTEGER}
     </update>
 
-    <update id="updateByPrimaryKeySelective" parameterType="InterviewInfo">
+    <update id="updateByPrimaryKeySelective" parameterType="com.keji.green.lit.engine.model.InterviewInfo">
         update interview_info
         <set>
             <if test="interviewName != null">
