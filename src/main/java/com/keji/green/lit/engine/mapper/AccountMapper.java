@@ -15,7 +15,7 @@ public interface AccountMapper extends BaseMapper<Account> {
 
     List<Account> queryAccountByCondV1(Map<String, Object> params);
 
-    Account queryAccountForUpdate(Long accountId);
+    Account queryAccountForUpdate(Map<String, Object> params);
 
     int insertBatch(List<Account> accounts);
 

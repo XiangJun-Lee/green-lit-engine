@@ -11,8 +11,8 @@
     <result column="sharding_key" jdbcType="TINYINT" property="shardingKey" />
     <result column="user_id" jdbcType="BIGINT" property="userId" />
     <result column="account_id" jdbcType="BIGINT" property="accountId" />
-    <result column="account_type" jdbcType="TINYINT" property="accountType" />
-    <result column="sub_type" jdbcType="TINYINT" property="subType" />
+    <result column="account_type" jdbcType="SMALLINT" property="accountType" />
+    <result column="sub_type" jdbcType="SMALLINT" property="subType" />
     <result column="balance" jdbcType="DECIMAL" property="balance" />
     <result column="status" jdbcType="VARCHAR" property="status" />
     <result column="income_amount" jdbcType="DECIMAL" property="incomeAmount" />
@@ -264,6 +264,17 @@
         #{item,jdbcType=INTEGER}
       </foreach>
     </if>
+  </select>
+
+  <select id="queryAccountForUpdate" parameterType="java.util.Map"  resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from account_${userId % 10}
+    where userId = #{userId,jdbcType=BIGINT}
+    <if test="accountId != null">
+      and accountId = #{accountId,jdbcType=BIGINT}
+    </if>
+    for update
   </select>
 
   <select id="queryAccountByCondV1" parameterType="java.util.Map" resultMap="BaseResultMap">

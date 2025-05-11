@@ -150,16 +150,21 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
                             remainingAmount = remainingAmount.subtract(account.getBalance());
                         }
                         // 检查账户余额是否足够
-                        Account update = accountMapper.queryAccountForUpdate(account.getAccountId());
+                        Map<String, Object> updateParam = new HashMap<>();
+                        updateParam.put("user_id", account.getUserId());
+                        updateParam.put("account_id", account.getAccountId());
+                        Account update = accountMapper.queryAccountForUpdate(updateParam);
                         BigDecimal beforeBalance = update.getBalance();
                         // 初始化账户流水数据
                         Boolean credit = tradeDto.getCredit();
                         AccountLog accountLog = new AccountLog();
-                        accountLog.setAccountId(account.getId());
+                        accountLog.setShardingKey(AccountUtil.CalShardingKey(account.getUserId()));
+                        accountLog.setAccountId(account.getAccountId());
                         accountLog.setRequestNo(tradeDto.getRequestNo());
                         accountLog.setOrderNo(tradeDto.getOrderNo());
                         accountLog.setUserId(account.getUserId());
                         accountLog.setAccountType(account.getAccountType());
+                        accountLog.setSubType(account.getSubType());
                         accountLog.setOtherAccount(tradeDto.getOtherAccount());
                         accountLog.setOtherAccountType(tradeDto.getOtherAccountType());
                         accountLog.setActionType(transType);
@@ -168,6 +173,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
                         accountLog.setSource(tradeDto.getSource());
                         accountLog.setRemark(tradeDto.getRemark());
                         accountLog.setSeq(Constants.DEFAULT_SEQ);
+                        accountLog.setCreateTime(new Date());
+                        accountLog.setUpdateTime(new Date());
                         //计算账户金额
                         AccountUtil.opt(update, deductionAmount, transTypeEnum.getOpt(), credit);
                         accountLog.setBeforeBalance(beforeBalance);
