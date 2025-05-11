@@ -33,6 +33,7 @@ import com.keji.green.lit.engine.integration.LlmChatService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.http.MediaType;
@@ -175,9 +176,6 @@ public class InterviewServiceImpl implements InterviewService {
             List<String> historyChat = JSON.parseArray(request.getHistoryChat(), String.class);
             fastAnswerParam.setHistoryChat(historyChat);
         }
-        log.info("快速答题参数：{}", JSON.toJSONString(fastAnswerParam));
-
-
         // 创建SSE发射器，超时设置为10分钟
         SseEmitter emitter = new SseEmitter(TEN_MINUTE_MILLISECONDS);
         // 异步调用算法服务
@@ -193,19 +191,13 @@ public class InterviewServiceImpl implements InterviewService {
                 ));
                 param.put("model_name", "qwq-plus-latest");
                 param.put("stream", true);
-//                param.put("enable_search", false);
-//                param.put("enable_reason", false);
+                if (BooleanUtils.isTrue(interviewExtraData.getOnlineMode())){
+                    param.put("enable_search", true);
+                }
+                param.put("enable_reason", false);
                 llmChatService.streamChat(param, chunk -> {
                     try {
-                        // 解析每一行流式内容，提取answer_content字段
-                        String answer = null;
-                        try {
-                            JSONObject obj = JSON.parseObject(chunk);
-                            answer = obj.getString("answer_content");
-                        } catch (Exception ignore) {}
-                        if (answer != null && !answer.isEmpty()) {
-                            emitter.send(SseEmitter.event().name("message").data(answer, MediaType.TEXT_PLAIN));
-                        }
+                        emitter.send(SseEmitter.event().name("message").data(chunk, MediaType.TEXT_PLAIN));
                     } catch (Exception e) {
                         log.error("SSE发送失败", e);
                     }
