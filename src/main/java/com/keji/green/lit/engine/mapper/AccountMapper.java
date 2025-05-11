@@ -13,15 +13,10 @@ public interface AccountMapper extends BaseMapper<Account> {
 
     List<Account> queryAccount(@Param("userId") Long userId, @Param("accountType") Integer accountType,@Param("subAccountTypes") List<Integer> subAccountTypes);
 
-    List<Account> queryAccountByCond(Map<String, Object> params);
+    List<Account> queryAccountByCondV1(Map<String, Object> params);
 
     Account queryAccountForUpdate(Long accountId);
 
-//    int insertBatch(List<Account> accounts);
-    int insertBatchV1(List<Account> accounts);
-    int insertBatchV2(Map<String, Object> params);
-//    int insertBatchV1(List<Account> accounts);
-
-//    int insert(Account account);
+    int insertBatch(List<Account> accounts);
 
 }

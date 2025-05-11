@@ -3,6 +3,7 @@ package com.keji.green.lit.engine.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.keji.green.lit.engine.dto.TradeDto;
 import com.keji.green.lit.engine.dto.request.AccountDto;
+import com.keji.green.lit.engine.dto.response.AccountTradeResponse;
 import com.keji.green.lit.engine.model.Account;
 import com.keji.green.lit.engine.model.AccountLog;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,6 @@ public interface AccountService extends IService<Account> {
 
     List<AccountLog> queryAccountLog(AccountDto account);
 
-    boolean trade(TradeDto tradeDto);
+    AccountTradeResponse trade(TradeDto tradeDto);
 
 }

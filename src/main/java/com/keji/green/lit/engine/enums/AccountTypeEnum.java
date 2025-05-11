@@ -14,13 +14,13 @@ public enum AccountTypeEnum {
 
     ;
 
-    AccountTypeEnum(Integer code, String name, String prefix) {
+    AccountTypeEnum(int code, String name, String prefix) {
         this.code = code;
         this.name = name;
         this.prefix = prefix;
     }
 
-    private Integer code;
+    private int code;
     private String name;
     private String prefix;
 
@@ -39,7 +39,7 @@ public enum AccountTypeEnum {
     /**
      * 校验账户类型
      */
-    public static AccountTypeEnum checkAccountType(Integer accountType){
+    public static AccountTypeEnum checkAccountType(int accountType){
 
         for (AccountTypeEnum node : AccountTypeEnum.values()){
             if(node.code == accountType){

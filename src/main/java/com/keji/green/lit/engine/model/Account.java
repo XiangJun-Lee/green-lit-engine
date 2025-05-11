@@ -37,7 +37,4 @@ public class Account {
 
     private Date updateTime;
 
-//    public Long getUserId() {
-//        return userId;
-//    }
 }

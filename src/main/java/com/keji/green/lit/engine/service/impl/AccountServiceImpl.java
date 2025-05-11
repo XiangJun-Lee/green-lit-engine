@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.toolkit.SqlHelper;
 import com.keji.green.lit.engine.dao.UserDao;
 import com.keji.green.lit.engine.dto.TradeDto;
 import com.keji.green.lit.engine.dto.request.AccountDto;
+import com.keji.green.lit.engine.dto.response.AccountTradeResponse;
 import com.keji.green.lit.engine.enums.AccountTypeEnum;
 import com.keji.green.lit.engine.enums.SubAccountTypeEnum;
 import com.keji.green.lit.engine.enums.TransTypeEnum;
@@ -51,13 +52,16 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         Integer accountType = dto.getAccountType();
         // 检查账户类型 10-内部账户 11-外部账户 12-管理者
         AccountTypeEnum anEnum = AccountTypeEnum.checkAccountType(accountType);
-        User user = userDao.findById(dto.getUserId()).orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在"));
+        if (accountType == AccountTypeEnum.USER.getCode()) {
+            User user = userDao.findById(dto.getUserId()).orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在"));
+        }
 
         // 构建查询参数
         Map<String, Object> params = new HashMap<>();
         params.put("user_id", dto.getUserId());
+        params.put("account_type", dto.getAccountType());
         List<Account> accounts = new ArrayList<>();
-        accounts = accountMapper.queryAccountByCond(params);
+        accounts = accountMapper.queryAccountByCondV1(params);
         if (!accounts.isEmpty()) {
             return true;
         }
@@ -65,7 +69,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             // 初始化账户数据
             Account account = new Account();
             account.setShardingKey(AccountUtil.CalShardingKey(dto.getUserId()));
-            account.setAccountId(AccountUtil.GenAccountId(dto.getAccountType(),subAccountTypeEnum.getCode(),dto.getUserId()));
+            account.setAccountId(AccountUtil.GenAccountId(dto.getAccountType(), subAccountTypeEnum.getCode(), dto.getUserId()));
             account.setUserId(dto.getUserId());
             account.setAccountType(dto.getAccountType());
             account.setSubType(subAccountTypeEnum.getCode());
@@ -84,7 +88,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         List<Account> finalAccounts = accounts;
         Object obj = template.execute(status -> {
             try {
-                int insert = accountMapper.insertBatchV1(finalAccounts);
+                int insert = accountMapper.insertBatch(finalAccounts);
                 return SqlHelper.retBool(insert);
             } catch (Exception e) {
                 log.error("账户开户异常 {} error {}", JSONObject.toJSONString(finalAccounts), e);
@@ -99,16 +103,24 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
     }
 
     @Override
-    public boolean trade(TradeDto tradeDto) {
+    public AccountTradeResponse trade(TradeDto tradeDto) {
 
         // 查询账户信息
-        List<Account> accounts = accountMapper.queryAccount(tradeDto.getUserId(), tradeDto.getAccountType(), tradeDto.getSubAccountTypes());
+        Map<String, Object> params = new HashMap<>();
+        params.put("user_id", tradeDto.getUserId());
+        params.put("account_type", tradeDto.getAccountType());
+        params.put("sub_account_types", tradeDto.getSubAccountTypes());
+
+        List<Account> accounts = accountMapper.queryAccountByCondV1(params);
         if (accounts.isEmpty()) {
-            throw new BusinessException(ACCOUNT_NOT_EXIST, "账户不存在");
+            return AccountTradeResponse.builder()
+                    .err_no(ACCOUNT_NOT_EXIST.getCode())
+                    .err_msg(ACCOUNT_NOT_EXIST.getMessage()).build();
         }
         if (!canDeduct(accounts, tradeDto.getAmount())) {
-            log.warn("余额不足");
-            return false;
+            return AccountTradeResponse.builder()
+                    .err_no(ACCOUNT_NOT_ENOUGH.getCode())
+                    .err_msg(ACCOUNT_NOT_ENOUGH.getMessage()).build();
         }
         // 交易类型和交易金额 是否允许欠款
         Integer transType = tradeDto.getTransType();
@@ -175,7 +187,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         if (obj instanceof Exception) {
             throw new BusinessException(ACCOUNT_SAVE_FAILURE, "操作账户数据失败！");
         }
-        return (Boolean) obj;
+        return null;
     }
 
     public boolean canDeduct(List<Account> list, BigDecimal deductionAmount) {
@@ -188,11 +200,13 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
     @Override
     public List<Account> queryAccount(AccountDto accountDto) {
+
+        // 创建响应对象并设置账户列表
         Map<String, Object> params = new HashMap<>();
         params.put("user_id", accountDto.getUserId());
-        List<Account> accounts = new ArrayList<>();
-        accounts = accountMapper.queryAccountByCond(params);
-//        List<Account> accounts = accountMapper.queryAccount(accountDto.getUserId(), accountDto.getAccountType(), accountDto.getSubTypes());
+        params.put("account_type", accountDto.getAccountType());
+        List<Account> accounts = accountMapper.queryAccountByCondV1(params);
+
         return accounts;
     }
 
