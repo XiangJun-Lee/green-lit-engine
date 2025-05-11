@@ -1,6 +1,7 @@
 package com.keji.green.lit.engine.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.keji.green.lit.engine.common.CommonConverter;
 import com.keji.green.lit.engine.dto.request.FastAnswerParam;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
@@ -28,6 +29,7 @@ import com.keji.green.lit.engine.service.TransactionalService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.RedisUtils;
+import com.keji.green.lit.engine.integration.LlmChatService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -75,6 +77,9 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Resource
     private TransactionalService transactionalService;
+
+    @Resource
+    private LlmChatService llmChatService;
 
     // TODO: 注入算法服务客户端
 
@@ -178,15 +183,33 @@ public class InterviewServiceImpl implements InterviewService {
         // 异步调用算法服务
         CompletableFuture.runAsync(() -> {
             try {
-                // TODO: 调用算法服务，获取答案
-                StringBuilder answer = new StringBuilder();
-                // 模拟流式返回
-                for (int i = 0; i < 10; i++) {
-                    String chunk = "这是回答的第" + (i + 1) + "部分。";
-                    answer.append(chunk);
-                    emitter.send(SseEmitter.event().name("message").data(chunk, MediaType.TEXT_PLAIN));
-                    Thread.sleep(500);
-                }
+                // 调用算法服务，获取答案（流式）
+                Map<String, Object> param = new HashMap<>();
+                param.put("messages", List.of(
+                        new HashMap<String, Object>() {{
+                            put("role", "user");
+                            put("content", request.getQuestion());
+                        }}
+                ));
+                param.put("model_name", "qwq-plus-latest");
+                param.put("stream", true);
+//                param.put("enable_search", false);
+//                param.put("enable_reason", false);
+                llmChatService.streamChat(param, chunk -> {
+                    try {
+                        // 解析每一行流式内容，提取answer_content字段
+                        String answer = null;
+                        try {
+                            JSONObject obj = JSON.parseObject(chunk);
+                            answer = obj.getString("answer_content");
+                        } catch (Exception ignore) {}
+                        if (answer != null && !answer.isEmpty()) {
+                            emitter.send(SseEmitter.event().name("message").data(answer, MediaType.TEXT_PLAIN));
+                        }
+                    } catch (Exception e) {
+                        log.error("SSE发送失败", e);
+                    }
+                });
                 // 发送完成事件
                 emitter.send(SseEmitter.event().name("complete").data("完成", MediaType.TEXT_PLAIN));
                 emitter.complete();

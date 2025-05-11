@@ -81,7 +81,7 @@
                 #{uid,jdbcType=BIGINT},
             </if>
             <if test="usageType != null">
-                #{usageType,jdbcType=VARCHAR},
+                #{usageType,jdbcType=INTEGER},
             </if>
             <if test="durationSeconds != null">
                 #{durationSeconds,jdbcType=INTEGER},
