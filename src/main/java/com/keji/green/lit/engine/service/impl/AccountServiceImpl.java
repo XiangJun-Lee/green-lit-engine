@@ -181,7 +181,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
                         accountLog.setAfterBalance(update.getBalance());
                         //记录交易记录 更新交易流水表
                         logMapper.insert(accountLog);
-                        accountMapper.updateById(update);
+                        accountMapper.updateByAccountId(update);
                     }
                 }
                 return true;

@@ -19,4 +19,6 @@ public interface AccountMapper extends BaseMapper<Account> {
 
     int insertBatch(List<Account> accounts);
 
+    int updateByAccountId(Account  account);
+
 }
