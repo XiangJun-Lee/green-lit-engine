@@ -84,16 +84,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         List<Account> finalAccounts = accounts;
         Object obj = template.execute(status -> {
             try {
-//                int insert = accountMapper.insertBatchV1(finalAccounts);
-//                return SqlHelper.retBool(insert);
-                for (Account account : finalAccounts){
-                    int insert = accountMapper.insert(account);
-                    if (!SqlHelper.retBool(insert)){
-                        log.error("账户开户异常 {} ", JSONObject.toJSONString(account));
-                        return false;
-                    };
-                }
-                return true;
+                int insert = accountMapper.insertBatchV1(finalAccounts);
+                return SqlHelper.retBool(insert);
             } catch (Exception e) {
                 log.error("账户开户异常 {} error {}", JSONObject.toJSONString(finalAccounts), e);
                 status.setRollbackOnly();

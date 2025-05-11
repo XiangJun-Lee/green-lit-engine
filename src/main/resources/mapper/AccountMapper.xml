@@ -303,21 +303,21 @@
       )
     </foreach>
   </insert>
-  <insert id="insertBatchV2" parameterType="java.util.Map">
-    INSERT INTO account (id, sharding_key, user_id,
-    account_id, account_type, sub_type,
-    balance, status, income_amount,
-    expense_amount, credit_amount, freeze_amount,
-    seq, create_time, update_time
-    )
-    VALUES
-    <foreach collection="accounts" item="account" separator=",">
-      (#{account.id,jdbcType=BIGINT}, #{account.shardingKey,jdbcType=TINYINT}, #{account.userId,jdbcType=BIGINT},
-      #{account.accountId,jdbcType=BIGINT}, #{account.accountType,jdbcType=TINYINT}, #{account.subType,jdbcType=TINYINT},
-      #{account.balance,jdbcType=DECIMAL}, #{account.status,jdbcType=VARCHAR}, #{account.incomeAmount,jdbcType=DECIMAL},
-      #{account.expenseAmount,jdbcType=DECIMAL}, #{account.creditAmount,jdbcType=DECIMAL}, #{account.freezeAmount,jdbcType=DECIMAL},
-      #{account.seq,jdbcType=BIGINT}, #{account.createTime,jdbcType=TIMESTAMP}, #{account.updateTime,jdbcType=TIMESTAMP}
-      );
-    </foreach>
-  </insert>
+<!--  <insert id="insertBatchV2" parameterType="java.util.Map">-->
+<!--    INSERT INTO account (id, sharding_key, user_id,-->
+<!--    account_id, account_type, sub_type,-->
+<!--    balance, status, income_amount,-->
+<!--    expense_amount, credit_amount, freeze_amount,-->
+<!--    seq, create_time, update_time-->
+<!--    )-->
+<!--    VALUES-->
+<!--    <foreach collection="accounts" item="account" separator=",">-->
+<!--      (#{account.id,jdbcType=BIGINT}, #{account.shardingKey,jdbcType=TINYINT}, #{account.userId,jdbcType=BIGINT},-->
+<!--      #{account.accountId,jdbcType=BIGINT}, #{account.accountType,jdbcType=TINYINT}, #{account.subType,jdbcType=TINYINT},-->
+<!--      #{account.balance,jdbcType=DECIMAL}, #{account.status,jdbcType=VARCHAR}, #{account.incomeAmount,jdbcType=DECIMAL},-->
+<!--      #{account.expenseAmount,jdbcType=DECIMAL}, #{account.creditAmount,jdbcType=DECIMAL}, #{account.freezeAmount,jdbcType=DECIMAL},-->
+<!--      #{account.seq,jdbcType=BIGINT}, #{account.createTime,jdbcType=TIMESTAMP}, #{account.updateTime,jdbcType=TIMESTAMP}-->
+<!--      );-->
+<!--    </foreach>-->
+<!--  </insert>-->
 </mapper>
