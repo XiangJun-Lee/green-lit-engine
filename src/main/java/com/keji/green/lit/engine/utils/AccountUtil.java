@@ -40,4 +40,35 @@ public class AccountUtil {
     public static boolean isGreaterOrEqual(BigDecimal bigNum1, BigDecimal bigNum2) {
         return bigNum1.compareTo(bigNum2) >= 0;
     }
+    public static long GenAccountId(int accountType, int subAccountType,long userId) {
+        // 验证 userId 范围
+        if (userId <= 0 || userId > 9999999999L) {
+            throw new IllegalArgumentException("userId 必须是大于0且不超过10位的整数");
+        }
+
+//        // 验证 accountType
+//        if (accountType < 1 || accountType > 3) {
+//            throw new IllegalArgumentException("accountType 必须是1、2、3中的一个");
+//        }
+
+//        // 验证 subAccountType
+//        if (subAccountType < 1 || subAccountType > 2) {
+//            throw new IllegalArgumentException("subAccountType 必须是1、2中的一个");
+//        }
+
+        // 格式化 subAccountType 为3位字符串
+        String subAccountTypeStr = String.format("%03d", subAccountType);
+
+        // 格式化 userId 为10位字符串，不足10位时前面补0
+        String userIdStr = String.format("%010d", userId);
+
+        // 组合各部分生成 accountId
+        String accountIdStr = accountType + subAccountTypeStr + userIdStr;
+
+        // 转换为 long 类型
+        return Long.parseLong(accountIdStr);
+    }
+    public static int CalShardingKey(long value) {
+        return (int) (value % 10);
+    }
 }

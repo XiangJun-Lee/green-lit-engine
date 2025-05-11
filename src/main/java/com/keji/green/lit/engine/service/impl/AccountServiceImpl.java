@@ -64,8 +64,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         for (SubAccountTypeEnum subAccountTypeEnum : SubAccountTypeEnum.values()) {
             // 初始化账户数据
             Account account = new Account();
-            account.setShardingKey(0);
-            account.setAccountId((long)0);
+            account.setShardingKey(AccountUtil.CalShardingKey(dto.getUserId()));
+            account.setAccountId(AccountUtil.GenAccountId(dto.getAccountType(),subAccountTypeEnum.getCode(),dto.getUserId()));
             account.setUserId(dto.getUserId());
             account.setAccountType(dto.getAccountType());
             account.setSubType(subAccountTypeEnum.getCode());
@@ -76,17 +76,26 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             account.setCreditAmount(BigDecimal.ZERO);
             account.setFreezeAmount(BigDecimal.ZERO);
             account.setSeq(Constants.DEFAULT_SEQ);
+            account.setCreateTime(new Date());
+            account.setUpdateTime(new Date());
             accounts.add(account);
         }
 
         List<Account> finalAccounts = accounts;
         Object obj = template.execute(status -> {
             try {
-
-                int insert = accountMapper.insertBatch(finalAccounts);
-                return SqlHelper.retBool(insert);
+//                int insert = accountMapper.insertBatchV1(finalAccounts);
+//                return SqlHelper.retBool(insert);
+                for (Account account : finalAccounts){
+                    int insert = accountMapper.insert(account);
+                    if (!SqlHelper.retBool(insert)){
+                        log.error("账户开户异常 {} ", JSONObject.toJSONString(account));
+                        return false;
+                    };
+                }
+                return true;
             } catch (Exception e) {
-                log.error("账户开户异常 {} error", JSONObject.toJSONString(finalAccounts), e);
+                log.error("账户开户异常 {} error {}", JSONObject.toJSONString(finalAccounts), e);
                 status.setRollbackOnly();
                 throw e;
             }

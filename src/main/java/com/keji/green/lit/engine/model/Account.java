@@ -1,10 +1,6 @@
 package com.keji.green.lit.engine.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.*;
 import java.math.BigDecimal;
 import java.util.Date;
 @Data
@@ -16,9 +12,7 @@ public class Account {
     private Long id;
 
     private int shardingKey;
-
     private Long userId;
-
     private Long accountId;
 
     private int accountType;
@@ -43,4 +37,7 @@ public class Account {
 
     private Date updateTime;
 
+//    public Long getUserId() {
+//        return userId;
+//    }
 }

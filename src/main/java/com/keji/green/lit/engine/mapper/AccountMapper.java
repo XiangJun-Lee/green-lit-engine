@@ -17,6 +17,11 @@ public interface AccountMapper extends BaseMapper<Account> {
 
     Account queryAccountForUpdate(Long accountId);
 
-    int insertBatch(List<Account> accounts);
+//    int insertBatch(List<Account> accounts);
+    int insertBatchV1(List<Account> accounts);
+    int insertBatchV2(Map<String, Object> params);
+//    int insertBatchV1(List<Account> accounts);
+
+//    int insert(Account account);
 
 }
