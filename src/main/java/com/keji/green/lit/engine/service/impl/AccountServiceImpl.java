@@ -55,7 +55,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
 
         // 构建查询参数
         Map<String, Object> params = new HashMap<>();
-        params.put("uid", dto.getUserId());
+        params.put("user_id", dto.getUserId());
         List<Account> accounts = new ArrayList<>();
         accounts = accountMapper.queryAccountByCond(params);
         if (!accounts.isEmpty()) {
@@ -64,6 +64,8 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
         for (SubAccountTypeEnum subAccountTypeEnum : SubAccountTypeEnum.values()) {
             // 初始化账户数据
             Account account = new Account();
+            account.setShardingKey(0);
+            account.setAccountId((long)0);
             account.setUserId(dto.getUserId());
             account.setAccountType(dto.getAccountType());
             account.setSubType(subAccountTypeEnum.getCode());
@@ -72,6 +74,7 @@ public class AccountServiceImpl extends ServiceImpl<AccountMapper, Account> impl
             account.setIncomeAmount(BigDecimal.ZERO);
             account.setExpenseAmount(BigDecimal.ZERO);
             account.setCreditAmount(BigDecimal.ZERO);
+            account.setFreezeAmount(BigDecimal.ZERO);
             account.setSeq(Constants.DEFAULT_SEQ);
             accounts.add(account);
         }
