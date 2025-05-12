@@ -1,6 +1,7 @@
 package com.keji.green.lit.engine.service.impl;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.keji.green.lit.engine.common.CommonConverter;
 import com.keji.green.lit.engine.dto.request.FastAnswerParam;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
@@ -28,9 +29,11 @@ import com.keji.green.lit.engine.service.TransactionalService;
 import com.keji.green.lit.engine.service.UserService;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.RedisUtils;
+import com.keji.green.lit.engine.integration.LlmChatService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.http.MediaType;
@@ -75,6 +78,9 @@ public class InterviewServiceImpl implements InterviewService {
 
     @Resource
     private TransactionalService transactionalService;
+
+    @Resource
+    private LlmChatService llmChatService;
 
     // TODO: 注入算法服务客户端
 
@@ -170,23 +176,32 @@ public class InterviewServiceImpl implements InterviewService {
             List<String> historyChat = JSON.parseArray(request.getHistoryChat(), String.class);
             fastAnswerParam.setHistoryChat(historyChat);
         }
-        log.info("快速答题参数：{}", JSON.toJSONString(fastAnswerParam));
-
-
         // 创建SSE发射器，超时设置为10分钟
         SseEmitter emitter = new SseEmitter(TEN_MINUTE_MILLISECONDS);
         // 异步调用算法服务
         CompletableFuture.runAsync(() -> {
             try {
-                // TODO: 调用算法服务，获取答案
-                StringBuilder answer = new StringBuilder();
-                // 模拟流式返回
-                for (int i = 0; i < 10; i++) {
-                    String chunk = "这是回答的第" + (i + 1) + "部分。";
-                    answer.append(chunk);
-                    emitter.send(SseEmitter.event().name("message").data(chunk, MediaType.TEXT_PLAIN));
-                    Thread.sleep(500);
+                // 调用算法服务，获取答案（流式）
+                Map<String, Object> param = new HashMap<>();
+                param.put("messages", List.of(
+                        new HashMap<String, Object>() {{
+                            put("role", "user");
+                            put("content", request.getQuestion());
+                        }}
+                ));
+                param.put("model_name", "qwq-plus-latest");
+                param.put("stream", true);
+                if (BooleanUtils.isTrue(interviewExtraData.getOnlineMode())){
+                    param.put("enable_search", true);
                 }
+                param.put("enable_reason", false);
+                llmChatService.streamChat(param, chunk -> {
+                    try {
+                        emitter.send(SseEmitter.event().name("message").data(chunk, MediaType.TEXT_PLAIN));
+                    } catch (Exception e) {
+                        log.error("SSE发送失败", e);
+                    }
+                });
                 // 发送完成事件
                 emitter.send(SseEmitter.event().name("complete").data("完成", MediaType.TEXT_PLAIN));
                 emitter.complete();

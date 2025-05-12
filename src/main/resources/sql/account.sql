@@ -1,10 +1,39 @@
+CREATE TABLE `account_log_0` (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键id',
+  `sharding_key` tinyint NOT NULL COMMENT 'sharding_key',
+  `account_id` bigint NOT NULL COMMENT '账户id',
+  `request_no` varchar(64) DEFAULT NULL COMMENT '流水号',
+  `order_no` varchar(64) NOT NULL COMMENT '订单号',
+  `user_id` bigint NOT NULL COMMENT '用户id',
+  `account_type` smallint NOT NULL DEFAULT '100' COMMENT '账户类型：100-用户、200-平台 ',
+  `sub_type` smallint NOT NULL COMMENT '子账户类型: 10-现金户（如充值的金额）、20-返现户 ',
+  `other_account` bigint DEFAULT NULL COMMENT '对方账户id',
+  `other_account_type` smallint NOT NULL DEFAULT '100' COMMENT '账户类型：100-用户、200-平台 ',
+  `other_account_sub_type` smallint NOT NULL COMMENT '子账户类型: 10-现金户（如充值的金额）、20-返现户 ',
+  `action_type` tinyint NOT NULL COMMENT '交易类型: 1-转入 2-转出 3-消费 4-充值 5-退款 ',
+  `prod_type` varchar(32) NOT NULL COMMENT '业务类型: 充值-001 返现-002 支付-003',
+  `before_balance` decimal(18,2) NOT NULL COMMENT '交易前余额',
+  `trans_amount` decimal(18,2) NOT NULL COMMENT '交易金额',
+  `after_balance` decimal(18,2) NOT NULL COMMENT '交易后余额',
+  `source` varchar(32) DEFAULT NULL COMMENT '数据来源',
+  `remark` varchar(256) DEFAULT NULL COMMENT '备注',
+  `seq` bigint NOT NULL COMMENT '流水号',
+  `create_time` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) COMMENT '创建时间',
+  `update_time` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uniq_request` (`request_no`,`source`,`account_id`),
+  KEY `idx_ct` (`create_time`),
+  KEY `idx_uact` (`user_id`,`account_type`,`sub_type`,`create_time`),
+  KEY `idx_prod_type` (`prod_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=1921611752271343618 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='账户流水表'
+
 CREATE TABLE `account_0` (
   `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键',
   `sharding_key` tinyint NOT NULL COMMENT 'sharding_key',
   `user_id` bigint DEFAULT NULL COMMENT '用户id',
   `account_id` bigint DEFAULT NULL COMMENT '账户id = accountType + subType + userId',
-  `account_type` tinyint NOT NULL DEFAULT '100' COMMENT '账户类型：100-用户、200-平台 ',
-  `sub_type` tinyint NOT NULL COMMENT '子账户类型: 10-现金户（如充值的金额）、20-返现户 ',
+  `account_type` smallint NOT NULL DEFAULT '100' COMMENT '账户类型：100-用户、200-平台 ',
+  `sub_type` smallint NOT NULL COMMENT '子账户类型: 10-现金户（如充值的金额）、20-返现户 ',
   `balance` decimal(18,2) DEFAULT NULL COMMENT '用户余额',
   `status` tinyint NOT NULL DEFAULT '0' COMMENT '账户状态:0-禁用，1-启用',
   `income_amount` decimal(18,2) NOT NULL DEFAULT '0.00' COMMENT '总收入',
@@ -16,4 +45,4 @@ CREATE TABLE `account_0` (
   `update_time` datetime(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6) ON UPDATE CURRENT_TIMESTAMP(6) COMMENT '更新时间',
   PRIMARY KEY (`id`),
   KEY `idx_uat` (`user_id`,`account_type`,`sub_type`)
-) ENGINE=InnoDB AUTO_INCREMENT=1921514567781351427 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户账户表'
+) ENGINE=InnoDB AUTO_INCREMENT=1921616189983391747 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='用户账户表'
