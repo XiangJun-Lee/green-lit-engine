@@ -317,24 +317,24 @@ public class InterviewServiceImpl implements InterviewService {
 
         // 计算分页查询的偏移量
         int offset = (pageNum - 1) * pageSize;
-        
+
         // 构建查询参数
         Map<String, Object> params = new HashMap<>();
         params.put("uid", uid);
         params.put("offset", offset);
         params.put("pageSize", pageSize);
-        
+
         // 查询面试列表数据
         List<InterviewInfo> interviewInfoList = interviewInfoMapper.selectPageByUserId(params);
-        
+
         // 统计总记录数
         long total = interviewInfoMapper.countByUserIdAndStatus(params);
-        
+
         // 如果没有数据，直接返回空列表
         if (CollectionUtils.isEmpty(interviewInfoList)) {
             return PageResponse.build(new ArrayList<>(), total, pageNum, pageSize);
         }
-        
+
         // 构建列表响应
         List<InterviewInfoResponse> responses = CommonConverter.INSTANCE.convert2InterviewListResponseList(interviewInfoList);
 
@@ -480,7 +480,7 @@ public class InterviewServiceImpl implements InterviewService {
         // 创建初始记录
         QuestionAnswerRecord record = new QuestionAnswerRecord();
         record.setInterviewId(interviewId);
-        record.setQuestion("[图片]"); // 初始标记为图片类型的问题
+        record.setQuestion("[图片]");
         try {
             if (questionAnswerRecordMapper.insertSelective(record) <= 0) {
                 // todo 异步重试
@@ -491,52 +491,14 @@ public class InterviewServiceImpl implements InterviewService {
 
         // 创建SSE发射器
         SseEmitter emitter = new SseEmitter(SSE_TIMEOUT);
-        
-        // 用于存储OCR识别结果
-        StringBuilder ocrResult = new StringBuilder();
-        
-        // 第一个异步线程：处理OCR识别
-        CompletableFuture<Void> ocrFuture = CompletableFuture.runAsync(() -> {
-            try {
-                // TODO: 调用算法服务进行图片识别
-                // 这里需要实现与算法服务的交互，将图片base64编码发送给算法服务
-                // 并接收算法服务返回的流式OCR结果
-                
-                // 模拟OCR流式返回
-                String[] ocrResults = {"正在识别图片...", "识别完成", "图片内容: 这是一段示例文本"};
-                for (String result : ocrResults) {
-                    emitter.send(SseEmitter.event().name("ocr").data(result, MediaType.TEXT_PLAIN));
-                    ocrResult.append(result).append("\n");
-                    Thread.sleep(1000); // 模拟延迟
-                }
 
-                // OCR识别完成后，更新问题记录
-                QuestionAnswerRecord updateRecord = new QuestionAnswerRecord();
-                updateRecord.setId(record.getId()); // 使用之前创建的记录ID
-                updateRecord.setQuestion(ocrResult.toString().trim()); // 使用OCR识别结果作为问题
-                if (questionAnswerRecordMapper.updateByPrimaryKeySelective(updateRecord) <= 0) {
-                    log.error("更新OCR识别结果失败, recordId: {}", record.getId());
-                }
-            } catch (Exception e) {
-                log.error("图片识别处理失败", e);
-                try {
-                    emitter.send(SseEmitter.event().name("ocr").data("图片识别失败: " + e.getMessage(), MediaType.TEXT_PLAIN));
-                } catch (IOException ex) {
-                    log.error("发送OCR错误信息失败", ex);
-                }
-            }
-        });
-        
-        // 第二个异步线程：处理答案生成
+        // 根据截图的base64，处理答案生成
         CompletableFuture<Void> answerFuture = CompletableFuture.runAsync(() -> {
             try {
-                // 等待OCR识别完成
-                ocrFuture.join();
-                
                 // TODO: 调用算法服务生成答案
                 // 这里需要实现与算法服务的交互，将OCR识别结果发送给算法服务
                 // 并接收算法服务返回的流式答案
-                
+
                 // 模拟答案流式返回
                 String[] answerResults = {"正在生成答案...", "根据图片内容分析...", "答案: 这是一个示例答案"};
                 for (String result : answerResults) {
@@ -576,4 +538,4 @@ public class InterviewServiceImpl implements InterviewService {
         String phone = authentication.getName();
         return userService.queryNormalUserByPhone(phone);
     }
-} 
+}
