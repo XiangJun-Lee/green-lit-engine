@@ -274,7 +274,7 @@ public class InterviewBizServiceImpl implements InterviewBizService {
         InterviewDetailResponse result = CommonConverter.INSTANCE.convert2InterviewDetailResponse(interviewInfo, interviewExtraData, questionAnswerRecordList);
         result.setResumeText(currentUser.getResumeText());
 
-        // todo mock 数据
+        // todo mock 余额数据
         result.setBalance(1000L);
         return result;
     }
