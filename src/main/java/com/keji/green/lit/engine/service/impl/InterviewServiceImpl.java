@@ -1,7 +1,6 @@
 package com.keji.green.lit.engine.service.impl;
 
 import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.keji.green.lit.engine.common.CommonConverter;
 import com.keji.green.lit.engine.dto.request.FastAnswerParam;
 import com.keji.green.lit.engine.dto.bean.InterviewExtraData;
