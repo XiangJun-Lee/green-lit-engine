@@ -18,7 +18,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  * 
  * @author xiangjun_lee
  */
-public interface InterviewService {
+public interface InterviewBizService {
     
     /**
      * 创建面试会话

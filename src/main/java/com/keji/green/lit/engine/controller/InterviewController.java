@@ -6,7 +6,7 @@ import com.keji.green.lit.engine.dto.request.AskQuestionRequest;
 import com.keji.green.lit.engine.dto.request.CreateInterviewRequest;
 import com.keji.green.lit.engine.dto.request.RecordSttUsageRequest;
 import com.keji.green.lit.engine.dto.request.ScreenshotQuestionRequest;
-import com.keji.green.lit.engine.service.InterviewService;
+import com.keji.green.lit.engine.service.InterviewBizService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
@@ -24,7 +24,7 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 public class InterviewController {
 
     @Resource
-    private InterviewService interviewService;
+    private InterviewBizService interviewBizService;
 
     /**
      * 创建面试会话
@@ -34,7 +34,7 @@ public class InterviewController {
      */
     @PostMapping("/create")
     public Result<InterviewCreateResponse> createInterview(@Valid @RequestBody CreateInterviewRequest request) {
-        return Result.success(interviewService.createInterview(request));
+        return Result.success(interviewBizService.createInterview(request));
     }
 
     /**
@@ -43,7 +43,7 @@ public class InterviewController {
     @PostMapping("/{interviewId}/update")
     public Result<UpdateInterviewResponse> updateInterview(@PathVariable String interviewId,
                                                            @Valid @RequestBody UpdateInterviewRequest request) {
-        return Result.success(interviewService.updateInterview(interviewId, request));
+        return Result.success(interviewBizService.updateInterview(interviewId, request));
     }
 
     /**
@@ -62,7 +62,7 @@ public class InterviewController {
     public SseEmitter askQuestion(
             @PathVariable String interviewId,
             @Valid @RequestBody AskQuestionRequest request) {
-        return interviewService.askQuestion(interviewId, request);
+        return interviewBizService.askQuestion(interviewId, request);
     }
 
     /**
@@ -73,7 +73,7 @@ public class InterviewController {
      */
     @PostMapping("/{interviewId}/end")
     public Result<InterviewInfoResponse> endInterview(@PathVariable String interviewId) {
-        return Result.success(interviewService.endInterview(interviewId));
+        return Result.success(interviewBizService.endInterview(interviewId));
     }
 
     /**
@@ -84,7 +84,7 @@ public class InterviewController {
      */
     @GetMapping("/{interviewId}")
     public Result<InterviewDetailResponse> getInterviewDetail(@PathVariable String interviewId) {
-        return Result.success(interviewService.getInterviewDetail(interviewId));
+        return Result.success(interviewBizService.getInterviewDetail(interviewId));
     }
 
     /**
@@ -98,7 +98,7 @@ public class InterviewController {
     public Result<PageResponse<InterviewInfoResponse>> getInterviewList(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize) {
-        return Result.success(interviewService.getInterviewList(pageNum, pageSize));
+        return Result.success(interviewBizService.getInterviewList(pageNum, pageSize));
     }
 
     /**
@@ -111,7 +111,7 @@ public class InterviewController {
     public Result<Void> recordSttUsage(
             @PathVariable String interviewId,
             @Valid @RequestBody RecordSttUsageRequest request) {
-        interviewService.recordSttUsage(interviewId, request);
+        interviewBizService.recordSttUsage(interviewId, request);
         return Result.success();
     }
 
@@ -129,6 +129,6 @@ public class InterviewController {
     public SseEmitter screenshotQuestion(
             @PathVariable String interviewId,
             @Valid @RequestBody ScreenshotQuestionRequest request) {
-        return interviewService.screenshotQuestion(interviewId, request);
+        return interviewBizService.screenshotQuestion(interviewId, request);
     }
 } 
