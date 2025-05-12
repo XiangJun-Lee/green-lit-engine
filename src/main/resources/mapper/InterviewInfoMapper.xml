@@ -97,16 +97,16 @@
             <if test="jobRequirements != null">
                 job_requirements,
             </if>
-            <if test="stt_total_seconds != null">
+            <if test="sttTotalSeconds != null">
                 stt_total_seconds,
             </if>
-            <if test="stt_total_cost != null">
+            <if test="sttTotalCost != null">
                 stt_total_cost,
             </if>
-            <if test="ag_total_count != null">
+            <if test="agTotalCount != null">
                 ag_total_count,
             </if>
-            <if test="ag_total_cost != null">
+            <if test="agTotalCost != null">
                 ag_total_cost,
             </if>
         </trim>
@@ -150,16 +150,16 @@
             <if test="jobRequirements != null">
                 #{jobRequirements,jdbcType=LONGVARCHAR},
             </if>
-            <if test="stt_total_seconds != null">
+            <if test="sttTotalSeconds != null">
                 #{stt_total_seconds,jdbcType=BIGINT},
             </if>
-            <if test="stt_total_cost != null">
+            <if test="sttTotalCost != null">
                 #{stt_total_cost,jdbcType=BIGINT},
             </if>
-            <if test="ag_total_count != null">
+            <if test="agTotalCount != null">
                 #{ag_total_count,jdbcType=INTEGER},
             </if>
-            <if test="ag_total_cost != null">
+            <if test="agTotalCost != null">
                 #{ag_total_cost,jdbcType=BIGINT},
             </if>
         </trim>
