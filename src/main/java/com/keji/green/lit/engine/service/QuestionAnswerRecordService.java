@@ -25,11 +25,4 @@ public interface QuestionAnswerRecordService {
      */
     boolean createQuestionAnswerRecord(QuestionAnswerRecord record);
 
-
-    /**
-     * 根据主键查询面试记录
-     * @param id
-     * @return
-     */
-    QuestionAnswerRecord selectByPrimaryKey(Long id);
 }
