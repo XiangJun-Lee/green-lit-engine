@@ -1,4 +1,4 @@
-package com.keji.green.lit.engine.dto.request;
+package com.keji.green.lit.engine.dto.request.account;
 
 import lombok.Data;
 

@@ -1,13 +1,12 @@
 package com.keji.green.lit.engine.controller;
 
 import com.keji.green.lit.engine.dto.TradeDto;
-import com.keji.green.lit.engine.dto.request.AccountDto;
+import com.keji.green.lit.engine.dto.request.account.AccountDto;
 import com.keji.green.lit.engine.dto.response.AccountInfoResponse;
 import com.keji.green.lit.engine.dto.response.AccountTradeResponse;
 import com.keji.green.lit.engine.dto.response.Result;
 import com.keji.green.lit.engine.model.Account;
 import com.keji.green.lit.engine.service.AccountService;
-import com.keji.green.lit.engine.service.AuthService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
