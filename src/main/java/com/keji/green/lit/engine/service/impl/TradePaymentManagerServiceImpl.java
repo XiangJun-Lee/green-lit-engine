@@ -87,7 +87,7 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
             }
         }
 
-        return getScanPayResultVo(rpTradePaymentOrder, payWay, scanPayRequestBo.getNumberOfStages());
+        return getScanPayResultVo(rpTradePaymentOrder, payWay, 0);
     }
 
 
