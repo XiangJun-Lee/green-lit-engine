@@ -1,16 +1,16 @@
 package com.keji.green.lit.engine.service.impl;
 
-import com.alibaba.druid.util.StringUtils;
 import com.alibaba.fastjson.JSONObject;
 import com.alipay.api.AlipayApiException;
 import com.alipay.api.DefaultAlipayClient;
 import com.alipay.api.domain.AlipayTradePrecreateModel;
-import com.alipay.api.request.AlipayTradePagePayRequest;
+import com.alipay.api.internal.util.AlipaySignature;
 import com.alipay.api.request.AlipayTradePrecreateRequest;
 import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.keji.green.lit.engine.dao.TradePaymentOrderDao;
 import com.keji.green.lit.engine.dao.TradePaymentRecordDao;
 import com.keji.green.lit.engine.dto.request.trade.ScanPayRequestBo;
+import com.keji.green.lit.engine.enums.AliPayTradeStateEnum;
 import com.keji.green.lit.engine.enums.PayTypeEnum;
 import com.keji.green.lit.engine.enums.PayWayEnum;
 import com.keji.green.lit.engine.enums.TradeStatusEnum;
@@ -25,6 +25,7 @@ import com.keji.green.lit.engine.service.TradePaymentManagerService;
 import com.keji.green.lit.engine.utils.AccountUtil;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.pay.AlipayConfigUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,7 +53,6 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
 
     @Override
     public ScanPayResultVo initDirectScanPay(PayConfig rpUserPayConfig, ScanPayRequestBo scanPayRequestBo) {
-        logger.info("======>扫码支付，直连方式");
         PayWay payWay = null;
         PayTypeEnum payType = PayTypeEnum.getEnum(scanPayRequestBo.getPayType());
         if (payType == null) {
@@ -69,18 +69,13 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
             throw new BusinessException(PAY_CONFIG_ERRPR, "支付配置有误");
         }
         String merchantNo = AlipayConfigUtil.seller_id;
-//        RpUserInfo rpUserInfo = rpUserInfoService.getDataByMerchentNo(merchantNo);
-//        if (rpUserInfo == null) {
-//            throw new UserBizException(UserBizException.USER_IS_NULL, "用户不存在");
-//        }
-//        TradePaymentOrder rpTradePaymentOrder = TradePaymentOrderDao.selectByMerchantNoAndMerchantOrderNo(merchantNo, scanPayRequestBo.getOrderNo());
         TradePaymentOrder rpTradePaymentOrder = tradePaymentOrderDao.selectByMerchantNoAndMerchantOrderNo(scanPayRequestBo.getUserId(), merchantNo, scanPayRequestBo.getOrderNo());
         if (rpTradePaymentOrder == null) {
             rpTradePaymentOrder = sealScanPayRpTradePaymentOrder(rpUserPayConfig, scanPayRequestBo, payWay);
             tradePaymentOrderDao.insert(rpTradePaymentOrder);
         } else {
             if (TradeStatusEnum.SUCCESS.name().equals(rpTradePaymentOrder.getStatus())) {
-                throw new BusinessException(PAY_ORDER_ERROR, "订单已支付成功,无需重复支付");
+                throw new BusinessException(PAY_ORDER_ALREADY_SUCCESS_ERROR, "订单已支付成功,无需重复支付");
             }
             if (rpTradePaymentOrder.getOrderAmount().compareTo(scanPayRequestBo.getOrderPrice()) != 0) {
                 rpTradePaymentOrder.setOrderAmount(scanPayRequestBo.getOrderPrice());// 如果金额不一致,修改金额为最新的金额
@@ -90,21 +85,96 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         return getScanPayResultVo(rpTradePaymentOrder, payWay, 0);
     }
 
+    @Override
+    public String completeScanPay(String payWayCode, Map<String, String> notifyMap) {
+        logger.info("接收到{}支付结果{}", payWayCode, notifyMap);
+        String returnStr = null;
+        String bankOrderNo = notifyMap.get("out_trade_no");
+        // 根据银行订单号获取支付信息
+//        TradePaymentRecord rpTradePaymentRecord = TradePaymentRecordDao.getByBankOrderNo(bankOrderNo);
+        TradePaymentRecord rpTradePaymentRecord = new TradePaymentRecord();
 
-    private TradePaymentOrder sealScanPayRpTradePaymentOrder(PayConfig rpUserPayConfig, ScanPayRequestBo scanPayRequestBo,  PayWay payWay) {
+        if (rpTradePaymentRecord == null) {
+            throw new BusinessException(PAY_TRADE_ORDER_ERROR, ",非法订单,订单不存在");
+        }
+
+        if (TradeStatusEnum.SUCCESS.name().equals(rpTradePaymentRecord.getStatus())) {
+            throw new BusinessException(PAY_ORDER_ALREADY_SUCCESS_ERROR, "订单为成功状态");
+        }
+        String merchantNo = rpTradePaymentRecord.getMerchantNo();// 商户编号
+
+        // 根据支付订单获取配置信息
+        String fundIntoType = rpTradePaymentRecord.getFundIntoType();// 获取资金流入类型
+        String partnerKey = "";
+
+//        if (FundInfoTypeEnum.MERCHANT_RECEIVES.name().equals(fundIntoType)) {// 商户收款
+//            // 根据资金流向获取配置信息
+//            RpUserPayInfo rpUserPayInfo = rpUserPayInfoService.getByUserNo(merchantNo, PayWayEnum.WEIXIN.name());
+//            partnerKey = rpUserPayInfo.getPartnerKey();
+//
+//        } else if (FundInfoTypeEnum.PLAT_RECEIVES.name().equals(fundIntoType)) {// 平台收款
+//            partnerKey = WeixinConfigUtil.readConfig("partnerKey");
+//
+//            RpUserPayConfig rpUserPayConfig = rpUserPayConfigService.getByUserNo(merchantNo);
+//            if (rpUserPayConfig == null) {
+//                throw new UserBizException(UserBizException.USER_PAY_CONFIG_ERRPR, "用户支付配置有误");
+//            }
+//            // 根据支付产品及支付方式获取费率
+//            RpPayWay payWay = rpPayWayService.getByPayWayTypeCode(rpUserPayConfig.getProductCode(), rpTradePaymentRecord.getPayWayCode(), rpTradePaymentRecord.getPayTypeCode());
+//            if (payWay == null) {
+//                throw new UserBizException(UserBizException.USER_PAY_CONFIG_ERRPR, "用户支付配置有误");
+//            }
+//        }
+        if (PayWayEnum.ALIPAY.name().equals(payWayCode)) {
+//            if (AlipayNotify.verify(notifyMap)) {// 验证成功
+            try {
+                if (AlipaySignature.rsaCheckV1(notifyMap, AlipayConfigUtil.ali_public_key, "UTF-8", "RSA2")){
+                    String tradeStatus = notifyMap.get("trade_status");
+
+                    if (AliPayTradeStateEnum.TRADE_FINISHED.name().equals(tradeStatus)) {
+                        // 判断该笔订单是否在商户网站中已经做过处理
+                        // 如果没有做过处理，根据订单号（out_trade_no）在商户网站的订单系统中查到该笔订单的详细，并执行商户的业务程序
+                        // 请务必判断请求时的total_fee、seller_id与通知时获取的total_fee、seller_id为一致的
+                        // 如果有做过处理，不执行商户的业务程序
+
+                        // 注意：
+                        // 退款日期超过可退款期限后（如三个月可退款），支付宝系统发送该交易状态通知
+                    } else if (AliPayTradeStateEnum.TRADE_SUCCESS.name().equals(tradeStatus)) {
+
+                        String gmtPaymentStr = notifyMap.get("gmt_payment");// 付款时间
+                        Date timeEnd = null;
+                        if (!StringUtils.isEmpty(gmtPaymentStr)) {
+                            timeEnd = DateTimeUtils.getDateFromString(gmtPaymentStr, "yyyy-MM-dd HH:mm:ss");
+                        }
+//                        completeSuccessOrder(rpTradePaymentRecord, notifyMap.get("trade_no"), timeEnd, notifyMap.toString());
+                        returnStr = "success";
+                    } else {
+//                        completeFailOrder(rpTradePaymentRecord, notifyMap.toString());
+                        returnStr = "fail";
+                    }
+                } else {// 验证失败
+                    throw new BusinessException(PAY_TRADE_SIGN_ERROR, "支付宝签名异常");
+                }
+            } catch (AlipayApiException e) {
+                logger.error("验签失败：" , e);
+                throw new BusinessException(PAY_TRADE_SIGN_ERROR, "支付宝签名异常");
+            }
+        } else {
+            throw new BusinessException(PAY_TYPE_NOT_EXIST, "错误的支付方式");
+        }
+
+        logger.info("返回支付通道{}信息{}", payWayCode, returnStr);
+        return returnStr;
+    }
+
+
+    private TradePaymentOrder sealScanPayRpTradePaymentOrder(PayConfig rpUserPayConfig, ScanPayRequestBo scanPayRequestBo, PayWay payWay) {
 
         TradePaymentOrder tradePaymentOrder = new TradePaymentOrder();
         tradePaymentOrder.setUserId(scanPayRequestBo.getUserId());
         tradePaymentOrder.setShardingKey(AccountUtil.CalShardingKey(scanPayRequestBo.getUserId()));
         tradePaymentOrder.setProductName(scanPayRequestBo.getProductName());// 商品名称
 
-//        PayTypeEnum payType = PayTypeEnum.getEnum(payWay.getPayTypeCode());
-//
-//        tradePaymentOrder.setPayTypeCode(payType.name());
-//        tradePaymentOrder.setPayTypeName(payType.getDesc());
-//        tradePaymentOrder.setPayWayCode(payWay.getPayWayCode());
-//        tradePaymentOrder.setPayWayName(payWay.getPayWayName());
-//
         tradePaymentOrder.setMerchantOrderNo(scanPayRequestBo.getOrderNo());// 订单号
         tradePaymentOrder.setCreateTime(new Date());
         tradePaymentOrder.setOrderAmount(scanPayRequestBo.getOrderPrice());// 订单金额
@@ -152,81 +222,43 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
 //        rpTradePaymentOrder.setPayWayCode(payWay.getPayWayCode());
 //        rpTradePaymentOrder.setPayWayName(payWay.getPayWayName());
 //        tradePaymentOrderDao.update(rpTradePaymentOrder);
-        TradePaymentRecord rpTradePaymentRecord = sealRpTradePaymentRecord(tradePaymentOrder.getUserId(), tradePaymentOrder.getMerchantNo(), tradePaymentOrder.getMerchantName(), tradePaymentOrder.getProductName(), tradePaymentOrder.getMerchantOrderNo(), tradePaymentOrder.getOrderAmount(), payWay.getPayWayCode(), payWay.getPayWayName(), payType, tradePaymentOrder.getFundIntoType(), BigDecimal.valueOf(payWay.getPayRate()), tradePaymentOrder.getOrderIp(), tradePaymentOrder.getReturnUrl(), tradePaymentOrder.getNotifyUrl(), tradePaymentOrder.getRemark(), tradePaymentOrder.getField1(), tradePaymentOrder.getField2(), tradePaymentOrder.getField3(), tradePaymentOrder.getField4(), tradePaymentOrder.getField5());
-        tradePaymentRecordDao.insert(rpTradePaymentRecord);
-//        if (PayWayEnum.ALIPAY.name().equals(payWayCode)) {
-            String appId = "";
-            String mchPrivateKey = "";
+        TradePaymentRecord tradePaymentRecord = sealRpTradePaymentRecord(tradePaymentOrder.getUserId(), tradePaymentOrder.getMerchantNo(), tradePaymentOrder.getMerchantName(), tradePaymentOrder.getProductName(), tradePaymentOrder.getMerchantOrderNo(), tradePaymentOrder.getOrderAmount(), payWay.getPayWayCode(), payWay.getPayWayName(), payType, tradePaymentOrder.getFundIntoType(), BigDecimal.valueOf(payWay.getPayRate()), tradePaymentOrder.getOrderIp(), tradePaymentOrder.getReturnUrl(), tradePaymentOrder.getNotifyUrl(), tradePaymentOrder.getRemark(), tradePaymentOrder.getField1(), tradePaymentOrder.getField2(), tradePaymentOrder.getField3(), tradePaymentOrder.getField4(), tradePaymentOrder.getField5());
+        tradePaymentRecordDao.insert(tradePaymentRecord);
 
-            if ("商家收款".equals(tradePaymentOrder.getFundIntoType())) {// 商户收款
-//                RpUserPayInfo rpUserPayInfo = rpUserPayInfoService.getByUserNo(rpTradePaymentOrder.getMerchantNo(), payWayCode);
-                appId = "";
-                mchPrivateKey = "";
-            }
-//            else if (FundInfoTypeEnum.PLAT_RECEIVES.name().equals(rpTradePaymentOrder.getFundIntoType())) {// 平台收款
-                appId = AlipayConfigUtil.app_id;
-                mchPrivateKey = AlipayConfigUtil.mch_private_key;
-//            }
 
-            AlipayClient alipayClient = new DefaultAlipayClient(AlipayConfigUtil.trade_pay_url, appId, mchPrivateKey, "json", "utf-8", AlipayConfigUtil.ali_public_key, "RSA2");
+        String appId = AlipayConfigUtil.app_id;
+        String mchPrivateKey = AlipayConfigUtil.mch_private_key;
 
-//            AlipayTradePagePayRequest alipayRequest = new AlipayTradePagePayRequest();
-//            alipayRequest.setNotifyUrl(AlipayConfigUtil.notify_url);
-//            alipayRequest.setReturnUrl(AlipayConfigUtil.return_url);
-//
-//            if (PayTypeEnum.DIRECT_PAY.name().equals(payType.name())) {
-//
-//                alipayRequest.setBizContent("{\"out_trade_no\":\"" + rpTradePaymentRecord.getBankOrderNo() + "\","
-//                        + "\"total_amount\":\"" + rpTradePaymentOrder.getOrderAmount() + "\","
-//                        + "\"subject\":\"" + rpTradePaymentOrder.getProductName() + "\","
-//                        + "\"body\":\"" + rpTradePaymentOrder.getProductName() + "\","
-//                        + "\"product_code\":\"FAST_INSTANT_TRADE_PAY\"}");
-//
-//            }
-//            try {
-//                String alipayTradePagePayResponse = alipayClient.pageExecute(alipayRequest).getBody();
-//                rpTradePaymentRecord.setBankReturnMsg(alipayTradePagePayResponse);
-//                rpTradePaymentRecordDao.update(rpTradePaymentRecord);
-//                scanPayResultVo.setCodeUrl(alipayTradePagePayResponse);// 设置支付宝跳转地址
-//                scanPayResultVo.setPayWayCode(PayWayEnum.ALIPAY.name());
-//                scanPayResultVo.setProductName(rpTradePaymentOrder.getProductName());
-//                scanPayResultVo.setOrderAmount(rpTradePaymentOrder.getOrderAmount());
-//
-//            } catch (AlipayApiException e) {
-//                logger.error("支付宝API异常：", e);
-//                throw new BusinessException(PAY_REQUEST_BANK_ERR, "请求支付宝异常");
-//            }
-        String subject = "Javen 支付宝扫码支付测试";
-        String totalAmount = "1";
-        String storeId = "123";
-        String notifyUrl =  "/alipay/precreate_notify_url";
+        AlipayClient alipayClient = new DefaultAlipayClient(AlipayConfigUtil.trade_pay_url, appId, mchPrivateKey, "json", "utf-8", AlipayConfigUtil.ali_public_key, "RSA2");
+
+        String subject = tradePaymentRecord.getProductName();
+        String totalAmount = tradePaymentRecord.getOrderAmount().toString();
+        String sellerId = tradePaymentRecord.getMerchantNo();
+        String notifyUrl = "/alipay/precreate_notify_url";
 
         AlipayTradePrecreateModel model = new AlipayTradePrecreateModel();
         model.setSubject(subject);
         model.setTotalAmount(totalAmount);
-        model.setStoreId(storeId);
+        model.setSellerId(sellerId);
         model.setTimeoutExpress("5m");
-        model.setOutTradeNo("test12345_001");
+        model.setOutTradeNo(tradePaymentRecord.getTrxNo());
         try {
-            String resultStr = tradePrecreatePayToResponse(alipayClient,model, notifyUrl).getBody();
+            String resultStr = tradePrecreatePayToResponse(alipayClient, model, notifyUrl).getBody();
             JSONObject jsonObject = JSONObject.parseObject(resultStr);
             String qr_code = jsonObject.getJSONObject("alipay_trade_precreate_response").getString("qr_code");
-//            renderText(qr_code);
             scanPayResultVo.setCodeUrl(qr_code);// 设置支付宝跳转地址
         } catch (Exception e) {
             e.printStackTrace();
         }
-//            rpNotifyService.orderSend(rpTradePaymentRecord.getBankOrderNo());
 
-//        }
         return scanPayResultVo;
     }
 
-    private TradePaymentRecord sealRpTradePaymentRecord(long userId,String merchantNo, String merchantName, String productName, String orderNo, BigDecimal orderPrice, String payWay, String payWayName, PayTypeEnum payType, String fundIntoType, BigDecimal feeRate, String orderIp, String returnUrl, String notifyUrl, String remark, String field1, String field2, String field3, String field4, String field5) {
+    private TradePaymentRecord sealRpTradePaymentRecord(long userId, String merchantNo, String merchantName, String productName, String orderNo, BigDecimal orderPrice, String payWay, String payWayName, PayTypeEnum payType, String fundIntoType, BigDecimal feeRate, String orderIp, String returnUrl, String notifyUrl, String remark, String field1, String field2, String field3, String field4, String field5) {
         TradePaymentRecord tradePaymentRecord = new TradePaymentRecord();
         tradePaymentRecord.setUserId(userId);
         tradePaymentRecord.setShardingKey(AccountUtil.CalShardingKey(userId));
-
+        tradePaymentRecord.setCreateTime(new Date());
         tradePaymentRecord.setProductName(productName);// 产品名称
         tradePaymentRecord.setMerchantOrderNo(orderNo);// 产品编号
 
@@ -291,11 +323,12 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         tradePaymentRecord.setField5(field5);// 扩展字段5
         return tradePaymentRecord;
     }
-    public static AlipayTradePrecreateResponse tradePrecreatePayToResponse(AlipayClient client,AlipayTradePrecreateModel model, String notifyUrl) throws AlipayApiException {
+
+    public static AlipayTradePrecreateResponse tradePrecreatePayToResponse(AlipayClient client, AlipayTradePrecreateModel model, String notifyUrl) throws AlipayApiException {
         AlipayTradePrecreateRequest request = new AlipayTradePrecreateRequest();
         request.setBizModel(model);
         request.setNotifyUrl(notifyUrl);
-        return (AlipayTradePrecreateResponse)client.execute(request);
+        return (AlipayTradePrecreateResponse) client.execute(request);
     }
 }
 

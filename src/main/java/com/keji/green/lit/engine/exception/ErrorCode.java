@@ -50,10 +50,12 @@ public enum ErrorCode {
     ACCOUNT_OPERATION_NOT_EXIST(6004, "account操作类型不存在"),
     ACCOUNT_NOT_EXIST(6010, "account账户不存在"),
 
-    PAY_TYPE_NOT_EXIST(7000, "支付类型有误"),
+    PAY_TYPE_NOT_EXIST(7000, "支付有误"),
     PAY_CONFIG_ERRPR(7001, "支付配置有误"),
-    PAY_REQUEST_BANK_ERR(7001, "支付有误"),
-    PAY_ORDER_ERROR(7003, "已经支付，无需重新支付");
+    PAY_REQUEST_BANK_ERR(7002, "支付请求有误"),
+    PAY_TRADE_ORDER_ERROR(7003, "非法订单,订单不存在"),
+    PAY_TRADE_SIGN_ERROR(7004, "签名错误"),
+    PAY_ORDER_ALREADY_SUCCESS_ERROR(7100, "已经支付，无需重新支付");
 
     private final int code;
     private final String message;

@@ -176,5 +176,13 @@ public class DateTimeUtils {
         calendar.add(Calendar.MINUTE, minute);
         return calendar.getTime();
     }
+    public static Date getDateFromString(String src, String pattern) {
+        SimpleDateFormat f = new SimpleDateFormat(pattern);
+        try {
+            return f.parse(src);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
 
 } 

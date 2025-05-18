@@ -89,7 +89,6 @@ public class AlipayConfigUtil {
     // 客户端的IP地址 非局域网的外网IP地址，如：221.0.0.1
     public static final String exter_invoke_ip = "";
 
-//↑↑↑↑↑↑↑↑↑↑请在这里配置防钓鱼信息，如果没开通防钓鱼功能，为空即可 ↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑
 
 }
 
