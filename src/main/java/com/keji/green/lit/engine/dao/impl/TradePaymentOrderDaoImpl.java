@@ -17,7 +17,7 @@ public class TradePaymentOrderDaoImpl  implements TradePaymentOrderDao {
     @Override
     public TradePaymentOrder selectByMerchantNoAndMerchantOrderNo(long userId, String merchantNo, String merchantOrderNo) {
         Map<String, Object> params = new HashMap<>();
-        params.put("user_id",userId);
+        params.put("user_id", userId);
         params.put("merchant_no", merchantNo);
         params.put("merchant_order_no", merchantOrderNo);
         return tradePaymentOrderMapper.queryTradePaymentOrder(params);
@@ -26,7 +26,6 @@ public class TradePaymentOrderDaoImpl  implements TradePaymentOrderDao {
     @Override
     public int insert(TradePaymentOrder entity) {
         return tradePaymentOrderMapper.insertSelective(entity);
-//        return 0;
     }
 
     @Override

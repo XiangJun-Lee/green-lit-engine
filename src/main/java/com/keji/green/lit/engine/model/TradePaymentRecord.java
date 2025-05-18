@@ -20,7 +20,7 @@ public class TradePaymentRecord {
      *
      * @mbg.generated Sat May 17 18:33:28 CST 2025
      */
-    private short shardingKey;
+    private int shardingKey;
 
     /**
      *
@@ -522,7 +522,7 @@ public class TradePaymentRecord {
      *
      * @mbg.generated Sat May 17 18:33:28 CST 2025
      */
-    public short getShardingKey() {
+    public int getShardingKey() {
         return shardingKey;
     }
 
@@ -534,7 +534,7 @@ public class TradePaymentRecord {
      *
      * @mbg.generated Sat May 17 18:33:28 CST 2025
      */
-    public void setShardingKey(short shardingKey) {
+    public void setShardingKey(int shardingKey) {
         this.shardingKey = shardingKey;
     }
 

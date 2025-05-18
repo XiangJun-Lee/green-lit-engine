@@ -7,8 +7,8 @@ import java.util.Map;
 
 public enum PayTypeEnum {
 
-    WX_SCAN_PAY("WX_SCAN_PAY","微信扫码支付"),
-    ALI_SCAN_PAY("ALIS_SCAN_PAY","支付宝扫码支付"),
+    WX_SCAN_PAY("WXPAY","微信扫码支付"),
+    ALI_SCAN_PAY("ALIPAY","支付宝扫码支付"),
     ALI_TEST("ALIPAY","支付宝测试");
 
     /** 所属支付方式 */

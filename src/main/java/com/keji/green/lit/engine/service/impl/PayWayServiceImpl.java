@@ -26,15 +26,14 @@ public class PayWayServiceImpl implements PayWayService {
 
     @Override
     public PayWay getByPayWayTypeCode(String payProductCode, String payWayCode, String rpTypeCode) {
-        if (payWayCode.equals("ALIS_SCAN_PAY")){
+        if (payWayCode.equals("ALIPAY")){
             PayWay payWay = new PayWay();
             payWay.setPayProductCode("");
             payWay.setPayRate(0.006);
             payWay.setPayTypeName("");
             payWay.setPayProductCode("");
-            payWay.setPayWayName("");
-            payWay.setPayWayName("");
-            payWay.setPayTypeCode("");
+            payWay.setPayWayName("ALIPAY");
+            payWay.setPayTypeCode("ALI_SCAN_PAY");
             return payWay;
         }
         logger.info("支付类型有误, 不支持");
