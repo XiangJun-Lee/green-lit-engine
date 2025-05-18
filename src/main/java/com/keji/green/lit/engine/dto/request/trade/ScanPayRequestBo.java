@@ -178,13 +178,13 @@ public class ScanPayRequestBo implements Serializable {
         this.payType = payType;
     }
 
-    public Integer getNumberOfStages() {
-        return numberOfStages;
-    }
+//    public Integer getNumberOfStages() {
+//        return numberOfStages;
+//    }
 
-    public void setNumberOfStages(Integer numberOfStages) {
-        this.numberOfStages = numberOfStages;
-    }
+//    public void setNumberOfStages(Integer numberOfStages) {
+//        this.numberOfStages = numberOfStages;
+//    }
 
     @Override
     public String toString() {
@@ -202,7 +202,7 @@ public class ScanPayRequestBo implements Serializable {
                 ", sign='" + sign + '\'' +
                 ", remark='" + remark + '\'' +
                 ", payType='" + payType + '\'' +
-                ", numberOfStages=" + numberOfStages +
+//                ", numberOfStages=" + numberOfStages +
                 '}';
     }
 }
