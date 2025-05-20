@@ -25,7 +25,7 @@ import com.keji.green.lit.engine.service.*;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.EncryptionUtils;
 import com.keji.green.lit.engine.utils.RedisUtils;
-import com.keji.green.lit.engine.integration.LlmChatService;
+import com.keji.green.lit.engine.integration.LlmWrapService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -70,7 +70,7 @@ public class InterviewBizServiceImpl implements InterviewBizService {
     private TransactionalService transactionalService;
 
     @Resource
-    private LlmChatService llmChatService;
+    private LlmWrapService llmWrapService;
 
     @Resource
     private InterviewInfoService interviewInfoService;
@@ -180,7 +180,7 @@ public class InterviewBizServiceImpl implements InterviewBizService {
                     param.put("enable_search", true);
                 }
                 param.put("enable_reason", false);
-                llmChatService.streamChat(param, chunk -> {
+                llmWrapService.streamChat(param, chunk -> {
                     try {
                         emitter.send(SseEmitter.event().name("message").data(chunk, MediaType.TEXT_PLAIN));
                     } catch (Exception e) {
