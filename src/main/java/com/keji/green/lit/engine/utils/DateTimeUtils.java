@@ -1,5 +1,6 @@
 package com.keji.green.lit.engine.utils;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
@@ -169,4 +170,19 @@ public class DateTimeUtils {
     public static boolean isDateInRange(Date date, Date startDate, Date endDate) {
         return !date.before(startDate) && !date.after(endDate);
     }
+    public static Date addMinute(Date date, int minute) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(date);
+        calendar.add(Calendar.MINUTE, minute);
+        return calendar.getTime();
+    }
+    public static Date getDateFromString(String src, String pattern) {
+        SimpleDateFormat f = new SimpleDateFormat(pattern);
+        try {
+            return f.parse(src);
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
 } 

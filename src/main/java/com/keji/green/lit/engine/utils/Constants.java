@@ -35,4 +35,7 @@ public class Constants {
      * SSE超时时间（毫秒）
      */
     public static final long SSE_TIMEOUT = 5 * 60 * 1000; // 5分钟
+
+    public final static Long DEFAULT_SEQ = 0L;
+
 }

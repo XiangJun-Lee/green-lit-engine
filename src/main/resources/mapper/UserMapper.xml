@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.keji.green.lit.engine.mapper.UserMapper">
-  <resultMap id="BaseResultMap" type="User">
+  <resultMap id="BaseResultMap" type="com.keji.green.lit.engine.model.User">
     <id column="uid" jdbcType="BIGINT" property="uid" />
     <result column="status" jdbcType="INTEGER" property="status" />
     <result column="password" jdbcType="VARCHAR" property="password" />
@@ -35,7 +35,7 @@
     where phone = #{phone,jdbcType=VARCHAR}
   </select>
 
-  <insert id="insertSelective" useGeneratedKeys="true" keyProperty="uid" parameterType="User">
+  <insert id="insertSelective" useGeneratedKeys="true" keyProperty="uid" parameterType="com.keji.green.lit.engine.model.User">
     insert into user_info
     <trim prefix="(" suffix=")" suffixOverrides=",">
       <if test="nickName != null">
