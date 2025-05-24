@@ -79,8 +79,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @Transactional
     public void deactivateAccount(Long uid) {
-        User user = userDao.findById(uid).orElseThrow(() -> new BusinessException(USER_NOT_EXIST.getCode(), "用户不存在"));
-        userDao.updateUserStatus(user.getUid(), UserStatusEnum.CANCELLED.getCode());
+        userDao.updateUserStatus(uid, UserStatusEnum.CANCELLED.getCode());
     }
 
 

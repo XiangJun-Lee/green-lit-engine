@@ -27,7 +27,7 @@ public interface AuthService {
 
     UserResponse getCurrentUser();
 
-    void deactivateAccount(Long uid);
+    void deactivateAccount();
 
     Boolean isPhoneRegisteredAndActive(String phone);
     

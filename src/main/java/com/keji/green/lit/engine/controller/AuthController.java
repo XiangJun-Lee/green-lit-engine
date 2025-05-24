@@ -98,13 +98,11 @@ public class AuthController {
     /**
      * 注销账号
      * 将用户标记为非活跃状态
-     * 
-     * @param uid 用户ID
      * @return 注销结果
      */
     @PostMapping("/deactivate")
-    public Result<Void> deactivateAccount(@RequestParam Long uid) {
-        authService.deactivateAccount(uid);
+    public Result<Void> deactivateAccount() {
+        authService.deactivateAccount();
         return Result.success();
     }
 

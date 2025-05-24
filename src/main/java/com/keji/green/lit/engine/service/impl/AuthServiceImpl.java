@@ -277,17 +277,20 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void deactivateAccount(Long uid) {
+    public void deactivateAccount() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
             throw new BusinessException(UNAUTHORIZED.getCode(), "用户未登录");
         }
         String phone = authentication.getName();
-        User user = userService.queryNormalUserByPhone(phone);
-        if (Objects.isNull(user) || !Objects.equals(UserRole.ADMIN.getCode(), user.getUserRole())) {
-            throw new BusinessException(FORBIDDEN.getCode(), "用户无权限注销");
+        User user = userService.findByPhone(phone);
+        if (Objects.isNull(user)) {
+            throw new BusinessException(USER_NOT_EXIST);
         }
-        userService.deactivateAccount(uid);
+        if (!UserStatusEnum.isCancelled(user.getStatus())) {
+            return;
+        }
+        userService.deactivateAccount(user.getUid());
     }
 
     @Override
