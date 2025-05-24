@@ -61,4 +61,10 @@ public class AccountUtil {
     public static int CalShardingKey(long value) {
         return (int) (value % 10);
     }
+
+    public static int CalShardingKey(String value) {
+        int number = Integer.parseInt(value);
+        // 对10取模
+        return Math.abs(number % 10);
+    }
 }

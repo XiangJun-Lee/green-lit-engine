@@ -25,6 +25,8 @@ import com.keji.green.lit.engine.service.TradePaymentManagerService;
 import com.keji.green.lit.engine.utils.AccountUtil;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.pay.AlipayConfigUtil;
+import com.keji.green.lit.engine.utils.pay.PayNoGenerator;
+import com.keji.green.lit.engine.utils.pay.PayUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,11 +36,14 @@ import com.alipay.api.AlipayClient;
 
 
 import java.math.BigDecimal;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.keji.green.lit.engine.exception.ErrorCode.*;
+import static com.keji.green.lit.engine.utils.pay.PayUtil.parseQueryString;
 
 @Service("tradePaymentManagerService")
 public class TradePaymentManagerServiceImpl implements TradePaymentManagerService {
@@ -90,21 +95,27 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         logger.info("接收到{}支付结果{}", payWayCode, notifyMap);
         String returnStr = null;
         String bankOrderNo = notifyMap.get("out_trade_no");
-        // 根据银行订单号获取支付信息
-//        TradePaymentRecord rpTradePaymentRecord = TradePaymentRecordDao.getByBankOrderNo(bankOrderNo);
-        TradePaymentRecord rpTradePaymentRecord = new TradePaymentRecord();
+        String passBackParams = notifyMap.get("passback_params");
+        // 1. URL 解码
+        String decodedParams = URLDecoder.decode(passBackParams, StandardCharsets.UTF_8);
+        // 2. 解析键值对
+        Map<String, String> paramMap = parseQueryString(decodedParams);
+        int shardingKey = AccountUtil.CalShardingKey(paramMap.get("userid"));
 
-        if (rpTradePaymentRecord == null) {
+        // 根据银行订单号获取支付信息
+//        TradePaymentRecord tradePaymentRecord = TradePaymentRecordDao.getByBankOrderNo(bankOrderNo);
+        TradePaymentRecord tradePaymentRecord = new TradePaymentRecord();
+        if (tradePaymentRecord == null) {
             throw new BusinessException(PAY_TRADE_ORDER_ERROR, ",非法订单,订单不存在");
         }
 
-        if (TradeStatusEnum.SUCCESS.name().equals(rpTradePaymentRecord.getStatus())) {
+        if (TradeStatusEnum.SUCCESS.name().equals(tradePaymentRecord.getStatus())) {
             throw new BusinessException(PAY_ORDER_ALREADY_SUCCESS_ERROR, "订单为成功状态");
         }
-        String merchantNo = rpTradePaymentRecord.getMerchantNo();// 商户编号
+        String merchantNo = tradePaymentRecord.getMerchantNo();// 商户编号
 
         // 根据支付订单获取配置信息
-        String fundIntoType = rpTradePaymentRecord.getFundIntoType();// 获取资金流入类型
+        String fundIntoType = tradePaymentRecord.getFundIntoType();// 获取资金流入类型
         String partnerKey = "";
 
 //        if (FundInfoTypeEnum.MERCHANT_RECEIVES.name().equals(fundIntoType)) {// 商户收款
@@ -241,10 +252,15 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         model.setTotalAmount(totalAmount);
         model.setSellerId(sellerId);
         model.setTimeoutExpress("5m");
-        model.setOutTradeNo(tradePaymentRecord.getTrxNo());
+        model.setOutTradeNo(tradePaymentRecord.getBankOrderNo());
+//        model.setPassbackParams("");
+        logger.info("AlipayTradePrecreateModel = {}",model);
         try {
             String resultStr = tradePrecreatePayToResponse(alipayClient, model, notifyUrl).getBody();
             JSONObject jsonObject = JSONObject.parseObject(resultStr);
+            tradePaymentRecord.setBankReturnMsg(resultStr);
+            tradePaymentRecordDao.update(tradePaymentRecord);
+
             String qr_code = jsonObject.getJSONObject("alipay_trade_precreate_response").getString("qr_code");
             scanPayResultVo.setCodeUrl(qr_code);// 设置支付宝跳转地址
         } catch (Exception e) {
@@ -262,14 +278,12 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         tradePaymentRecord.setProductName(productName);// 产品名称
         tradePaymentRecord.setMerchantOrderNo(orderNo);// 产品编号
 
-//        String trxNo = buildNoService.buildTrxNo();//todo
-        String trxNo = "test_001";
+        String trxNo = PayNoGenerator.genTrxNo();
+        tradePaymentRecord.setTrxNo(trxNo);// 支付流水号
 
-        tradePaymentRecord.setTrxNo(orderNo);// 支付流水号
-
-//        String bankOrderNo = buildNoService.buildBankOrderNo();
-        String bankOrderNo = orderNo;
+        String bankOrderNo = PayNoGenerator.genOutTradeNo();
         tradePaymentRecord.setBankOrderNo(bankOrderNo);// 银行订单号
+
         tradePaymentRecord.setMerchantName(merchantName);
         tradePaymentRecord.setMerchantNo(merchantNo);// 商户编号
         tradePaymentRecord.setOrderIp(orderIp);// 下单IP

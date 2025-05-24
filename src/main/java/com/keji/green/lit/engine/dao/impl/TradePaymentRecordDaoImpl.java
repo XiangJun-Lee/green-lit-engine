@@ -28,7 +28,17 @@ public class TradePaymentRecordDaoImpl implements TradePaymentRecordDao {
 
     @Override
     public int update(TradePaymentRecord entity) {
-        return 0;
+        TradePaymentRecord update = new TradePaymentRecord();
+        update.setId(entity.getId());
+        update.setUserId(entity.getUserId());
+        update.setShardingKey(entity.getShardingKey());
+        update.setTrxNo(entity.getTrxNo());
+        update.setBankReturnMsg(entity.getBankReturnMsg());
+        update.setStatus(entity.getStatus());
+        update.setTrxNo(entity.getTrxNo());
+        update.setVersion(entity.getVersion());
+        return tradePaymentRecordMapper.updateByPrimaryKeySelective(entity);
+
     }
 
     @Override
