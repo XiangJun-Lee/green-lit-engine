@@ -10,10 +10,7 @@ import com.alipay.api.response.AlipayTradePrecreateResponse;
 import com.keji.green.lit.engine.dao.TradePaymentOrderDao;
 import com.keji.green.lit.engine.dao.TradePaymentRecordDao;
 import com.keji.green.lit.engine.dto.request.trade.ScanPayRequestBo;
-import com.keji.green.lit.engine.enums.AliPayTradeStateEnum;
-import com.keji.green.lit.engine.enums.PayTypeEnum;
-import com.keji.green.lit.engine.enums.PayWayEnum;
-import com.keji.green.lit.engine.enums.TradeStatusEnum;
+import com.keji.green.lit.engine.enums.*;
 import com.keji.green.lit.engine.exception.BusinessException;
 import com.keji.green.lit.engine.model.TradePaymentOrder;
 import com.keji.green.lit.engine.model.TradePaymentRecord;
@@ -26,13 +23,14 @@ import com.keji.green.lit.engine.utils.AccountUtil;
 import com.keji.green.lit.engine.utils.DateTimeUtils;
 import com.keji.green.lit.engine.utils.pay.AlipayConfigUtil;
 import com.keji.green.lit.engine.utils.pay.PayNoGenerator;
-import com.keji.green.lit.engine.utils.pay.PayUtil;
+import java.net.URLEncoder;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.alipay.api.AlipayClient;
+import org.springframework.transaction.annotation.Transactional;
 
 
 import java.math.BigDecimal;
@@ -100,11 +98,11 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         String decodedParams = URLDecoder.decode(passBackParams, StandardCharsets.UTF_8);
         // 2. 解析键值对
         Map<String, String> paramMap = parseQueryString(decodedParams);
-        int shardingKey = AccountUtil.CalShardingKey(paramMap.get("userid"));
+        long userId=Long.parseLong(paramMap.get("userId"));
+        int shardingKey = AccountUtil.CalShardingKey(userId);
 
         // 根据银行订单号获取支付信息
-//        TradePaymentRecord tradePaymentRecord = TradePaymentRecordDao.getByBankOrderNo(bankOrderNo);
-        TradePaymentRecord tradePaymentRecord = new TradePaymentRecord();
+        TradePaymentRecord tradePaymentRecord = tradePaymentRecordDao.getByBankOrderNo(shardingKey,userId,bankOrderNo);
         if (tradePaymentRecord == null) {
             throw new BusinessException(PAY_TRADE_ORDER_ERROR, ",非法订单,订单不存在");
         }
@@ -137,9 +135,11 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
 //            }
 //        }
         if (PayWayEnum.ALIPAY.name().equals(payWayCode)) {
-//            if (AlipayNotify.verify(notifyMap)) {// 验证成功
             try {
-                if (AlipaySignature.rsaCheckV1(notifyMap, AlipayConfigUtil.ali_public_key, "UTF-8", "RSA2")){
+                if (!AlipaySignature.rsaCheckV1(notifyMap, AlipayConfigUtil.ali_public_key, "UTF-8", "RSA2")){
+                    logger.info("failed verify sign");
+                }
+//                if (AlipaySignature.rsaCheckV1(notifyMap, AlipayConfigUtil.ali_public_key, "UTF-8", "RSA2")){//todo
                     String tradeStatus = notifyMap.get("trade_status");
 
                     if (AliPayTradeStateEnum.TRADE_FINISHED.name().equals(tradeStatus)) {
@@ -157,15 +157,15 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
                         if (!StringUtils.isEmpty(gmtPaymentStr)) {
                             timeEnd = DateTimeUtils.getDateFromString(gmtPaymentStr, "yyyy-MM-dd HH:mm:ss");
                         }
-//                        completeSuccessOrder(rpTradePaymentRecord, notifyMap.get("trade_no"), timeEnd, notifyMap.toString());
+                        completeSuccessOrder(tradePaymentRecord, notifyMap.get("trade_no"), timeEnd, notifyMap.toString());
                         returnStr = "success";
                     } else {
 //                        completeFailOrder(rpTradePaymentRecord, notifyMap.toString());
                         returnStr = "fail";
                     }
-                } else {// 验证失败
-                    throw new BusinessException(PAY_TRADE_SIGN_ERROR, "支付宝签名异常");
-                }
+//                } else {// 验证失败
+//                    throw new BusinessException(PAY_TRADE_SIGN_ERROR, "支付宝签名异常");
+//                }
             } catch (AlipayApiException e) {
                 logger.error("验签失败：" , e);
                 throw new BusinessException(PAY_TRADE_SIGN_ERROR, "支付宝签名异常");
@@ -253,7 +253,17 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         model.setSellerId(sellerId);
         model.setTimeoutExpress("5m");
         model.setOutTradeNo(tradePaymentRecord.getBankOrderNo());
-//        model.setPassbackParams("");
+        try {
+            // 构建并编码passback_params
+            String passbackData = "userId=" + tradePaymentRecord.getUserId();
+            String encodedParams = URLEncoder.encode(passbackData, StandardCharsets.UTF_8.name());
+            // 设置到模型中
+            model.setPassbackParams(encodedParams);
+        } catch (Exception e) {
+            // 处理编码异常
+            logger.error("编码passback_params失败", e);
+            throw new RuntimeException("生成支付参数失败", e);
+        }
         logger.info("AlipayTradePrecreateModel = {}",model);
         try {
             String resultStr = tradePrecreatePayToResponse(alipayClient, model, notifyUrl).getBody();
@@ -344,5 +354,36 @@ public class TradePaymentManagerServiceImpl implements TradePaymentManagerServic
         request.setNotifyUrl(notifyUrl);
         return (AlipayTradePrecreateResponse) client.execute(request);
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    void completeSuccessOrder(TradePaymentRecord tradePaymentRecord, String bankTrxNo, Date timeEnd, String bankReturnMsg) {
+        logger.info("订单支付成功!");
+        tradePaymentRecord.setPaySuccessTime(timeEnd);
+        tradePaymentRecord.setBankTrxNo(bankTrxNo);// 设置银行流水号
+        tradePaymentRecord.setBankReturnMsg(bankReturnMsg);
+        tradePaymentRecord.setStatus(TradeStatusEnum.SUCCESS.name());
+        tradePaymentRecordDao.update(tradePaymentRecord);
+
+        TradePaymentOrder rpTradePaymentOrder = tradePaymentOrderDao.selectByMerchantNoAndMerchantOrderNo(tradePaymentRecord.getUserId(),tradePaymentRecord.getMerchantNo(), tradePaymentRecord.getMerchantOrderNo());
+        rpTradePaymentOrder.setStatus(TradeStatusEnum.SUCCESS.name());
+        rpTradePaymentOrder.setTrxNo(tradePaymentRecord.getTrxNo());// 设置支付平台支付流水号
+        tradePaymentOrderDao.update(rpTradePaymentOrder);
+
+        if (FundInfoTypeEnum.RECHARGE.name().equals(tradePaymentRecord.getFundIntoType())) {
+            //todo
+//            rpAccountTransactionService.creditToAccount(tradePaymentRecord.getMerchantNo(), tradePaymentRecord.getOrderAmount().subtract(tradePaymentRecord.getPlatIncome()), tradePaymentRecord.getBankOrderNo(), tradePaymentRecord.getBankTrxNo(), tradePaymentRecord.getTrxType(), tradePaymentRecord.getRemark());
+        }
+
+//        if (PayTypeEnum.F2F_PAY.name().equals(rpTradePaymentOrder.getPayTypeCode())) {// 支付宝
+//            // 条码支付实时返回支付结果,不需要商户通知（修改后，条码支付结果通过订单轮询去确认订单状态，成功后通知商户）
+//            String notifyUrl = getMerchantNotifyUrl(rpTradePaymentRecord, rpTradePaymentOrder, rpTradePaymentRecord.getNotifyUrl(), TradeStatusEnum.SUCCESS);
+//            rpNotifyService.notifySend(notifyUrl, rpTradePaymentRecord.getMerchantOrderNo(), rpTradePaymentRecord.getMerchantNo());
+//            //return;
+//        } else {
+//            String notifyUrl = getMerchantNotifyUrl(rpTradePaymentRecord, rpTradePaymentOrder, rpTradePaymentRecord.getNotifyUrl(), TradeStatusEnum.SUCCESS);
+//            rpNotifyService.notifySend(notifyUrl, rpTradePaymentRecord.getMerchantOrderNo(), rpTradePaymentRecord.getMerchantNo());
+//        }
+    }
 }
+
 

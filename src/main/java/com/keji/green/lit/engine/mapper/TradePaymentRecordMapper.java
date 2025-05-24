@@ -1,6 +1,9 @@
 package com.keji.green.lit.engine.mapper;
 
+import com.keji.green.lit.engine.model.TradePaymentOrder;
 import com.keji.green.lit.engine.model.TradePaymentRecord;
+
+import java.util.Map;
 
 public interface TradePaymentRecordMapper {
     /**
@@ -50,4 +53,7 @@ public interface TradePaymentRecordMapper {
      * @mbg.generated Sat May 17 18:33:28 CST 2025
      */
     int updateByPrimaryKey(TradePaymentRecord row);
+
+    TradePaymentRecord queryTradePaymentRecord(Map<String, Object> params);
+
 }

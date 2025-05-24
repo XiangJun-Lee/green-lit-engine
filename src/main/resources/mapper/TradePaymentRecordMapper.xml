@@ -482,7 +482,7 @@
     update trade_payment_record_${userId % 10}
     <set>
       <if test="version != null">
-        version = #{version,jdbcType=INTEGER},
+        version = #{version,jdbcType=INTEGER} + 1,
       </if>
       <if test="status != null">
         status = #{status,jdbcType=VARCHAR},
@@ -632,7 +632,7 @@
         bank_return_msg = #{bankReturnMsg,jdbcType=VARCHAR},
       </if>
     </set>
-    where sharding_key = #{shardingKey,jdbcType=TINYINT} and user_id = #{userId,jdbcType=BIGINT} and trx_no = #{trxNo,jdbcType=VARCHAR}
+    where sharding_key = #{shardingKey,jdbcType=TINYINT} and user_id = #{userId,jdbcType=BIGINT} and trx_no = #{trxNo,jdbcType=VARCHAR} and version = #{version,jdbcType=INTEGER}
   </update>
   <update id="updateByPrimaryKey" parameterType="com.keji.green.lit.engine.model.TradePaymentRecord">
     update trade_payment_record
@@ -691,4 +691,10 @@
       bank_return_msg = #{bankReturnMsg,jdbcType=VARCHAR}
     where id = #{id,jdbcType=BIGINT}
   </update>
+  <select id="queryTradePaymentRecord" parameterType="java.util.Map" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from trade_payment_record_${sharding_key}
+    where user_id = #{user_id,jdbcType=BIGINT} and sharding_key = #{sharding_key,jdbcType=TINYINT} and bank_order_no = #{bank_order_no,jdbcType=VARCHAR}
+  </select>
 </mapper>

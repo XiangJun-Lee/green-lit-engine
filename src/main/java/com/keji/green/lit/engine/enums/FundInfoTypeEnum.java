@@ -8,7 +8,8 @@ import java.util.Map;
 public enum FundInfoTypeEnum {
 
     PLAT_RECEIVES("平台收款"),
-    MERCHANT_RECEIVES("商家收款");
+    MERCHANT_RECEIVES("商家收款"),
+    RECHARGE("用户充值");
 
     /** 描述 */
     private String desc;

@@ -38,7 +38,10 @@ public class PayController {
     public String aliPrePay(@RequestBody ScanPayRequestBo scanPayRequestBo, BindingResult bindingResult, Model model, HttpServletRequest httpServletRequest) {
         logger.info("======>进入扫码支付{}", scanPayRequestBo);
         PayConfig rpUserPayConfig = new PayConfig();
-        BigDecimal orderPrice = scanPayRequestBo.getOrderPrice();
+        if (StringUtils.isNotBlank(scanPayRequestBo.getFundInfoType())){
+            rpUserPayConfig.setFundIntoType(scanPayRequestBo.getFundInfoType());
+        }
+//        BigDecimal orderPrice = scanPayRequestBo.getOrderPrice();
         ScanPayResultVo scanPayResultVo = tradePaymentManagerService.initDirectScanPay(rpUserPayConfig , scanPayRequestBo);
 
         model.addAttribute("codeUrl", scanPayResultVo.getCodeUrl());//支付二维码

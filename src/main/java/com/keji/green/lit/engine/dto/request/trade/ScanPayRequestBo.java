@@ -51,6 +51,10 @@ public class ScanPayRequestBo implements Serializable {
     @NotNull(message = "异步通知地址[notifyUrl]不能为空")
     private String notifyUrl;
 
+
+    @Size(min = 1 ,  max = 20 , message = "支付场景[fundInfoType]长度最小1位，最大200位")
+    private String fundInfoType;
+
     @NotNull(message = "签名[sign]不能为空")
     private String sign;
 
@@ -178,6 +182,14 @@ public class ScanPayRequestBo implements Serializable {
         this.payType = payType;
     }
 
+    public String getFundInfoType() {
+        return fundInfoType;
+    }
+
+    public void setFundInfoType(String fundInfoType) {
+        this.fundInfoType = fundInfoType;
+    }
+
 //    public Integer getNumberOfStages() {
 //        return numberOfStages;
 //    }
@@ -202,7 +214,7 @@ public class ScanPayRequestBo implements Serializable {
                 ", sign='" + sign + '\'' +
                 ", remark='" + remark + '\'' +
                 ", payType='" + payType + '\'' +
-//                ", numberOfStages=" + numberOfStages +
+                ", fundInfoType=" + fundInfoType +
                 '}';
     }
 }
